@@ -8,6 +8,7 @@ const board = $("board"), status = $("status"), error = $("roomError");
 const start = $("startScreen"), playerMode = $("playerModeScreen"), computer = $("computerScreen"), room = $("roomScreen"), lobby = $("lobbyScreen"), game = $("gameScreen");
 const codeDisplay = $("roomCodeDisplay"), connection = $("connectionStatus"), lobbyError = $("lobbyError"), lobbyPlayers = $("lobbyPlayers"), startPrivate = $("startPrivateBtn"), undo = $("undoBtn");
 const moveHistoryBody = $("moveHistoryBody");
+const roomLinkInput = $("roomLinkInput"), copyRoomLinkBtn = $("copyRoomLinkBtn"), copyStatus = $("copyStatus");
 const files = ["a","b","c","d","e","f","g","h"], ranks = ["8","7","6","5","4","3","2","1"];
 let selected = null, lastMove = null, moveHistory = [], channel = null, privateRoom = false, computerMode = false, thinking = false, difficulty = "medium", color = null, host = false, started = false, undoState = null;
 const id = crypto.randomUUID();
@@ -77,7 +78,17 @@ function players() { return Object.values(channel.presenceState()).flat(); }
 function updateLobby() { const list=players(); lobbyPlayers.textContent=list.length===2?"Both players connected. Choose your sides.":"Waiting for an opponent..."; startPrivate.classList.toggle("hidden",!host || list.length!==2 || !list.every((p)=>p.color) || list[0].color===list[1].color); document.querySelectorAll(".side-option").forEach((button)=>{ const taken=list.some((p)=>p.playerId!==id&&p.color===button.dataset.color); button.disabled=taken; button.classList.toggle("selected",color===button.dataset.color); }); }
 async function selectSide(next) { const opponent=players().find((p)=>p.playerId!==id); if(opponent?.color===next){lobbyError.textContent="Your opponent has already chosen that side.";return;} color=next; lobbyError.textContent=""; await channel.track({playerId:id,color}); updateLobby(); }
 function enterGame() { started=true; connection.textContent=`Connected as ${color === "w" ? "White" : "Black"}`; chess.reset(); lastMove=null; moveHistory=[]; selected=null; draw(); show(game); }
-async function leavePrivate(notify=false) { if(channel){if(notify) await channel.send({type:"broadcast",event:"player-left"}); await channel.unsubscribe();channel=null;} privateRoom=false;started=false;color=null;show(start); }
+async function leavePrivate(notify=false) { if(channel){if(notify) await channel.send({type:"broadcast",event:"player-left"}); await channel.unsubscribe();channel=null;} privateRoom=false;started=false;color=null;clearRoomLink();show(start); }
+function updateRoomLink(code) {
+  const link = new URL(window.location.href);
+  link.search = `?room=${encodeURIComponent(code)}`;
+  roomLinkInput.value = link.href;
+}
+function clearRoomLink() {
+  const link = new URL(window.location.href);
+  link.search = "";
+  window.history.replaceState({}, "", link.href);
+}
 async function joinPrivate(code, isHost) {
   privateRoom = true;
   computerMode = false;
@@ -86,6 +97,7 @@ async function joinPrivate(code, isHost) {
   color = null;
   codeDisplay.textContent = code;
   $("lobbyCodeDisplay").textContent = code;
+  updateRoomLink(code);
   $("undoBtn").classList.add("hidden");
   show(lobby);
 
@@ -145,8 +157,26 @@ async function joinPrivate(code, isHost) {
   });
 }
 
+async function joinRoomFromLink() {
+  const code = new URLSearchParams(window.location.search).get("room");
+  if (!code || !/^[A-Z0-9]{6}$/i.test(code)) return;
+  const result = await supabaseClient
+    .from("chess_rooms")
+    .select("code")
+    .eq("code", code.toUpperCase())
+    .maybeSingle();
+  if (result.error || !result.data) {
+    error.textContent = "That room link is invalid or the room has closed.";
+    show(room);
+    clearRoomLink();
+    return;
+  }
+  await joinPrivate(code.toUpperCase(), false);
+}
+
 $("computerModeBtn").onclick=()=>show(computer); $("playerModeBtn").onclick=()=>show(playerMode); $("backToStartBtn").onclick=()=>show(start); $("backFromComputerBtn").onclick=()=>show(start); $("localModeBtn").onclick=startLocal; $("privateModeBtn").onclick=()=>show(room); $("undoBtn").onclick=undoComputerTurn;
 document.querySelectorAll(".difficulty-option").forEach((button)=>button.onclick=()=>startComputer(button.dataset.difficulty));
 $("createRoomBtn").onclick=async()=>{const code=Math.random().toString(36).slice(2,8).toUpperCase();const result=await supabaseClient.from("chess_rooms").insert({code});if(result.error){error.textContent="Could not create the room. Check Supabase setup.";return;}joinPrivate(code,true);};
+copyRoomLinkBtn.onclick = async () => { if (!roomLinkInput.value) return; await navigator.clipboard.writeText(roomLinkInput.value); copyStatus.textContent = "Link copied. Send it to your opponent."; };
 $("showJoinBtn").onclick=()=>{$("createRoomPanel").classList.add("hidden");$("joinRoomPanel").classList.remove("hidden");$("roomInput").focus();}; $("backBtn").onclick=()=>show(start); $("leaveLobbyBtn").onclick=()=>leavePrivate(); $("leaveBtn").onclick=()=>leavePrivate(true); $("startPrivateBtn").onclick=async()=>{const list=players();const colors=Object.fromEntries(list.map((p)=>[p.playerId,p.color]));await channel.send({type:"broadcast",event:"start",payload:{colors}});enterGame();};
-$("joinRoomPanel").onsubmit=async(e)=>{e.preventDefault();const code=$("roomInput").value.trim().toUpperCase();const result=await supabaseClient.from("chess_rooms").select("code").eq("code",code).maybeSingle();if(result.error||!result.data){error.textContent="That room does not exist.";return;}joinPrivate(code,false);}; $("resetBtn").onclick=async()=>{if(privateRoom){await channel.send({type:"broadcast",event:"new-game"});started=false;color=null;moveHistory=[];show(lobby);await channel.track({playerId:id,color:null});updateLobby();return;}chess.reset();lastMove=null;moveHistory=[];undoState=null;thinking=false;draw();}; window.addEventListener("pagehide",()=>channel&&supabaseClient.removeChannel(channel)); buildBoard();
+$("joinRoomPanel").onsubmit=async(e)=>{e.preventDefault();const code=$("roomInput").value.trim().toUpperCase();const result=await supabaseClient.from("chess_rooms").select("code").eq("code",code).maybeSingle();if(result.error||!result.data){error.textContent="That room does not exist.";return;}joinPrivate(code,false);}; $("resetBtn").onclick=async()=>{if(privateRoom){await channel.send({type:"broadcast",event:"new-game"});started=false;color=null;moveHistory=[];show(lobby);await channel.track({playerId:id,color:null});updateLobby();return;}chess.reset();lastMove=null;moveHistory=[];undoState=null;thinking=false;draw();}; window.addEventListener("pagehide",()=>channel&&supabaseClient.removeChannel(channel)); buildBoard(); joinRoomFromLink();

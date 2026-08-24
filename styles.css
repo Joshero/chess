@@ -94,6 +94,10 @@ body {
 .room-code, .lobby-code { color: var(--accent-dark); font-weight: bold; letter-spacing: 0.16em; }
 .room-code { font-size: 2rem; margin: 0 0 24px; }
 .lobby-code { font-size: 2.4rem; margin: 14px 0 24px; }
+.share-room { display: flex; gap: 10px; max-width: 620px; width: 100%; }
+.share-room input { background: #f8f3e9; border: 2px solid var(--line); color: var(--ink); flex: 1; font: inherit; min-width: 0; padding: 10px 12px; }
+.share-room .btn { margin-top: 0; white-space: nowrap; }
+.copy-status { color: var(--accent-dark) !important; font-size: 0.9rem; min-height: 1.4em; margin: 8px 0 18px !important; }
 .btn { margin-top: 18px; padding: 10px 20px; font-size: 1rem; background-color: var(--accent); color: #fff; border: none; border-radius: 2px; cursor: pointer; font-weight: bold; min-height: 44px; transition: background-color 0.2s; }
 .btn:hover { background-color: var(--accent-dark); }
 .text-btn { background: none; border: 0; color: var(--accent-dark); cursor: pointer; font: inherit; margin-top: 14px; padding: 4px 0; min-height: 36px; text-decoration: underline; }
@@ -136,6 +140,8 @@ body {
   .mode-card { min-height: auto; padding: 18px; }
   .room-form { flex-direction: column; }
   .room-form .btn { margin-top: 0; width: 100%; }
+  .share-room { align-items: stretch; flex-direction: column; }
+  .share-room .btn { width: 100%; }
   .side-options { display: grid; grid-template-columns: 1fr 1fr; }
   .side-option { padding: 12px 8px; width: 100%; }
   .lobby-code { font-size: 2rem; }
