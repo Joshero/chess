@@ -559,7 +559,7 @@
         <h2>Room lobby</h2>
         <p>Share this code, wait for your opponent, then choose a side.</p>
         <div class="lobby-code" id="lobbyCodeDisplay"></div>
-        <div class="share-room" id="shareRoom">
+        <div class="share-room hidden" id="shareRoom">
           <input
             id="roomLinkInput"
             type="url"
@@ -573,8 +573,12 @@
         <p class="copy-status" id="copyStatus"></p>
         <p id="lobbyPlayers">Waiting for an opponent...</p>
         <div class="side-options">
-          <button class="side-option" data-color="w">White</button>
-          <button class="side-option" data-color="b">Black</button>
+          <button class="side-option" type="button" data-color="w">
+            White
+          </button>
+          <button class="side-option" type="button" data-color="b">
+            Black
+          </button>
         </div>
         <p class="error" id="lobbyError"></p>
         <button class="btn hidden" id="startPrivateBtn">Start game</button>
@@ -1288,6 +1292,6 @@
       createBoard();
     </script>
     -->
-    <script src="app.js?v=6"></script>
+    <script src="app.js?v=7"></script>
   </body>
 </html>
