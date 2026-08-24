@@ -79,7 +79,7 @@ body {
 .square.last-move { background-color: #e7c86e !important; }
 .piece.w { color: #fff; text-shadow: 0 0 4px #000, 0 0 4px #000; }
 .piece.b { color: #000; text-shadow: 0 0 2px #fff; }
-.game-layout { display: grid; grid-template-columns: minmax(150px, 0.25fr) minmax(0, 0.55fr) minmax(190px, 0.2fr); gap: clamp(16px, 3vw, 36px); align-items: center; min-width: 0; }
+.game-layout { display: grid; grid-template-columns: 190px minmax(320px, 1fr) 240px; gap: clamp(16px, 3vw, 36px); align-items: center; min-width: 0; }
 #gameScreen .game-layout { max-height: 100%; }
 .game-layout > * { min-width: 0; }
 .game-info { order: -1; }
@@ -99,14 +99,14 @@ body {
 .side-option.selected { background: var(--ink); border-color: var(--ink); color: #fff; }
 .side-option:disabled { cursor: not-allowed; opacity: 0.45; }
 .connection-status { color: var(--muted); font-size: 0.9rem; margin: -10px 0 18px; }
-.move-sidebar { align-self: stretch; min-width: 0; }
-.move-sidebar h3 { font-size: 1.15rem; margin: 0 0 12px; }
-.move-table-wrap { background: #f8f3e9; border: 1px solid var(--line); max-height: min(48vh, 390px); overflow-y: auto; }
+.move-sidebar { align-self: stretch; background: #17212b; border: 2px solid #e7c86e; box-shadow: 0 10px 24px rgba(23, 33, 43, 0.24); color: #fff; min-width: 0; padding: 18px 14px; }
+.move-sidebar h3 { color: #f2c879; font-size: 1.2rem; margin: 0 0 14px; }
+.move-table-wrap { background: #253640; border: 1px solid #536773; max-height: min(48vh, 390px); overflow-y: auto; }
 .move-sidebar table { border-collapse: collapse; font-family: Georgia, "Times New Roman", serif; width: 100%; }
-.move-sidebar th, .move-sidebar td { border-bottom: 1px solid var(--line); padding: 8px 6px; text-align: center; }
-.move-sidebar th { color: var(--muted); font-size: 0.78rem; font-weight: normal; text-transform: uppercase; }
-.move-sidebar td { font-size: 0.9rem; }
-.move-sidebar tbody tr:last-child td { background: #fff3d2; border-bottom: 0; font-weight: bold; }
+.move-sidebar th, .move-sidebar td { border-bottom: 1px solid #536773; padding: 9px 5px; text-align: center; }
+.move-sidebar th { color: #c9d3d8; font-size: 0.76rem; font-weight: normal; text-transform: uppercase; }
+.move-sidebar td { color: #fff; font-size: 0.92rem; }
+.move-sidebar tbody tr:last-child td { background: #66552d; border-bottom: 0; color: #fff7d6; font-weight: bold; }
 .hidden { display: none !important; }
 
 @media (max-width: 760px) {
@@ -115,6 +115,11 @@ body {
   .board { width: min(100%, calc(100dvh - 300px)); max-width: 640px; }
   .move-sidebar { width: 100%; }
   .move-table-wrap { max-height: 180px; }
+}
+
+@media (min-width: 761px) and (max-width: 980px) {
+  .game-layout { grid-template-columns: 150px minmax(280px, 1fr) 210px; gap: 14px; }
+  .move-sidebar { padding: 14px 10px; }
 }
 
 @media (max-width: 420px) {
