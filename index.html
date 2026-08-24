@@ -194,6 +194,10 @@
         background-color: #abdca7 !important;
       }
 
+      .square.last-move {
+        background-color: #e7c86e !important;
+      }
+
       /* Piece Colors */
       .piece.w {
         color: #ffffff;
@@ -551,6 +555,7 @@
               <p class="room-code" id="roomCodeDisplay">LOCAL</p>
             </div>
             <button class="btn" id="resetBtn">New game</button>
+            <button class="btn hidden" id="undoBtn">Undo move</button>
             <br />
             <button class="text-btn" id="leaveBtn">Leave game</button>
           </aside>
@@ -587,6 +592,7 @@
       const boardElement = document.getElementById("board");
       const statusElement = document.getElementById("status");
       const resetBtn = document.getElementById("resetBtn");
+      const undoBtn = document.getElementById("undoBtn");
       const startScreen = document.getElementById("startScreen");
       const playerModeScreen = document.getElementById("playerModeScreen");
       const computerScreen = document.getElementById("computerScreen");
@@ -613,6 +619,8 @@
       let isComputerMode = false;
       let computerDifficulty = "medium";
       let computerThinking = false;
+      let computerUndoState = null;
+      let lastMove = null;
       let playerColor = null;
       let isRoomHost = false;
       let gameStarted = false;
@@ -647,7 +655,7 @@
         // Clear current pieces and highlights
         document.querySelectorAll(".square").forEach((sq) => {
           sq.innerHTML = "";
-          sq.classList.remove("selected", "highlighted");
+          sq.classList.remove("selected", "highlighted", "last-move");
         });
 
         // Draw pieces based on current chess game state
@@ -670,6 +678,11 @@
             }
           });
         });
+
+        if (lastMove) {
+          document.getElementById(lastMove.from)?.classList.add("last-move");
+          document.getElementById(lastMove.to)?.classList.add("last-move");
+        }
 
         // Update Status text
         if (chess.in_checkmate()) {
@@ -708,6 +721,9 @@
           }
 
           // Attempt to move
+          const previousComputerState = isComputerMode
+            ? { fen: chess.fen(), lastMove }
+            : null;
           const move = chess.move({
             from: selectedSquare,
             to: squareId,
@@ -715,12 +731,16 @@
           });
 
           if (move) {
+            if (isComputerMode) {
+              computerUndoState = previousComputerState;
+            }
             selectedSquare = null;
+            lastMove = { from: move.from, to: move.to };
             if (isPrivateRoom) {
               await roomChannel.send({
                 type: "broadcast",
                 event: "move",
-                payload: { fen: chess.fen() },
+                payload: { fen: chess.fen(), from: move.from, to: move.to },
               });
             }
             updateBoardVisuals();
@@ -761,10 +781,15 @@
         }
         chess.reset();
         computerThinking = false;
+        computerUndoState = null;
+        lastMove = null;
         selectedSquare = null;
         updateBoardVisuals();
+        undoBtn.classList.add("hidden");
         if (isComputerMode) connectionStatusElement.textContent = "Your turn";
       });
+
+      undoBtn.addEventListener("click", undoComputerTurn);
 
       function showScreen(screen) {
         [
@@ -786,7 +811,10 @@
         roomCode = "LOCAL";
         roomCodeDisplay.textContent = roomCode;
         connectionStatusElement.textContent = "Pass & Play";
+        undoBtn.classList.add("hidden");
         chess.reset();
+        computerUndoState = null;
+        lastMove = null;
         selectedSquare = null;
         updateBoardVisuals();
         showScreen(gameScreen);
@@ -801,7 +829,10 @@
         roomCode = "COMPUTER";
         roomCodeDisplay.textContent = roomCode;
         connectionStatusElement.textContent = `Computer: ${difficulty}`;
+        undoBtn.classList.remove("hidden");
         chess.reset();
+        computerUndoState = null;
+        lastMove = null;
         selectedSquare = null;
         updateBoardVisuals();
         showScreen(gameScreen);
@@ -863,10 +894,21 @@
           if (chess.game_over() || !isComputerMode) return;
           const move = chooseComputerMove();
           chess.move({ from: move.from, to: move.to, promotion: "q" });
+          lastMove = { from: move.from, to: move.to };
           computerThinking = false;
           connectionStatusElement.textContent = `Computer: ${computerDifficulty}`;
           updateBoardVisuals();
         }, 300);
+      }
+
+      function undoComputerTurn() {
+        if (!isComputerMode || !computerUndoState || computerThinking) return;
+        chess.load(computerUndoState.fen);
+        lastMove = computerUndoState.lastMove;
+        computerUndoState = null;
+        selectedSquare = null;
+        updateBoardVisuals();
+        connectionStatusElement.textContent = `Computer: ${computerDifficulty}`;
       }
 
       function getRoomPlayers() {
@@ -922,6 +964,7 @@
         opponentLeaveHandled = false;
         connectionStatusElement.textContent = `Connected as ${playerColor === "w" ? "White" : "Black"}`;
         chess.reset();
+        lastMove = null;
         selectedSquare = null;
         updateBoardVisuals();
         showScreen(gameScreen);
@@ -937,6 +980,7 @@
         playerColor = null;
         roomCode = code;
         roomCodeDisplay.textContent = code;
+        undoBtn.classList.add("hidden");
         lobbyCodeDisplay.textContent = code;
         lobbyError.textContent = "";
         startPrivateBtn.classList.add("hidden");
@@ -982,11 +1026,16 @@
           .on("broadcast", { event: "move" }, ({ payload }) => {
             chess.load(payload.fen);
             selectedSquare = null;
+            lastMove =
+              payload.from && payload.to
+                ? { from: payload.from, to: payload.to }
+                : null;
             updateBoardVisuals();
           })
           .on("broadcast", { event: "reset" }, ({ payload }) => {
             chess.load(payload.fen);
             selectedSquare = null;
+            lastMove = null;
             updateBoardVisuals();
           });
 
