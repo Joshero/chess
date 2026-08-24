@@ -14,7 +14,7 @@ const id = crypto.randomUUID();
 
 function show(screen) { [start, playerMode, computer, room, lobby, game].forEach((item) => item.classList.add("hidden")); screen.classList.remove("hidden"); }
 function draw() {
-  document.querySelectorAll(".square").forEach((square) => { square.innerHTML = ""; square.classList.remove("selected","highlighted","last-move"); });
+  document.querySelectorAll(".square").forEach((square) => { square.querySelectorAll(".piece").forEach((piece) => piece.remove()); square.classList.remove("selected","highlighted","last-move"); });
   chess.board().forEach((row, r) => row.forEach((piece, f) => { if (!piece) return; const el = $(files[f] + ranks[r]); const span = document.createElement("span"); span.className = `piece ${piece.color}`; span.textContent = symbols[piece.color === "w" ? piece.type.toUpperCase() : piece.type]; el.appendChild(span); }));
   if (lastMove) { $(lastMove.from)?.classList.add("last-move"); $(lastMove.to)?.classList.add("last-move"); }
   status.textContent = chess.game_over() ? (chess.in_checkmate() ? "Checkmate! Game over." : "Game over: Draw!") : `${chess.turn() === "w" ? "White" : "Black"}'s turn${chess.in_check() ? " (Check!)" : ""}`;
@@ -24,7 +24,7 @@ function draw() {
     return rows;
   }, []).join("") : '<tr><td colspan="3">No moves yet</td></tr>';
 }
-function buildBoard() { board.innerHTML = ""; for (let r=0;r<8;r++) for (let f=0;f<8;f++) { const square = document.createElement("div"); square.className = `square ${(r+f)%2 ? "dark" : "light"}`; square.id = files[f]+ranks[r]; square.onclick = () => clickSquare(square.id); board.appendChild(square); } draw(); }
+function buildBoard() { board.innerHTML = ""; for (let r=0;r<8;r++) for (let f=0;f<8;f++) { const square = document.createElement("div"); square.className = `square ${(r+f)%2 ? "dark" : "light"}`; square.id = files[f]+ranks[r]; if (r === 7) { const fileLabel = document.createElement("span"); fileLabel.className = "coordinate file-coordinate"; fileLabel.textContent = files[f]; square.appendChild(fileLabel); } if (f === 0) { const rankLabel = document.createElement("span"); rankLabel.className = "coordinate rank-coordinate"; rankLabel.textContent = ranks[r]; square.appendChild(rankLabel); } square.onclick = () => clickSquare(square.id); board.appendChild(square); } draw(); }
 async function clickSquare(square) {
   if (chess.game_over() || thinking || (computerMode && chess.turn() !== "w")) return;
   if (selected) {

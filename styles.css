@@ -71,7 +71,12 @@ body {
 .board { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); grid-template-rows: repeat(8, minmax(0, 1fr)); aspect-ratio: 1; width: min(760px, 100%); max-width: 760px; justify-self: center; border: 5px solid var(--ink); box-shadow: 0 12px 24px rgba(54, 42, 26, 0.2); transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .board.flipped { transform: rotate(180deg); }
 .board.flipped .piece { transform: rotate(180deg); }
-.square { display: flex; align-items: center; justify-content: center; font-size: clamp(1.8rem, 7vw, 3.7rem); cursor: pointer; user-select: none; transition: background-color 0.2s; }
+.square { display: flex; align-items: center; justify-content: center; font-size: clamp(1.8rem, 7vw, 3.7rem); cursor: pointer; position: relative; user-select: none; transition: background-color 0.2s; }
+.coordinate { font-family: Georgia, "Times New Roman", serif; font-size: clamp(0.55rem, 1.2vw, 0.8rem); font-weight: bold; line-height: 1; opacity: 0.85; pointer-events: none; position: absolute; z-index: 1; }
+.file-coordinate { bottom: 3px; right: 4px; }
+.rank-coordinate { left: 4px; top: 3px; }
+.light .coordinate { color: var(--dark-square); }
+.dark .coordinate { color: var(--light-square); }
 .light { background-color: var(--light-square); }
 .dark { background-color: var(--dark-square); }
 .square.selected { background-color: #7ab3d5 !important; }
