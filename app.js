@@ -25,7 +25,7 @@ function draw() {
     return rows;
   }, []).join("") : '<tr><td colspan="3">No moves yet</td></tr>';
 }
-function buildBoard() { board.innerHTML = ""; for (let r=0;r<8;r++) for (let f=0;f<8;f++) { const square = document.createElement("div"); square.className = `square ${(r+f)%2 ? "dark" : "light"}`; square.id = files[f]+ranks[r]; if (r === 7) { const fileLabel = document.createElement("span"); fileLabel.className = "coordinate file-coordinate"; fileLabel.textContent = files[f]; square.appendChild(fileLabel); } if (f === 0) { const rankLabel = document.createElement("span"); rankLabel.className = "coordinate rank-coordinate"; rankLabel.textContent = ranks[r]; square.appendChild(rankLabel); } square.onclick = () => clickSquare(square.id); board.appendChild(square); } draw(); }
+function buildBoard() { board.innerHTML = ""; for (let r=0;r<8;r++) for (let f=0;f<8;f++) { const square = document.createElement("div"); square.className = `square ${(r+f)%2 ? "dark" : "light"}`; square.id = files[f]+ranks[r]; if (r === 7 || r === 0) { const fileLabel = document.createElement("span"); fileLabel.className = `coordinate file-coordinate ${r === 0 ? "file-top" : "file-bottom"}`; fileLabel.textContent = files[f]; square.appendChild(fileLabel); } if (f === 0 || f === 7) { const rankLabel = document.createElement("span"); rankLabel.className = `coordinate rank-coordinate ${f === 7 ? "rank-right" : "rank-left"}`; rankLabel.textContent = ranks[r]; square.appendChild(rankLabel); } square.onclick = () => clickSquare(square.id); board.appendChild(square); } draw(); }
 async function clickSquare(square) {
   if (chess.game_over() || thinking || (computerMode && chess.turn() !== "w")) return;
   if (selected) {

@@ -76,6 +76,11 @@ body {
 .coordinate { background: rgba(255, 255, 255, 0.4); border-radius: 2px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(0.65rem, 1.4vw, 0.9rem); font-weight: bold; line-height: 1; opacity: 1; padding: 2px 3px; pointer-events: none; position: absolute; z-index: 2; }
 .file-coordinate { bottom: 3px; right: 3px; }
 .rank-coordinate { left: 3px; top: 3px; }
+.file-top { bottom: auto; left: 3px; right: auto; top: 3px; }
+.rank-right { bottom: 3px; left: auto; right: 3px; top: auto; }
+.file-top, .rank-right { display: none; }
+.board.flipped .file-bottom, .board.flipped .rank-left { display: none; }
+.board.flipped .file-top, .board.flipped .rank-right { display: inline; transform: rotate(180deg); }
 .light .coordinate { color: #17212b; }
 .dark .coordinate { color: #fff; background: rgba(23, 33, 43, 0.55); }
 .light { background-color: var(--light-square); }
