@@ -8,7 +8,7 @@ const board = $("board"), status = $("status"), error = $("roomError");
 const start = $("startScreen"), playerMode = $("playerModeScreen"), computer = $("computerScreen"), room = $("roomScreen"), lobby = $("lobbyScreen"), game = $("gameScreen");
 const codeDisplay = $("roomCodeDisplay"), connection = $("connectionStatus"), lobbyError = $("lobbyError"), lobbyPlayers = $("lobbyPlayers"), startPrivate = $("startPrivateBtn"), undo = $("undoBtn");
 const moveHistoryBody = $("moveHistoryBody");
-const roomLinkInput = $("roomLinkInput"), copyRoomLinkBtn = $("copyRoomLinkBtn"), copyStatus = $("copyStatus");
+const roomLinkInput = $("roomLinkInput"), copyRoomLinkBtn = $("copyRoomLinkBtn"), copyStatus = $("copyStatus"), shareRoom = $("shareRoom");
 const files = ["a","b","c","d","e","f","g","h"], ranks = ["8","7","6","5","4","3","2","1"];
 let selected = null, lastMove = null, moveHistory = [], channel = null, privateRoom = false, computerMode = false, thinking = false, difficulty = "medium", color = null, host = false, started = false, undoState = null;
 const id = crypto.randomUUID();
@@ -76,7 +76,7 @@ function computerMove() { thinking=true; connection.textContent="Computer is thi
 function undoComputerTurn() { if (!undoState || thinking) return; chess.load(undoState.fen); lastMove=undoState.lastMove; moveHistory=moveHistory.slice(0, -2); undoState=null; selected=null; draw(); }
 function players() { return Object.values(channel.presenceState()).flat(); }
 function updateLobby() { const list=players(); lobbyPlayers.textContent=list.length===2?"Both players connected. Choose your sides.":"Waiting for an opponent..."; startPrivate.classList.toggle("hidden",!host || list.length!==2 || !list.every((p)=>p.color) || list[0].color===list[1].color); document.querySelectorAll(".side-option").forEach((button)=>{ const taken=list.some((p)=>p.playerId!==id&&p.color===button.dataset.color); button.disabled=taken; button.classList.toggle("selected",color===button.dataset.color); }); }
-async function selectSide(next) { const opponent=players().find((p)=>p.playerId!==id); if(opponent?.color===next){lobbyError.textContent="Your opponent has already chosen that side.";return;} color=next; lobbyError.textContent=""; await channel.track({playerId:id,color}); updateLobby(); }
+async function selectSide(next) { const opponent=players().find((p)=>p.playerId!==id); if(opponent?.color===next){lobbyError.textContent="Your opponent has already chosen that side.";return;} color=next; lobbyError.textContent=""; const result=await channel.track({playerId:id,color}); if(result?.error){lobbyError.textContent="Could not save your side. Please try again.";return;} updateLobby(); }
 function enterGame() { started=true; connection.textContent=`Connected as ${color === "w" ? "White" : "Black"}`; chess.reset(); lastMove=null; moveHistory=[]; selected=null; draw(); show(game); }
 async function leavePrivate(notify=false) { if(channel){if(notify) await channel.send({type:"broadcast",event:"player-left"}); await channel.unsubscribe();channel=null;} privateRoom=false;started=false;color=null;clearRoomLink();show(start); }
 function updateRoomLink(code) {
@@ -98,6 +98,8 @@ async function joinPrivate(code, isHost) {
   codeDisplay.textContent = code;
   $("lobbyCodeDisplay").textContent = code;
   updateRoomLink(code);
+  shareRoom.classList.toggle("hidden", !isHost);
+  copyStatus.textContent = "";
   $("undoBtn").classList.add("hidden");
   show(lobby);
 
