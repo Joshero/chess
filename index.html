@@ -585,6 +585,25 @@
             <button class="text-btn" id="leaveBtn">Leave game</button>
           </aside>
           <div class="board" id="board" aria-label="Chess board"></div>
+          <aside class="move-sidebar" aria-label="Move history">
+            <h3>Move history</h3>
+            <div class="move-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Move</th>
+                    <th>White</th>
+                    <th>Black</th>
+                  </tr>
+                </thead>
+                <tbody id="moveHistoryBody">
+                  <tr>
+                    <td colspan="3">No moves yet</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </aside>
         </div>
       </section>
     </main>

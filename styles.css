@@ -79,7 +79,7 @@ body {
 .square.last-move { background-color: #e7c86e !important; }
 .piece.w { color: #fff; text-shadow: 0 0 4px #000, 0 0 4px #000; }
 .piece.b { color: #000; text-shadow: 0 0 2px #fff; }
-.game-layout { display: grid; grid-template-columns: minmax(0, 0.36fr) minmax(0, 0.64fr); gap: clamp(18px, 4vw, 48px); align-items: center; min-width: 0; }
+.game-layout { display: grid; grid-template-columns: minmax(150px, 0.25fr) minmax(0, 0.55fr) minmax(190px, 0.2fr); gap: clamp(16px, 3vw, 36px); align-items: center; min-width: 0; }
 #gameScreen .game-layout { max-height: 100%; }
 .game-layout > * { min-width: 0; }
 .game-info { order: -1; }
@@ -99,12 +99,22 @@ body {
 .side-option.selected { background: var(--ink); border-color: var(--ink); color: #fff; }
 .side-option:disabled { cursor: not-allowed; opacity: 0.45; }
 .connection-status { color: var(--muted); font-size: 0.9rem; margin: -10px 0 18px; }
+.move-sidebar { align-self: stretch; min-width: 0; }
+.move-sidebar h3 { font-size: 1.15rem; margin: 0 0 12px; }
+.move-table-wrap { background: #f8f3e9; border: 1px solid var(--line); max-height: min(48vh, 390px); overflow-y: auto; }
+.move-sidebar table { border-collapse: collapse; font-family: Georgia, "Times New Roman", serif; width: 100%; }
+.move-sidebar th, .move-sidebar td { border-bottom: 1px solid var(--line); padding: 8px 6px; text-align: center; }
+.move-sidebar th { color: var(--muted); font-size: 0.78rem; font-weight: normal; text-transform: uppercase; }
+.move-sidebar td { font-size: 0.9rem; }
+.move-sidebar tbody tr:last-child td { background: #fff3d2; border-bottom: 0; font-weight: bold; }
 .hidden { display: none !important; }
 
 @media (max-width: 760px) {
   .mode-grid, .game-layout { grid-template-columns: 1fr; }
   .game-info { order: 0; }
   .board { width: min(100%, calc(100dvh - 300px)); max-width: 640px; }
+  .move-sidebar { width: 100%; }
+  .move-table-wrap { max-height: 180px; }
 }
 
 @media (max-width: 420px) {
@@ -124,6 +134,6 @@ body {
   body { align-items: flex-start; padding-top: 12px; }
   .brand { font-size: 2rem; margin-bottom: 12px; }
   .screen { padding: 18px; }
-  .game-layout { grid-template-columns: 170px minmax(0, 1fr); gap: 18px; }
+  .game-layout { grid-template-columns: 170px minmax(0, 1fr) 190px; gap: 18px; }
   .board { max-height: calc(100dvh - 100px); width: auto; height: min(calc(100dvh - 100px), 640px); }
 }
