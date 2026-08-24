@@ -14,8 +14,8 @@
 
 body {
   font-family: Georgia, "Times New Roman", serif;
-  background: radial-gradient(circle at 15% 10%, #fffdf5 0, transparent 32%), #e5ded1;
-  background-image: url("chess-pieces.svg"), radial-gradient(circle at 15% 10%, #fffdf5 0, transparent 32%);
+  background: radial-gradient(circle at 15% 10%, #52616a 0, transparent 34%), #202b31;
+  background-image: url("chess-pieces.svg"), radial-gradient(circle at 15% 10%, #52616a 0, transparent 34%);
   background-position: center;
   background-size: cover;
   color: var(--ink);
@@ -31,7 +31,7 @@ body {
 }
 
 .background-pieces { inset: 0; overflow: hidden; pointer-events: none; position: fixed; z-index: 0; }
-.background-pieces span { color: #8b6f56; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.8rem, 4vw, 3.8rem); opacity: 0.35; position: absolute; text-shadow: 0 2px 2px rgba(255, 255, 255, 0.35); }
+.background-pieces span { color: #f2c879; filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.45)); font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.8rem, 4vw, 3.8rem); opacity: 0.78; position: absolute; text-shadow: 0 0 12px rgba(242, 200, 121, 0.22); }
 .piece-one { left: 4%; top: 10%; transform: rotate(-18deg); }
 .piece-two { left: 16%; top: 70%; transform: rotate(15deg); }
 .piece-three { left: 3%; top: 82%; transform: rotate(20deg); }
