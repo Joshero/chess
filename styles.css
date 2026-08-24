@@ -30,6 +30,19 @@ body {
   overflow-y: hidden;
 }
 
+.background-pieces { inset: 0; overflow: hidden; pointer-events: none; position: fixed; z-index: 0; }
+.background-pieces span { color: #8b6f56; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.8rem, 4vw, 3.8rem); opacity: 0.35; position: absolute; text-shadow: 0 2px 2px rgba(255, 255, 255, 0.35); }
+.piece-one { left: 4%; top: 10%; transform: rotate(-18deg); }
+.piece-two { left: 16%; top: 70%; transform: rotate(15deg); }
+.piece-three { left: 3%; top: 82%; transform: rotate(20deg); }
+.piece-four { left: 27%; top: 5%; transform: rotate(8deg); }
+.piece-five { left: 47%; top: 14%; transform: rotate(-12deg); }
+.piece-six { right: 28%; top: 78%; transform: rotate(14deg); }
+.piece-seven { right: 5%; top: 12%; transform: rotate(-15deg); }
+.piece-eight { right: 14%; top: 52%; transform: rotate(20deg); }
+.piece-nine { right: 3%; bottom: 7%; transform: rotate(-12deg); }
+.piece-ten { left: 58%; bottom: 8%; transform: rotate(16deg); }
+
 .app { width: min(100%, 1040px); max-height: 100%; min-width: 0; margin: auto 0; position: relative; z-index: 1; }
 .brand { margin: 0 0 24px; font-size: clamp(2rem, 5vw, 3.6rem); letter-spacing: 0; }
 .brand span { color: var(--accent); }
