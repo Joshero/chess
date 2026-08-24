@@ -6,6 +6,7 @@
     <title>Chess Room</title>
     <!-- Loading chess.js for move validation and game logic -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
       :root {
         --ink: #17212b;
@@ -123,6 +124,10 @@
       }
 
       .board.flipped {
+        transform: rotate(180deg);
+      }
+
+      .board.flipped .piece {
         transform: rotate(180deg);
       }
 
@@ -250,6 +255,12 @@
         margin: 12px 0 0 !important;
       }
 
+      .connection-status {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin: -10px 0 18px;
+      }
+
       .hidden {
         display: none !important;
       }
@@ -278,7 +289,7 @@
         <h2>Choose your game</h2>
         <p>
           Set up a board for two players. Private rooms use a six-character code
-          and accept only one guest.
+          and accept only one guest in this browser.
         </p>
         <div class="mode-grid">
           <button class="mode-card" id="localModeBtn">
@@ -290,7 +301,8 @@
           <button class="mode-card" id="privateModeBtn">
             <strong>Private room</strong>
             <small
-              >Create or join a two-player room with a shareable code.</small
+              >Create or join a two-player room with a code on this
+              browser.</small
             >
           </button>
         </div>
@@ -299,7 +311,8 @@
       <section class="screen hidden" id="roomScreen">
         <h2>Private room</h2>
         <p id="roomDescription">
-          Create a room and share its code with one opponent.
+          Create a room and share its code with one opponent. Realtime play is
+          enabled through Supabase.
         </p>
         <div id="createRoomPanel">
           <button class="btn" id="createRoomBtn">Create room</button>
@@ -322,6 +335,7 @@
         <div class="game-layout">
           <aside class="game-info">
             <div class="status" id="status">White's turn</div>
+            <div class="connection-status" id="connectionStatus"></div>
             <div id="roomDetails">
               <p class="room-label">Room code</p>
               <p class="room-code" id="roomCodeDisplay">LOCAL</p>
@@ -336,6 +350,13 @@
     </main>
 
     <script>
+      const SUPABASE_URL = "https://yaauwnvcjjetdybeixfr.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_POH2JdWG0JMCzEkt9lhrPg_SmLG0Y1I";
+      const supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY,
+      );
+
       // Unicode chess symbols mapping from chess.js notation
       const pieceSymbols = {
         p: "♟",
@@ -364,9 +385,15 @@
       const roomInput = document.getElementById("roomInput");
       const createRoomPanel = document.getElementById("createRoomPanel");
       const joinRoomPanel = document.getElementById("joinRoomPanel");
+      const connectionStatusElement =
+        document.getElementById("connectionStatus");
 
       let selectedSquare = null;
       let roomCode = "LOCAL";
+      let roomChannel = null;
+      let isPrivateRoom = false;
+      let playerColor = null;
+      const playerId = crypto.randomUUID();
 
       // Generate coordinates for an 8x8 board ('a8' to 'h1')
       const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
@@ -436,7 +463,7 @@
         boardElement.classList.toggle("flipped", chess.turn() === "b");
       }
 
-      function handleSquareClick(squareId) {
+      async function handleSquareClick(squareId) {
         if (chess.game_over()) return;
 
         const clickedSquare = document.getElementById(squareId);
@@ -459,6 +486,13 @@
 
           if (move) {
             selectedSquare = null;
+            if (isPrivateRoom) {
+              await roomChannel.send({
+                type: "broadcast",
+                event: "move",
+                payload: { fen: chess.fen() },
+              });
+            }
             updateBoardVisuals();
             return;
           }
@@ -466,7 +500,11 @@
 
         // Select a piece if it belongs to the current player
         const piece = chess.get(squareId);
-        if (piece && piece.color === chess.turn()) {
+        if (
+          piece &&
+          piece.color === chess.turn() &&
+          (!isPrivateRoom || piece.color === playerColor)
+        ) {
           selectedSquare = squareId;
           updateBoardVisuals();
 
@@ -489,6 +527,13 @@
         chess.reset();
         selectedSquare = null;
         updateBoardVisuals();
+        if (isPrivateRoom) {
+          roomChannel.send({
+            type: "broadcast",
+            event: "reset",
+            payload: { fen: chess.fen() },
+          });
+        }
       });
 
       function showScreen(screen) {
@@ -498,13 +543,86 @@
         screen.classList.remove("hidden");
       }
 
-      function startGame(code) {
-        roomCode = code;
-        roomCodeDisplay.textContent = code;
+      function startLocalGame() {
+        isPrivateRoom = false;
+        playerColor = null;
+        roomCode = "LOCAL";
+        roomCodeDisplay.textContent = roomCode;
+        connectionStatusElement.textContent = "Pass & Play";
         chess.reset();
         selectedSquare = null;
         updateBoardVisuals();
         showScreen(gameScreen);
+      }
+
+      async function startPrivateGame(code, color) {
+        isPrivateRoom = true;
+        playerColor = color;
+        roomCode = code;
+        roomCodeDisplay.textContent = code;
+        connectionStatusElement.textContent = `Connected as ${color === "w" ? "White" : "Black"}`;
+        chess.reset();
+        selectedSquare = null;
+        updateBoardVisuals();
+        showScreen(gameScreen);
+
+        roomChannel = supabaseClient.channel(`chess-room-${code}`, {
+          config: {
+            presence: { key: playerId },
+            broadcast: { self: false },
+          },
+        });
+
+        roomChannel
+          .on("presence", { event: "sync" }, () => {
+            const players = roomChannel.presenceState();
+            const playerCount = Object.keys(players).length;
+            if (playerCount > 2) {
+              roomError.textContent = "This room already has two players.";
+              leavePrivateRoom();
+            }
+          })
+          .on("broadcast", { event: "move" }, ({ payload }) => {
+            chess.load(payload.fen);
+            selectedSquare = null;
+            updateBoardVisuals();
+          })
+          .on("broadcast", { event: "reset" }, ({ payload }) => {
+            chess.load(payload.fen);
+            selectedSquare = null;
+            updateBoardVisuals();
+          });
+
+        roomChannel.subscribe(async (channelStatus) => {
+          if (channelStatus === "SUBSCRIBED") {
+            const existingPlayers = Object.keys(
+              roomChannel.presenceState(),
+            ).length;
+            if (existingPlayers >= 2) {
+              roomError.textContent = "This room already has two players.";
+              await leavePrivateRoom();
+              return;
+            }
+            await roomChannel.track({ playerId, color });
+          } else if (
+            channelStatus === "CHANNEL_ERROR" ||
+            channelStatus === "TIMED_OUT"
+          ) {
+            roomError.textContent = "Could not connect to the private room.";
+            await leavePrivateRoom();
+          }
+        });
+      }
+
+      async function leavePrivateRoom() {
+        if (roomChannel) {
+          await roomChannel.unsubscribe();
+          roomChannel = null;
+        }
+        isPrivateRoom = false;
+        playerColor = null;
+        connectionStatusElement.textContent = "";
+        showScreen(roomScreen);
       }
 
       function makeRoomCode() {
@@ -513,35 +631,48 @@
 
       document
         .getElementById("localModeBtn")
-        .addEventListener("click", () => startGame("LOCAL"));
+        .addEventListener("click", startLocalGame);
       document
         .getElementById("privateModeBtn")
         .addEventListener("click", () => {
           roomError.textContent = "";
           showScreen(roomScreen);
         });
-      document.getElementById("createRoomBtn").addEventListener("click", () => {
-        const code = makeRoomCode();
-        localStorage.setItem(`chess-room-${code}`, "host");
-        roomError.textContent = `Your room code is ${code}. Share it with one player.`;
-        startGame(code);
-      });
+      document
+        .getElementById("createRoomBtn")
+        .addEventListener("click", async () => {
+          const code = makeRoomCode();
+          const { error } = await supabaseClient
+            .from("chess_rooms")
+            .insert({ code });
+          if (error) {
+            roomError.textContent = "Could not create the room. Try again.";
+            return;
+          }
+          await startPrivateGame(code, "w");
+        });
       document.getElementById("showJoinBtn").addEventListener("click", () => {
         createRoomPanel.classList.add("hidden");
         joinRoomPanel.classList.remove("hidden");
         roomInput.focus();
       });
-      joinRoomPanel.addEventListener("submit", (event) => {
+      joinRoomPanel.addEventListener("submit", async (event) => {
         event.preventDefault();
         const code = roomInput.value.trim().toUpperCase();
-        const roomState = localStorage.getItem(`chess-room-${code}`);
-        if (!/^[A-Z0-9]{6}$/.test(code) || !roomState || roomState === "full") {
-          roomError.textContent =
-            "That room does not exist or already has two players.";
+        if (!/^[A-Z0-9]{6}$/.test(code)) {
+          roomError.textContent = "Enter a valid six-character room code.";
           return;
         }
-        localStorage.setItem(`chess-room-${code}`, "full");
-        startGame(code);
+        const { data, error } = await supabaseClient
+          .from("chess_rooms")
+          .select("code")
+          .eq("code", code)
+          .maybeSingle();
+        if (error || !data) {
+          roomError.textContent = "That room does not exist.";
+          return;
+        }
+        await startPrivateGame(code, "b");
       });
       document.getElementById("backBtn").addEventListener("click", () => {
         createRoomPanel.classList.remove("hidden");
@@ -552,7 +683,10 @@
       });
       document
         .getElementById("leaveBtn")
-        .addEventListener("click", () => showScreen(startScreen));
+        .addEventListener("click", async () => {
+          if (isPrivateRoom) await leavePrivateRoom();
+          showScreen(startScreen);
+        });
 
       // Initialize board on load
       createBoard();
