@@ -34,7 +34,36 @@ async function clickSquare(square) {
 function startLocal() { privateRoom=false; computerMode=false; thinking=false; color=null; undo.classList.add("hidden"); codeDisplay.textContent="LOCAL"; connection.textContent="Pass & Play"; chess.reset(); lastMove=null; selected=null; draw(); show(game); }
 function startComputer(level) { privateRoom=false; computerMode=true; thinking=false; difficulty=level; color="w"; undo.classList.remove("hidden"); codeDisplay.textContent="COMPUTER"; connection.textContent=`Computer: ${level}`; chess.reset(); lastMove=null; undoState=null; selected=null; draw(); show(game); }
 function evaluate(position) { const values={p:100,n:320,b:330,r:500,q:900,k:20000}; return position.board().flat().reduce((score,p) => p ? score + values[p.type]*(p.color === "b" ? 1 : -1) : score, 0); }
-function chooseComputerMove() { const moves=chess.moves({verbose:true}); if(difficulty==="easy") return moves[Math.floor(Math.random()*moves.length)]; if(difficulty==="medium") { const captures=moves.filter((move)=>move.captured); const pool=captures.length?captures:moves; return pool[Math.floor(Math.random()*pool.length)]; } let best=moves[0], score=-Infinity; moves.forEach((move)=>{ const test=new Chess(chess.fen()); test.move({from:move.from,to:move.to,promotion:"q"}); const value=evaluate(test); if(value>score){score=value;best=move;} }); return best; }
+function chooseComputerMove() {
+  const moves = chess.moves({ verbose: true });
+  if (difficulty === "easy") {
+    return moves[Math.floor(Math.random() * moves.length)];
+  }
+
+  let bestMove = moves[0];
+  let bestScore = -Infinity;
+  const depth = difficulty === "hard" ? 3 : 1;
+  moves.forEach((move) => {
+    const test = new Chess(chess.fen());
+    test.move({ from: move.from, to: move.to, promotion: "q" });
+    const score = minimax(test, depth - 1);
+    if (score > bestScore) {
+      bestScore = score;
+      bestMove = move;
+    }
+  });
+  return bestMove;
+}
+function minimax(position, depth) {
+  if (depth === 0 || position.game_over()) return evaluate(position);
+  const moves = position.moves({ verbose: true });
+  const scores = moves.map((move) => {
+    const next = new Chess(position.fen());
+    next.move({ from: move.from, to: move.to, promotion: "q" });
+    return minimax(next, depth - 1);
+  });
+  return position.turn() === "b" ? Math.max(...scores) : Math.min(...scores);
+}
 function computerMove() { thinking=true; connection.textContent="Computer is thinking..."; setTimeout(() => { if (!computerMode || chess.game_over()) return; const move=chooseComputerMove(); chess.move({from:move.from,to:move.to,promotion:"q"}); lastMove={from:move.from,to:move.to}; thinking=false; connection.textContent=`Computer: ${difficulty}`; draw(); }, 300); }
 function undoComputerTurn() { if (!undoState || thinking) return; chess.load(undoState.fen); lastMove=undoState.lastMove; undoState=null; selected=null; draw(); }
 function players() { return Object.values(channel.presenceState()).flat(); }
