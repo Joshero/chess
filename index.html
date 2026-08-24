@@ -684,9 +684,11 @@
           }
         }
 
-        const shouldFlipBoard = isPrivateRoom
-          ? playerColor === "b"
-          : chess.turn() === "b";
+        const shouldFlipBoard = isComputerMode
+          ? false
+          : isPrivateRoom
+            ? playerColor === "b"
+            : chess.turn() === "b";
         boardElement.classList.toggle("flipped", shouldFlipBoard);
       }
 
