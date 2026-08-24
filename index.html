@@ -3,49 +3,134 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HTML5 Chess Game</title>
+    <title>Chess Room</title>
     <!-- Loading chess.js for move validation and game logic -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <style>
+      :root {
+        --ink: #17212b;
+        --muted: #65727e;
+        --paper: #f7f4ed;
+        --panel: #fffdf9;
+        --accent: #e76f51;
+        --accent-dark: #bb4d35;
+        --line: #ddd6c9;
+        --light-square: #f1dfc5;
+        --dark-square: #698c87;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #1e1e24;
-        color: #fff;
+        font-family: Georgia, "Times New Roman", serif;
+        background:
+          radial-gradient(circle at 15% 10%, #fffdf5 0, transparent 32%),
+          #e5ded1;
+        color: var(--ink);
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
         min-height: 100vh;
         margin: 0;
+        padding: 28px 16px;
       }
 
-      h1 {
-        margin-bottom: 5px;
-        color: #4cc9f0;
+      .app {
+        width: min(100%, 1040px);
       }
 
-      .status {
+      .brand {
+        margin: 0 0 24px;
+        font-size: clamp(2rem, 5vw, 3.6rem);
+        letter-spacing: 0;
+      }
+
+      .brand span {
+        color: var(--accent);
+      }
+
+      .screen {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        box-shadow: 0 18px 50px rgba(54, 42, 26, 0.13);
+        padding: clamp(24px, 5vw, 52px);
+      }
+
+      .screen h2 {
+        font-size: clamp(1.7rem, 4vw, 2.5rem);
+        margin: 0 0 8px;
+      }
+
+      .screen p {
+        color: var(--muted);
+        margin: 0 0 28px;
+        line-height: 1.5;
+      }
+
+      .mode-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .mode-card {
+        background: transparent;
+        border: 2px solid var(--line);
+        color: var(--ink);
+        cursor: pointer;
+        padding: 22px;
+        text-align: left;
+        transition:
+          border-color 0.2s,
+          transform 0.2s,
+          background 0.2s;
+      }
+
+      .mode-card:hover,
+      .mode-card:focus-visible {
+        border-color: var(--accent);
+        background: #fff7ef;
+        transform: translateY(-2px);
+        outline: none;
+      }
+
+      .mode-card strong,
+      .mode-card small {
+        display: block;
+      }
+
+      .mode-card strong {
         font-size: 1.2rem;
-        margin-bottom: 15px;
-        font-weight: bold;
-        height: 25px;
+        margin-bottom: 8px;
+      }
+
+      .mode-card small {
+        color: var(--muted);
+        line-height: 1.4;
       }
 
       .board {
         display: grid;
-        grid-template-columns: repeat(8, 60px);
-        grid-template-rows: repeat(8, 60px);
-        border: 4px solid #333;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+        grid-template-rows: repeat(8, minmax(0, 1fr));
+        aspect-ratio: 1;
+        width: min(78vw, 640px);
+        border: 5px solid var(--ink);
+        box-shadow: 0 12px 24px rgba(54, 42, 26, 0.2);
+        transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      .board.flipped {
+        transform: rotate(180deg);
       }
 
       .square {
-        width: 60px;
-        height: 60px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2.5rem;
+        font-size: clamp(1.8rem, 7vw, 3.7rem);
         cursor: pointer;
         user-select: none;
         transition: background-color 0.2s;
@@ -53,11 +138,11 @@
 
       /* Chessboard Colors */
       .light {
-        background-color: #f0d9b5;
+        background-color: var(--light-square);
       }
 
       .dark {
-        background-color: #b58863;
+        background-color: var(--dark-square);
       }
 
       /* Highlights */
@@ -82,31 +167,173 @@
         text-shadow: 0 0 2px #fff;
       }
 
+      .game-layout {
+        display: grid;
+        grid-template-columns: minmax(220px, 280px) minmax(0, 640px);
+        gap: clamp(24px, 5vw, 64px);
+        align-items: center;
+      }
+
+      .game-info {
+        order: -1;
+      }
+
+      .status {
+        font-size: 1.25rem;
+        font-weight: bold;
+        margin: 0 0 18px;
+      }
+
+      .room-label {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin: 0 0 5px;
+        text-transform: uppercase;
+      }
+
+      .room-code {
+        color: var(--accent-dark);
+        font-size: 2rem;
+        font-weight: bold;
+        letter-spacing: 0.16em;
+        margin: 0 0 24px;
+      }
+
       .btn {
-        margin-top: 20px;
+        margin-top: 18px;
         padding: 10px 20px;
         font-size: 1rem;
-        background-color: #4cc9f0;
-        color: #1e1e24;
+        background-color: var(--accent);
+        color: #fff;
         border: none;
-        border-radius: 5px;
+        border-radius: 2px;
         cursor: pointer;
         font-weight: bold;
         transition: background-color 0.2s;
       }
 
       .btn:hover {
-        background-color: #3a9fc4;
+        background-color: var(--accent-dark);
+      }
+
+      .text-btn {
+        background: none;
+        border: 0;
+        color: var(--accent-dark);
+        cursor: pointer;
+        font: inherit;
+        margin-top: 14px;
+        padding: 4px 0;
+        text-decoration: underline;
+      }
+
+      .room-form {
+        display: flex;
+        gap: 10px;
+        max-width: 440px;
+      }
+
+      .room-form input {
+        border: 2px solid var(--line);
+        color: var(--ink);
+        flex: 1;
+        font: inherit;
+        font-size: 1.1rem;
+        min-width: 0;
+        padding: 11px 12px;
+        text-transform: uppercase;
+      }
+
+      .error {
+        color: var(--accent-dark);
+        min-height: 1.4em;
+        margin: 12px 0 0 !important;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @media (max-width: 760px) {
+        .mode-grid,
+        .game-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .game-info {
+          order: 0;
+        }
+
+        .board {
+          width: min(92vw, 640px);
+        }
       }
     </style>
   </head>
   <body>
-    <h1>Chess</h1>
-    <div class="status" id="status">White's turn</div>
+    <main class="app">
+      <h1 class="brand">Chess<span>.</span></h1>
 
-    <div class="board" id="board"></div>
+      <section class="screen" id="startScreen">
+        <h2>Choose your game</h2>
+        <p>
+          Set up a board for two players. Private rooms use a six-character code
+          and accept only one guest.
+        </p>
+        <div class="mode-grid">
+          <button class="mode-card" id="localModeBtn">
+            <strong>Pass &amp; Play</strong>
+            <small
+              >Two players, one device. Take turns at the same board.</small
+            >
+          </button>
+          <button class="mode-card" id="privateModeBtn">
+            <strong>Private room</strong>
+            <small
+              >Create or join a two-player room with a shareable code.</small
+            >
+          </button>
+        </div>
+      </section>
 
-    <button class="btn" id="resetBtn">Restart Game</button>
+      <section class="screen hidden" id="roomScreen">
+        <h2>Private room</h2>
+        <p id="roomDescription">
+          Create a room and share its code with one opponent.
+        </p>
+        <div id="createRoomPanel">
+          <button class="btn" id="createRoomBtn">Create room</button>
+          <button class="text-btn" id="showJoinBtn">I have a code</button>
+        </div>
+        <form class="room-form hidden" id="joinRoomPanel">
+          <input
+            id="roomInput"
+            maxlength="6"
+            placeholder="ROOM CODE"
+            aria-label="Room code"
+          />
+          <button class="btn" type="submit">Join</button>
+        </form>
+        <p class="error" id="roomError"></p>
+        <button class="text-btn" id="backBtn">Back to game modes</button>
+      </section>
+
+      <section class="screen hidden" id="gameScreen">
+        <div class="game-layout">
+          <aside class="game-info">
+            <div class="status" id="status">White's turn</div>
+            <div id="roomDetails">
+              <p class="room-label">Room code</p>
+              <p class="room-code" id="roomCodeDisplay">LOCAL</p>
+            </div>
+            <button class="btn" id="resetBtn">Restart game</button>
+            <br />
+            <button class="text-btn" id="leaveBtn">Leave game</button>
+          </aside>
+          <div class="board" id="board" aria-label="Chess board"></div>
+        </div>
+      </section>
+    </main>
 
     <script>
       // Unicode chess symbols mapping from chess.js notation
@@ -129,8 +356,17 @@
       const boardElement = document.getElementById("board");
       const statusElement = document.getElementById("status");
       const resetBtn = document.getElementById("resetBtn");
+      const startScreen = document.getElementById("startScreen");
+      const roomScreen = document.getElementById("roomScreen");
+      const gameScreen = document.getElementById("gameScreen");
+      const roomCodeDisplay = document.getElementById("roomCodeDisplay");
+      const roomError = document.getElementById("roomError");
+      const roomInput = document.getElementById("roomInput");
+      const createRoomPanel = document.getElementById("createRoomPanel");
+      const joinRoomPanel = document.getElementById("joinRoomPanel");
 
       let selectedSquare = null;
+      let roomCode = "LOCAL";
 
       // Generate coordinates for an 8x8 board ('a8' to 'h1')
       const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
@@ -196,6 +432,8 @@
             statusElement.textContent += " (Check!)";
           }
         }
+
+        boardElement.classList.toggle("flipped", chess.turn() === "b");
       }
 
       function handleSquareClick(squareId) {
@@ -252,6 +490,69 @@
         selectedSquare = null;
         updateBoardVisuals();
       });
+
+      function showScreen(screen) {
+        [startScreen, roomScreen, gameScreen].forEach((item) =>
+          item.classList.add("hidden"),
+        );
+        screen.classList.remove("hidden");
+      }
+
+      function startGame(code) {
+        roomCode = code;
+        roomCodeDisplay.textContent = code;
+        chess.reset();
+        selectedSquare = null;
+        updateBoardVisuals();
+        showScreen(gameScreen);
+      }
+
+      function makeRoomCode() {
+        return Math.random().toString(36).slice(2, 8).toUpperCase();
+      }
+
+      document
+        .getElementById("localModeBtn")
+        .addEventListener("click", () => startGame("LOCAL"));
+      document
+        .getElementById("privateModeBtn")
+        .addEventListener("click", () => {
+          roomError.textContent = "";
+          showScreen(roomScreen);
+        });
+      document.getElementById("createRoomBtn").addEventListener("click", () => {
+        const code = makeRoomCode();
+        localStorage.setItem(`chess-room-${code}`, "host");
+        roomError.textContent = `Your room code is ${code}. Share it with one player.`;
+        startGame(code);
+      });
+      document.getElementById("showJoinBtn").addEventListener("click", () => {
+        createRoomPanel.classList.add("hidden");
+        joinRoomPanel.classList.remove("hidden");
+        roomInput.focus();
+      });
+      joinRoomPanel.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const code = roomInput.value.trim().toUpperCase();
+        const roomState = localStorage.getItem(`chess-room-${code}`);
+        if (!/^[A-Z0-9]{6}$/.test(code) || !roomState || roomState === "full") {
+          roomError.textContent =
+            "That room does not exist or already has two players.";
+          return;
+        }
+        localStorage.setItem(`chess-room-${code}`, "full");
+        startGame(code);
+      });
+      document.getElementById("backBtn").addEventListener("click", () => {
+        createRoomPanel.classList.remove("hidden");
+        joinRoomPanel.classList.add("hidden");
+        roomInput.value = "";
+        roomError.textContent = "";
+        showScreen(startScreen);
+      });
+      document
+        .getElementById("leaveBtn")
+        .addEventListener("click", () => showScreen(startScreen));
 
       // Initialize board on load
       createBoard();
