@@ -122,6 +122,29 @@
         line-height: 1.4;
       }
 
+      .difficulty-panel {
+        display: grid;
+        gap: 12px;
+        max-width: 520px;
+      }
+
+      .difficulty-option {
+        background: transparent;
+        border: 2px solid var(--line);
+        color: var(--ink);
+        cursor: pointer;
+        font: inherit;
+        padding: 16px 18px;
+        text-align: left;
+      }
+
+      .difficulty-option:hover,
+      .difficulty-option:focus-visible {
+        background: #fff7ef;
+        border-color: var(--accent);
+        outline: none;
+      }
+
       .board {
         display: grid;
         grid-template-columns: repeat(8, minmax(0, 1fr));
@@ -426,6 +449,24 @@
           and accept only one guest in this browser.
         </p>
         <div class="mode-grid">
+          <button class="mode-card" id="computerModeBtn">
+            <strong>Play computer</strong>
+            <small>Play against the computer and choose its difficulty.</small>
+          </button>
+          <button class="mode-card" id="playerModeBtn">
+            <strong>Play another player</strong>
+            <small
+              >Choose Pass &amp; Play on one device or join a private
+              room.</small
+            >
+          </button>
+        </div>
+      </section>
+
+      <section class="screen hidden" id="playerModeScreen">
+        <h2>Choose player mode</h2>
+        <p>Select how you want to play against another person.</p>
+        <div class="mode-grid">
           <button class="mode-card" id="localModeBtn">
             <strong>Pass &amp; Play</strong>
             <small
@@ -434,12 +475,32 @@
           </button>
           <button class="mode-card" id="privateModeBtn">
             <strong>Private room</strong>
-            <small
-              >Create or join a two-player room with a code on this
-              browser.</small
-            >
+            <small>Create or join a two-player room with a code.</small>
           </button>
         </div>
+        <button class="text-btn" id="backToStartBtn">
+          Back to game choices
+        </button>
+      </section>
+
+      <section class="screen hidden" id="computerScreen">
+        <h2>Play computer</h2>
+        <p>Choose the computer's difficulty before starting.</p>
+        <div class="difficulty-panel">
+          <button class="difficulty-option" data-difficulty="easy">
+            <strong>Easy</strong><br />A relaxed opponent with random legal
+            moves.
+          </button>
+          <button class="difficulty-option" data-difficulty="medium">
+            <strong>Medium</strong><br />Looks for captures and useful moves.
+          </button>
+          <button class="difficulty-option" data-difficulty="hard">
+            <strong>Hard</strong><br />Searches ahead for the strongest move.
+          </button>
+        </div>
+        <button class="text-btn" id="backFromComputerBtn">
+          Back to game choices
+        </button>
       </section>
 
       <section class="screen hidden" id="roomScreen">
@@ -527,6 +588,8 @@
       const statusElement = document.getElementById("status");
       const resetBtn = document.getElementById("resetBtn");
       const startScreen = document.getElementById("startScreen");
+      const playerModeScreen = document.getElementById("playerModeScreen");
+      const computerScreen = document.getElementById("computerScreen");
       const roomScreen = document.getElementById("roomScreen");
       const lobbyScreen = document.getElementById("lobbyScreen");
       const gameScreen = document.getElementById("gameScreen");
@@ -547,6 +610,9 @@
       let roomCode = "LOCAL";
       let roomChannel = null;
       let isPrivateRoom = false;
+      let isComputerMode = false;
+      let computerDifficulty = "medium";
+      let computerThinking = false;
       let playerColor = null;
       let isRoomHost = false;
       let gameStarted = false;
@@ -625,7 +691,8 @@
       }
 
       async function handleSquareClick(squareId) {
-        if (chess.game_over()) return;
+        if (chess.game_over() || computerThinking) return;
+        if (isComputerMode && chess.turn() !== "w") return;
 
         const clickedSquare = document.getElementById(squareId);
 
@@ -655,6 +722,7 @@
               });
             }
             updateBoardVisuals();
+            if (isComputerMode && !chess.game_over()) makeComputerMove();
             return;
           }
         }
@@ -690,19 +758,28 @@
           return;
         }
         chess.reset();
+        computerThinking = false;
         selectedSquare = null;
         updateBoardVisuals();
+        if (isComputerMode) connectionStatusElement.textContent = "Your turn";
       });
 
       function showScreen(screen) {
-        [startScreen, roomScreen, lobbyScreen, gameScreen].forEach((item) =>
-          item.classList.add("hidden"),
-        );
+        [
+          startScreen,
+          playerModeScreen,
+          computerScreen,
+          roomScreen,
+          lobbyScreen,
+          gameScreen,
+        ].forEach((item) => item.classList.add("hidden"));
         screen.classList.remove("hidden");
       }
 
       function startLocalGame() {
         isPrivateRoom = false;
+        isComputerMode = false;
+        computerThinking = false;
         playerColor = null;
         roomCode = "LOCAL";
         roomCodeDisplay.textContent = roomCode;
@@ -711,6 +788,83 @@
         selectedSquare = null;
         updateBoardVisuals();
         showScreen(gameScreen);
+      }
+
+      function startComputerGame(difficulty) {
+        isPrivateRoom = false;
+        isComputerMode = true;
+        computerThinking = false;
+        computerDifficulty = difficulty;
+        playerColor = "w";
+        roomCode = "COMPUTER";
+        roomCodeDisplay.textContent = roomCode;
+        connectionStatusElement.textContent = `Computer: ${difficulty}`;
+        chess.reset();
+        selectedSquare = null;
+        updateBoardVisuals();
+        showScreen(gameScreen);
+      }
+
+      function chooseComputerMove() {
+        const legalMoves = chess.moves({ verbose: true });
+        if (computerDifficulty === "easy") {
+          return legalMoves[Math.floor(Math.random() * legalMoves.length)];
+        }
+        if (computerDifficulty === "medium") {
+          const captures = legalMoves.filter((move) => move.captured);
+          const candidateMoves = captures.length ? captures : legalMoves;
+          return candidateMoves[
+            Math.floor(Math.random() * candidateMoves.length)
+          ];
+        }
+        let bestMove = legalMoves[0];
+        let bestScore = -Infinity;
+        legalMoves.forEach((move) => {
+          const simulation = new Chess(chess.fen());
+          simulation.move({ from: move.from, to: move.to, promotion: "q" });
+          const score = minimax(simulation, 2, true);
+          if (score > bestScore) {
+            bestScore = score;
+            bestMove = move;
+          }
+        });
+        return bestMove;
+      }
+
+      function minimax(position, depth, maximizing) {
+        if (depth === 0 || position.game_over())
+          return evaluatePosition(position);
+        const moves = position.moves({ verbose: true });
+        const scores = moves.map((move) => {
+          const nextPosition = new Chess(position.fen());
+          nextPosition.move({ from: move.from, to: move.to, promotion: "q" });
+          return minimax(nextPosition, depth - 1, !maximizing);
+        });
+        return maximizing ? Math.max(...scores) : Math.min(...scores);
+      }
+
+      function evaluatePosition(position) {
+        const values = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
+        return position
+          .board()
+          .flat()
+          .reduce((score, piece) => {
+            if (!piece) return score;
+            return score + values[piece.type] * (piece.color === "b" ? 1 : -1);
+          }, 0);
+      }
+
+      function makeComputerMove() {
+        computerThinking = true;
+        connectionStatusElement.textContent = "Computer is thinking...";
+        window.setTimeout(() => {
+          if (chess.game_over() || !isComputerMode) return;
+          const move = chooseComputerMove();
+          chess.move({ from: move.from, to: move.to, promotion: "q" });
+          computerThinking = false;
+          connectionStatusElement.textContent = `Computer: ${computerDifficulty}`;
+          updateBoardVisuals();
+        }, 300);
       }
 
       function getRoomPlayers() {
@@ -773,6 +927,8 @@
 
       async function startPrivateGame(code, host) {
         isPrivateRoom = true;
+        isComputerMode = false;
+        computerThinking = false;
         isRoomHost = host;
         gameStarted = false;
         opponentLeaveHandled = false;
@@ -901,6 +1057,24 @@
       function makeRoomCode() {
         return Math.random().toString(36).slice(2, 8).toUpperCase();
       }
+
+      document
+        .getElementById("computerModeBtn")
+        .addEventListener("click", () => showScreen(computerScreen));
+      document
+        .getElementById("playerModeBtn")
+        .addEventListener("click", () => showScreen(playerModeScreen));
+      document
+        .getElementById("backToStartBtn")
+        .addEventListener("click", () => showScreen(startScreen));
+      document
+        .getElementById("backFromComputerBtn")
+        .addEventListener("click", () => showScreen(startScreen));
+      document.querySelectorAll(".difficulty-option").forEach((button) => {
+        button.addEventListener("click", () =>
+          startComputerGame(button.dataset.difficulty),
+        );
+      });
 
       sideButtons.forEach((button) => {
         button.addEventListener("click", () =>
