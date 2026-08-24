@@ -42,6 +42,16 @@ body {
 .piece-eight { right: 14%; top: 52%; transform: rotate(20deg); }
 .piece-nine { right: 3%; bottom: 7%; transform: rotate(-12deg); }
 .piece-ten { left: 58%; bottom: 8%; transform: rotate(16deg); }
+.piece-eleven { left: 31%; top: 28%; transform: rotate(-9deg); }
+.piece-twelve { left: 8%; top: 43%; transform: rotate(18deg); }
+.piece-thirteen { left: 38%; top: 82%; transform: rotate(-22deg); }
+.piece-fourteen { right: 31%; top: 3%; transform: rotate(11deg); }
+.piece-fifteen { right: 7%; top: 34%; transform: rotate(-20deg); }
+.piece-sixteen { right: 22%; bottom: 26%; transform: rotate(13deg); }
+.piece-seventeen { left: 2%; bottom: 30%; transform: rotate(-14deg); }
+.piece-eighteen { left: 76%; top: 3%; transform: rotate(24deg); }
+.piece-nineteen { right: 42%; bottom: 3%; transform: rotate(-18deg); }
+.piece-twenty { left: 24%; bottom: 9%; transform: rotate(10deg); }
 
 .app { width: min(100%, 1040px); max-height: 100%; min-width: 0; margin: auto 0; position: relative; z-index: 1; }
 .brand { margin: 0 0 24px; font-size: clamp(2rem, 5vw, 3.6rem); letter-spacing: 0; }
