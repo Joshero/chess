@@ -1,0 +1,103 @@
+:root {
+  --ink: #17212b;
+  --muted: #65727e;
+  --paper: #f7f4ed;
+  --panel: #fffdf9;
+  --accent: #e76f51;
+  --accent-dark: #bb4d35;
+  --line: #ddd6c9;
+  --light-square: #f1dfc5;
+  --dark-square: #698c87;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: Georgia, "Times New Roman", serif;
+  background: radial-gradient(circle at 15% 10%, #fffdf5 0, transparent 32%), #e5ded1;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  padding: clamp(8px, 3vh, 28px) clamp(10px, 3vw, 16px);
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+.app { width: min(100%, 1040px); max-height: 100%; min-width: 0; margin: auto 0; }
+.brand { margin: 0 0 24px; font-size: clamp(2rem, 5vw, 3.6rem); letter-spacing: 0; }
+.brand span { color: var(--accent); }
+.screen { width: 100%; max-height: 100%; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 18px 50px rgba(54, 42, 26, 0.13); overflow: hidden; padding: clamp(16px, 4vw, 52px); }
+.screen h2 { font-size: clamp(1.7rem, 4vw, 2.5rem); margin: 0 0 8px; }
+.screen p { color: var(--muted); margin: 0 0 28px; line-height: 1.5; }
+.mode-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.mode-card { background: transparent; border: 2px solid var(--line); color: var(--ink); cursor: pointer; padding: 22px; text-align: left; min-height: 126px; transition: border-color 0.2s, transform 0.2s, background 0.2s; }
+.mode-card:hover, .mode-card:focus-visible { border-color: var(--accent); background: #fff7ef; transform: translateY(-2px); outline: none; }
+.mode-card strong, .mode-card small { display: block; }
+.mode-card strong { font-size: 1.2rem; margin-bottom: 8px; }
+.mode-card small { color: var(--muted); line-height: 1.4; }
+.difficulty-panel { display: grid; gap: 12px; max-width: 520px; }
+.difficulty-option { background: transparent; border: 2px solid var(--line); color: var(--ink); cursor: pointer; font: inherit; padding: 16px 18px; text-align: left; }
+.difficulty-option:hover, .difficulty-option:focus-visible { background: #fff7ef; border-color: var(--accent); outline: none; }
+.board { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); grid-template-rows: repeat(8, minmax(0, 1fr)); aspect-ratio: 1; width: min(100%, calc(100dvh - 180px)); max-width: 640px; justify-self: center; border: 5px solid var(--ink); box-shadow: 0 12px 24px rgba(54, 42, 26, 0.2); transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.board.flipped { transform: rotate(180deg); }
+.board.flipped .piece { transform: rotate(180deg); }
+.square { display: flex; align-items: center; justify-content: center; font-size: clamp(1.8rem, 7vw, 3.7rem); cursor: pointer; user-select: none; transition: background-color 0.2s; }
+.light { background-color: var(--light-square); }
+.dark { background-color: var(--dark-square); }
+.square.selected { background-color: #7ab3d5 !important; }
+.square.highlighted { background-color: #abdca7 !important; }
+.square.last-move { background-color: #e7c86e !important; }
+.piece.w { color: #fff; text-shadow: 0 0 4px #000, 0 0 4px #000; }
+.piece.b { color: #000; text-shadow: 0 0 2px #fff; }
+.game-layout { display: grid; grid-template-columns: minmax(0, 0.36fr) minmax(0, 0.64fr); gap: clamp(18px, 4vw, 48px); align-items: center; min-width: 0; }
+#gameScreen .game-layout { max-height: 100%; }
+.game-layout > * { min-width: 0; }
+.game-info { order: -1; }
+.status { font-size: 1.25rem; font-weight: bold; margin: 0 0 18px; }
+.room-label { color: var(--muted); font-size: 0.9rem; margin: 0 0 5px; text-transform: uppercase; }
+.room-code, .lobby-code { color: var(--accent-dark); font-weight: bold; letter-spacing: 0.16em; }
+.room-code { font-size: 2rem; margin: 0 0 24px; }
+.lobby-code { font-size: 2.4rem; margin: 14px 0 24px; }
+.btn { margin-top: 18px; padding: 10px 20px; font-size: 1rem; background-color: var(--accent); color: #fff; border: none; border-radius: 2px; cursor: pointer; font-weight: bold; min-height: 44px; transition: background-color 0.2s; }
+.btn:hover { background-color: var(--accent-dark); }
+.text-btn { background: none; border: 0; color: var(--accent-dark); cursor: pointer; font: inherit; margin-top: 14px; padding: 4px 0; min-height: 36px; text-decoration: underline; }
+.room-form { display: flex; gap: 10px; max-width: 440px; width: 100%; }
+.room-form input { border: 2px solid var(--line); color: var(--ink); flex: 1; font: inherit; font-size: 1.1rem; min-width: 0; padding: 11px 12px; text-transform: uppercase; }
+.error { color: var(--accent-dark); min-height: 1.4em; margin: 12px 0 0 !important; }
+.side-options { display: flex; gap: 12px; margin: 18px 0; flex-wrap: wrap; }
+.side-option { background: transparent; border: 2px solid var(--line); color: var(--ink); cursor: pointer; font: inherit; font-weight: bold; padding: 12px 22px; }
+.side-option.selected { background: var(--ink); border-color: var(--ink); color: #fff; }
+.side-option:disabled { cursor: not-allowed; opacity: 0.45; }
+.connection-status { color: var(--muted); font-size: 0.9rem; margin: -10px 0 18px; }
+.hidden { display: none !important; }
+
+@media (max-width: 760px) {
+  .mode-grid, .game-layout { grid-template-columns: 1fr; }
+  .game-info { order: 0; }
+  .board { width: min(100%, calc(100dvh - 300px)); max-width: 640px; }
+}
+
+@media (max-width: 420px) {
+  body { padding: 8px 10px; }
+  .brand { margin-bottom: 16px; }
+  .screen { padding: 16px; }
+  .mode-grid { gap: 10px; }
+  .mode-card { min-height: auto; padding: 18px; }
+  .room-form { flex-direction: column; }
+  .room-form .btn { margin-top: 0; width: 100%; }
+  .side-options { display: grid; grid-template-columns: 1fr 1fr; }
+  .side-option { padding: 12px 8px; width: 100%; }
+  .lobby-code { font-size: 2rem; }
+}
+
+@media (max-height: 620px) and (orientation: landscape) {
+  body { align-items: flex-start; padding-top: 12px; }
+  .brand { font-size: 2rem; margin-bottom: 12px; }
+  .screen { padding: 18px; }
+  .game-layout { grid-template-columns: 170px minmax(0, 1fr); gap: 18px; }
+  .board { max-height: calc(100dvh - 100px); width: auto; height: min(calc(100dvh - 100px), 640px); }
+}
