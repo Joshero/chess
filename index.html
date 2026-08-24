@@ -460,7 +460,10 @@
           }
         }
 
-        boardElement.classList.toggle("flipped", chess.turn() === "b");
+        const shouldFlipBoard = isPrivateRoom
+          ? playerColor === "b"
+          : chess.turn() === "b";
+        boardElement.classList.toggle("flipped", shouldFlipBoard);
       }
 
       async function handleSquareClick(squareId) {
