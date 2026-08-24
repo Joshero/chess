@@ -646,7 +646,10 @@
             .from("chess_rooms")
             .insert({ code });
           if (error) {
-            roomError.textContent = "Could not create the room. Try again.";
+            roomError.textContent =
+              error.code === "PGRST205"
+                ? "Supabase setup incomplete: create the chess_rooms table first."
+                : "Could not create the room. Check your Supabase settings.";
             return;
           }
           await startPrivateGame(code, "w");
