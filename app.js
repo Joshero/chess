@@ -42,7 +42,70 @@ function updateLobby() { const list=players(); lobbyPlayers.textContent=list.len
 async function selectSide(next) { const opponent=players().find((p)=>p.playerId!==id); if(opponent?.color===next){lobbyError.textContent="Your opponent has already chosen that side.";return;} color=next; lobbyError.textContent=""; await channel.track({playerId:id,color}); updateLobby(); }
 function enterGame() { started=true; connection.textContent=`Connected as ${color === "w" ? "White" : "Black"}`; chess.reset(); lastMove=null; selected=null; draw(); show(game); }
 async function leavePrivate(notify=false) { if(channel){if(notify) await channel.send({type:"broadcast",event:"player-left"}); await channel.unsubscribe();channel=null;} privateRoom=false;started=false;color=null;show(start); }
-async function joinPrivate(code, isHost) { privateRoom=true; computerMode=false; host=isHost; started=false;color=null; codeDisplay.textContent=code; $("lobbyCodeDisplay").textContent=code; $("undoBtn").classList.add("hidden"); show(lobby); channel=supabaseClient.channel(`chess-room-${code}`,{config:{presence:{key:id},broadcast:{self:false}}}); channel.on("presence",{event:"sync"},updateLobby).on("presence",{event:"leave"},function(presence){const key=presence.key;if(key!==id&&started){alert("Your opponent left the game.");leavePrivate();}else updateLobby();}).on("broadcast",{event:"player-left"},function(){if(started){alert("Your opponent left the game.");leavePrivate();}}).on("broadcast",{event:"start"},function(message){const payload=message.payload;if(payload.colors[id]){color=payload.colors[id];enterGame();}}).on("broadcast",{event:"move"},function(message){const payload=message.payload;chess.load(payload.fen);lastMove=payload.from?{from:payload.from,to:payload.to}:null;draw();}).on("broadcast",{event:"new-game"},function(){started=false;color=null;chess.reset();lastMove=null;show(lobby);channel.track({playerId:id,color:null});updateLobby();}); channel.subscribe(async function(state){if(state==="SUBSCRIBED"){if(players().length>=2){lobbyError.textContent="This room already has two players.";await leavePrivate();return;}await channel.track({playerId:id,color:null});updateLobby();}}); }
+async function joinPrivate(code, isHost) {
+  privateRoom = true;
+  computerMode = false;
+  host = isHost;
+  started = false;
+  color = null;
+  codeDisplay.textContent = code;
+  $("lobbyCodeDisplay").textContent = code;
+  $("undoBtn").classList.add("hidden");
+  show(lobby);
+
+  channel = supabaseClient.channel(`chess-room-${code}`, {
+    config: { presence: { key: id }, broadcast: { self: false } },
+  });
+  channel
+    .on("presence", { event: "sync" }, updateLobby)
+    .on("presence", { event: "leave" }, function (presence) {
+      if (presence.key !== id && started) {
+        alert("Your opponent left the game.");
+        leavePrivate();
+      } else {
+        updateLobby();
+      }
+    })
+    .on("broadcast", { event: "player-left" }, function () {
+      if (started) {
+        alert("Your opponent left the game.");
+        leavePrivate();
+      }
+    })
+    .on("broadcast", { event: "start" }, function (message) {
+      if (message.payload.colors[id]) {
+        color = message.payload.colors[id];
+        enterGame();
+      }
+    })
+    .on("broadcast", { event: "move" }, function (message) {
+      chess.load(message.payload.fen);
+      lastMove = message.payload.from
+        ? { from: message.payload.from, to: message.payload.to }
+        : null;
+      draw();
+    })
+    .on("broadcast", { event: "new-game" }, function () {
+      started = false;
+      color = null;
+      chess.reset();
+      lastMove = null;
+      show(lobby);
+      channel.track({ playerId: id, color: null });
+      updateLobby();
+    });
+
+  channel.subscribe(async function (state) {
+    if (state !== "SUBSCRIBED") return;
+    if (players().length >= 2) {
+      lobbyError.textContent = "This room already has two players.";
+      await leavePrivate();
+      return;
+    }
+    await channel.track({ playerId: id, color: null });
+    updateLobby();
+  });
+}
 
 $("computerModeBtn").onclick=()=>show(computer); $("playerModeBtn").onclick=()=>show(playerMode); $("backToStartBtn").onclick=()=>show(start); $("backFromComputerBtn").onclick=()=>show(start); $("localModeBtn").onclick=startLocal; $("privateModeBtn").onclick=()=>show(room); $("undoBtn").onclick=undoComputerTurn;
 document.querySelectorAll(".difficulty-option").forEach((button)=>button.onclick=()=>startComputer(button.dataset.difficulty));
