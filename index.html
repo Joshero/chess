@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTML5 Chess Game</title>
+    <!-- Loading chess.js for move validation and game logic -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #1e1e24;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+      }
+
+      h1 {
+        margin-bottom: 5px;
+        color: #4cc9f0;
+      }
+
+      .status {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        font-weight: bold;
+        height: 25px;
+      }
+
+      .board {
+        display: grid;
+        grid-template-columns: repeat(8, 60px);
+        grid-template-rows: repeat(8, 60px);
+        border: 4px solid #333;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+      }
+
+      .square {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        cursor: pointer;
+        user-select: none;
+        transition: background-color 0.2s;
+      }
+
+      /* Chessboard Colors */
+      .light {
+        background-color: #f0d9b5;
+      }
+
+      .dark {
+        background-color: #b58863;
+      }
+
+      /* Highlights */
+      .square.selected {
+        background-color: #7ab3d5 !important;
+      }
+
+      .square.highlighted {
+        background-color: #abdca7 !important;
+      }
+
+      /* Piece Colors */
+      .piece.w {
+        color: #ffffff;
+        text-shadow:
+          0 0 4px #000,
+          0 0 4px #000;
+      }
+
+      .piece.b {
+        color: #000000;
+        text-shadow: 0 0 2px #fff;
+      }
+
+      .btn {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 1rem;
+        background-color: #4cc9f0;
+        color: #1e1e24;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.2s;
+      }
+
+      .btn:hover {
+        background-color: #3a9fc4;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Chess</h1>
+    <div class="status" id="status">White's turn</div>
+
+    <div class="board" id="board"></div>
+
+    <button class="btn" id="resetBtn">Restart Game</button>
+
+    <script>
+      // Unicode chess symbols mapping from chess.js notation
+      const pieceSymbols = {
+        p: "♟",
+        r: "♜",
+        n: "♞",
+        b: "♝",
+        q: "♛",
+        k: "♚",
+        P: "♙",
+        R: "♖",
+        N: "♘",
+        B: "♗",
+        Q: "♕",
+        K: "♔",
+      };
+
+      const chess = new Chess();
+      const boardElement = document.getElementById("board");
+      const statusElement = document.getElementById("status");
+      const resetBtn = document.getElementById("resetBtn");
+
+      let selectedSquare = null;
+
+      // Generate coordinates for an 8x8 board ('a8' to 'h1')
+      const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
+      const ranks = ["8", "7", "6", "5", "4", "3", "2", "1"];
+
+      function createBoard() {
+        boardElement.innerHTML = "";
+        for (let r = 0; r < 8; r++) {
+          for (let f = 0; f < 8; f++) {
+            const squareId = files[f] + ranks[r];
+            const squareSquare = document.createElement("div");
+
+            squareSquare.classList.add("square");
+            squareSquare.classList.add((r + f) % 2 === 0 ? "light" : "dark");
+            squareSquare.setAttribute("id", squareId);
+
+            squareSquare.addEventListener("click", () =>
+              handleSquareClick(squareId),
+            );
+            boardElement.appendChild(squareSquare);
+          }
+        }
+        updateBoardVisuals();
+      }
+
+      function updateBoardVisuals() {
+        // Clear current pieces and highlights
+        document.querySelectorAll(".square").forEach((sq) => {
+          sq.innerHTML = "";
+          sq.classList.remove("selected", "highlighted");
+        });
+
+        // Draw pieces based on current chess game state
+        chess.board().forEach((row, rIndex) => {
+          row.forEach((square, fIndex) => {
+            if (square) {
+              const squareId = files[fIndex] + ranks[rIndex];
+              const squareElement = document.getElementById(squareId);
+
+              const pieceElement = document.createElement("span");
+              pieceElement.classList.add("piece", square.color);
+              // Convert symbol case depending on color for correct rendering
+              const symbolKey =
+                square.color === "w"
+                  ? square.type.toUpperCase()
+                  : square.type.toLowerCase();
+              pieceElement.textContent = pieceSymbols[symbolKey];
+
+              squareElement.appendChild(pieceElement);
+            }
+          });
+        });
+
+        // Update Status text
+        if (chess.in_checkmate()) {
+          statusElement.textContent = `Checkmate! Game Over.`;
+        } else if (chess.in_draw()) {
+          statusElement.textContent = `Game Over: Draw!`;
+        } else {
+          statusElement.textContent =
+            chess.turn() === "w" ? "White's turn" : "Black's turn";
+          if (chess.in_check()) {
+            statusElement.textContent += " (Check!)";
+          }
+        }
+      }
+
+      function handleSquareClick(squareId) {
+        if (chess.game_over()) return;
+
+        const clickedSquare = document.getElementById(squareId);
+
+        // If a square is already selected, try to move there
+        if (selectedSquare) {
+          if (selectedSquare === squareId) {
+            // Clicking the same square deselects it
+            selectedSquare = null;
+            updateBoardVisuals();
+            return;
+          }
+
+          // Attempt to move
+          const move = chess.move({
+            from: selectedSquare,
+            to: squareId,
+            promotion: "q", // Auto-promote to Queen for simplicity
+          });
+
+          if (move) {
+            selectedSquare = null;
+            updateBoardVisuals();
+            return;
+          }
+        }
+
+        // Select a piece if it belongs to the current player
+        const piece = chess.get(squareId);
+        if (piece && piece.color === chess.turn()) {
+          selectedSquare = squareId;
+          updateBoardVisuals();
+
+          // Highlight selected square
+          clickedSquare.classList.add("selected");
+
+          // Highlight valid possible moves
+          const moves = chess.moves({ square: squareId, verbose: true });
+          moves.forEach((m) => {
+            document.getElementById(m.to).classList.add("highlighted");
+          });
+        } else {
+          // Clicked empty space or enemy piece without a valid move configuration
+          selectedSquare = null;
+          updateBoardVisuals();
+        }
+      }
+
+      resetBtn.addEventListener("click", () => {
+        chess.reset();
+        selectedSquare = null;
+        updateBoardVisuals();
+      });
+
+      // Initialize board on load
+      createBoard();
+    </script>
+  </body>
+</html>
