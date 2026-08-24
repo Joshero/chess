@@ -79,7 +79,7 @@ body {
 .square.last-move { background-color: #e7c86e !important; }
 .piece.w { color: #fff; text-shadow: 0 0 4px #000, 0 0 4px #000; }
 .piece.b { color: #000; text-shadow: 0 0 2px #fff; }
-.game-layout { display: grid; grid-template-columns: 190px minmax(320px, 1fr) 240px; gap: clamp(16px, 3vw, 36px); align-items: center; min-width: 0; }
+.game-layout { display: grid; grid-template-columns: 190px minmax(320px, 760px) 240px; gap: clamp(16px, 3vw, 36px); align-items: center; min-width: 0; }
 #gameScreen .game-layout { max-height: 100%; }
 .game-layout > * { min-width: 0; }
 .game-info { order: -1; }
