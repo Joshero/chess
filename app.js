@@ -40,7 +40,7 @@ function chooseComputerMove() {
     return moves[Math.floor(Math.random() * moves.length)];
   }
 
-  let bestMove = moves[0];
+  let bestMoves = [];
   let bestScore = -Infinity;
   const depth = difficulty === "hard" ? 3 : 1;
   moves.forEach((move) => {
@@ -49,10 +49,12 @@ function chooseComputerMove() {
     const score = minimax(test, depth - 1);
     if (score > bestScore) {
       bestScore = score;
-      bestMove = move;
+      bestMoves = [move];
+    } else if (score === bestScore) {
+      bestMoves.push(move);
     }
   });
-  return bestMove;
+  return bestMoves[Math.floor(Math.random() * bestMoves.length)];
 }
 function minimax(position, depth) {
   if (depth === 0 || position.game_over()) return evaluate(position);
