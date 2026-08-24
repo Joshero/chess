@@ -390,7 +390,7 @@
               <p class="room-label">Room code</p>
               <p class="room-code" id="roomCodeDisplay">LOCAL</p>
             </div>
-            <button class="btn" id="resetBtn">Restart game</button>
+            <button class="btn" id="resetBtn">New game</button>
             <br />
             <button class="text-btn" id="leaveBtn">Leave game</button>
           </aside>
@@ -451,6 +451,7 @@
       let playerColor = null;
       let isRoomHost = false;
       let gameStarted = false;
+      let opponentLeaveHandled = false;
       const playerId = crypto.randomUUID();
 
       // Generate coordinates for an 8x8 board ('a8' to 'h1')
@@ -584,17 +585,14 @@
         }
       }
 
-      resetBtn.addEventListener("click", () => {
+      resetBtn.addEventListener("click", async () => {
+        if (isPrivateRoom) {
+          await requestNewPrivateGame();
+          return;
+        }
         chess.reset();
         selectedSquare = null;
         updateBoardVisuals();
-        if (isPrivateRoom) {
-          roomChannel.send({
-            type: "broadcast",
-            event: "reset",
-            payload: { fen: chess.fen() },
-          });
-        }
       });
 
       function showScreen(screen) {
@@ -666,6 +664,7 @@
 
       function enterPrivateGame() {
         gameStarted = true;
+        opponentLeaveHandled = false;
         connectionStatusElement.textContent = `Connected as ${playerColor === "w" ? "White" : "Black"}`;
         chess.reset();
         selectedSquare = null;
@@ -677,6 +676,7 @@
         isPrivateRoom = true;
         isRoomHost = host;
         gameStarted = false;
+        opponentLeaveHandled = false;
         playerColor = null;
         roomCode = code;
         roomCodeDisplay.textContent = code;
@@ -705,8 +705,7 @@
           })
           .on("presence", { event: "leave" }, ({ key }) => {
             if (key !== playerId && gameStarted) {
-              alert("Your opponent left the game.");
-              leavePrivateRoom();
+              handleOpponentLeave();
             } else {
               updateLobby();
             }
@@ -716,6 +715,12 @@
               playerColor = payload.colors[playerId];
               enterPrivateGame();
             }
+          })
+          .on("broadcast", { event: "new-game" }, () => {
+            preparePrivateRematch();
+          })
+          .on("broadcast", { event: "player-left" }, () => {
+            if (gameStarted) handleOpponentLeave();
           })
           .on("broadcast", { event: "move" }, ({ payload }) => {
             chess.load(payload.fen);
@@ -748,8 +753,14 @@
         });
       }
 
-      async function leavePrivateRoom() {
+      async function leavePrivateRoom(notifyOpponent = false) {
         if (roomChannel) {
+          if (notifyOpponent) {
+            await roomChannel.send({
+              type: "broadcast",
+              event: "player-left",
+            });
+          }
           await roomChannel.unsubscribe();
           roomChannel = null;
         }
@@ -759,6 +770,33 @@
         gameStarted = false;
         connectionStatusElement.textContent = "";
         showScreen(roomScreen);
+      }
+
+      function handleOpponentLeave() {
+        if (opponentLeaveHandled) return;
+        opponentLeaveHandled = true;
+        alert("Your opponent left the game.");
+        leavePrivateRoom();
+      }
+
+      function preparePrivateRematch() {
+        gameStarted = false;
+        playerColor = null;
+        selectedSquare = null;
+        chess.reset();
+        lobbyError.textContent = "Choose a side for the new game.";
+        sideButtons.forEach((button) => button.classList.remove("selected"));
+        showScreen(lobbyScreen);
+        updateLobby();
+        roomChannel.track({ playerId, color: null });
+      }
+
+      async function requestNewPrivateGame() {
+        await roomChannel.send({
+          type: "broadcast",
+          event: "new-game",
+        });
+        preparePrivateRematch();
       }
 
       function makeRoomCode() {
@@ -823,6 +861,12 @@
         joinRoomPanel.classList.remove("hidden");
         roomInput.focus();
       });
+      document
+        .getElementById("leaveLobbyBtn")
+        .addEventListener("click", async () => {
+          if (isPrivateRoom) await leavePrivateRoom();
+          showScreen(startScreen);
+        });
       joinRoomPanel.addEventListener("submit", async (event) => {
         event.preventDefault();
         const code = roomInput.value.trim().toUpperCase();
@@ -851,9 +895,13 @@
       document
         .getElementById("leaveBtn")
         .addEventListener("click", async () => {
-          if (isPrivateRoom) await leavePrivateRoom();
+          if (isPrivateRoom) await leavePrivateRoom(true);
           showScreen(startScreen);
         });
+
+      window.addEventListener("pagehide", () => {
+        if (roomChannel) supabaseClient.removeChannel(roomChannel);
+      });
 
       // Initialize board on load
       createBoard();
