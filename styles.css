@@ -27,7 +27,7 @@ body {
   margin: 0;
   padding: clamp(8px, 3vh, 28px) clamp(10px, 3vw, 16px) 32px;
   overflow-x: hidden;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 .background-pieces { inset: 0; overflow: hidden; pointer-events: none; position: fixed; z-index: 0; }
@@ -53,7 +53,7 @@ body {
 .piece-nineteen { right: 42%; bottom: 3%; transform: rotate(-18deg); }
 .piece-twenty { left: 24%; bottom: 9%; transform: rotate(10deg); }
 
-.app { width: min(100%, 1400px); min-width: 0; margin: 0 auto; position: relative; z-index: 1; }
+.app { width: min(100%, 1400px); min-width: 0; margin: 0 auto; padding-bottom: 48px; position: relative; z-index: 1; }
 .brand { margin: 0 0 24px; font-size: clamp(2rem, 5vw, 3.6rem); letter-spacing: 0; }
 .brand span { color: var(--accent); }
 .screen { width: 100%; background: var(--panel); border: 1px solid var(--line); box-shadow: 0 18px 50px rgba(54, 42, 26, 0.13); overflow: visible; padding: clamp(16px, 4vw, 52px); }
@@ -72,11 +72,11 @@ body {
 .board.flipped { transform: rotate(180deg); }
 .board.flipped .piece { transform: rotate(180deg); }
 .square { display: flex; align-items: center; justify-content: center; font-size: clamp(1.8rem, 7vw, 3.7rem); cursor: pointer; position: relative; user-select: none; transition: background-color 0.2s; }
-.coordinate { font-family: Georgia, "Times New Roman", serif; font-size: clamp(0.55rem, 1.2vw, 0.8rem); font-weight: bold; line-height: 1; opacity: 0.85; pointer-events: none; position: absolute; z-index: 1; }
-.file-coordinate { bottom: 3px; right: 4px; }
-.rank-coordinate { left: 4px; top: 3px; }
-.light .coordinate { color: var(--dark-square); }
-.dark .coordinate { color: var(--light-square); }
+.coordinate { background: rgba(255, 255, 255, 0.4); border-radius: 2px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(0.65rem, 1.4vw, 0.9rem); font-weight: bold; line-height: 1; opacity: 1; padding: 2px 3px; pointer-events: none; position: absolute; z-index: 2; }
+.file-coordinate { bottom: 3px; right: 3px; }
+.rank-coordinate { left: 3px; top: 3px; }
+.light .coordinate { color: #17212b; }
+.dark .coordinate { color: #fff; background: rgba(23, 33, 43, 0.55); }
 .light { background-color: var(--light-square); }
 .dark { background-color: var(--dark-square); }
 .square.selected { background-color: #7ab3d5 !important; }
