@@ -24,6 +24,7 @@ function draw() {
     if (index % 2 === 0) rows.push(`<tr><td>${Math.floor(index / 2) + 1}</td><td>${move}</td><td>${moveHistory[index + 1] || ""}</td></tr>`);
     return rows;
   }, []).join("") : '<tr><td colspan="3">No moves yet</td></tr>';
+  replayBtn.disabled = replaying || moveHistory.length === 0;
 }
 function buildBoard() { board.innerHTML = ""; for (let r=0;r<8;r++) for (let f=0;f<8;f++) { const square = document.createElement("div"); square.className = `square ${(r+f)%2 ? "dark" : "light"}`; square.id = files[f]+ranks[r]; if (r === 7 || r === 0) { const fileLabel = document.createElement("span"); fileLabel.className = `coordinate file-coordinate ${r === 0 ? "file-top" : "file-bottom"}`; fileLabel.textContent = files[f]; square.appendChild(fileLabel); } if (f === 0 || f === 7) { const rankLabel = document.createElement("span"); rankLabel.className = `coordinate rank-coordinate ${f === 7 ? "rank-right" : "rank-left"}`; rankLabel.textContent = ranks[r]; square.appendChild(rankLabel); } square.onclick = () => clickSquare(square.id); board.appendChild(square); } draw(); }
 async function clickSquare(square) {
@@ -99,6 +100,17 @@ function watchReplay() {
       return;
     }
     const move = replayChess.move(replayMoves[index]);
+    if (!move) {
+      window.clearInterval(timer);
+      chess.load(liveFen);
+      lastMove = liveLastMove;
+      replaying = false;
+      replayBtn.disabled = false;
+      replayBtn.textContent = "Watch replay";
+      connection.textContent = "Replay unavailable for this move history.";
+      draw();
+      return;
+    }
     chess.load(replayChess.fen());
     lastMove = { from: move.from, to: move.to };
     index += 1;
