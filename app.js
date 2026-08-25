@@ -33,7 +33,7 @@ async function clickSquare(square) {
     if (selected === square) { selected = null; draw(); return; }
     const previous = computerMode ? { fen: chess.fen(), lastMove } : null;
     const move = chess.move({ from: selected, to: square, promotion: "q" });
-    if (move) { selected = null; lastMove = { from: move.from, to: move.to }; moveHistory.push(move.san); if (computerMode) undoState = previous; if (privateRoom) await channel.send({ type:"broadcast", event:"move", payload:{ fen:chess.fen(), from:move.from, to:move.to, history:moveHistory } }); draw(); if (computerMode && !chess.game_over()) computerMove(); return; }
+    if (move) { selected = null; lastMove = { from: move.from, to: move.to }; moveHistory.push(chess.history().slice(-1)[0]); if (computerMode) undoState = previous; if (privateRoom) await channel.send({ type:"broadcast", event:"move", payload:{ fen:chess.fen(), from:move.from, to:move.to, history:moveHistory } }); draw(); if (computerMode && !chess.game_over()) computerMove(); return; }
   }
   const piece = chess.get(square);
   if (piece && piece.color === chess.turn() && (!privateRoom || piece.color === color)) { selected = square; draw(); $(square).classList.add("selected"); chess.moves({ square, verbose:true }).forEach((move) => $(move.to).classList.add("highlighted")); } else { selected = null; draw(); }
@@ -73,10 +73,14 @@ function minimax(position, depth) {
   });
   return position.turn() === "b" ? Math.max(...scores) : Math.min(...scores);
 }
-function computerMove() { thinking=true; connection.textContent="Computer is thinking..."; setTimeout(() => { if (!computerMode || chess.game_over()) return; const move=chooseComputerMove(); const played=chess.move({from:move.from,to:move.to,promotion:"q"}); lastMove={from:move.from,to:move.to}; moveHistory.push(played.san); thinking=false; connection.textContent=`Computer: ${difficulty}`; draw(); }, 300); }
+function computerMove() { thinking=true; connection.textContent="Computer is thinking..."; setTimeout(() => { if (!computerMode || chess.game_over()) return; const move=chooseComputerMove(); chess.move({from:move.from,to:move.to,promotion:"q"}); lastMove={from:move.from,to:move.to}; moveHistory.push(chess.history().slice(-1)[0]); thinking=false; connection.textContent=`Computer: ${difficulty}`; draw(); }, 300); }
 function undoComputerTurn() { if (!undoState || thinking) return; chess.load(undoState.fen); lastMove=undoState.lastMove; moveHistory=moveHistory.slice(0, -2); undoState=null; selected=null; draw(); }
 function watchReplay() {
-  if (replaying || moveHistory.length === 0) return;
+  if (replaying) return;
+  if (moveHistory.length === 0) {
+    connection.textContent = "Play at least one move before starting replay.";
+    return;
+  }
   const liveFen = chess.fen();
   const liveLastMove = lastMove;
   const replayMoves = [...moveHistory];
@@ -220,7 +224,7 @@ async function joinRoomFromLink() {
 }
 
 $("computerModeBtn").onclick=()=>show(computer); $("playerModeBtn").onclick=()=>show(playerMode); $("backToStartBtn").onclick=()=>show(start); $("backFromComputerBtn").onclick=()=>show(start); $("localModeBtn").onclick=startLocal; $("privateModeBtn").onclick=()=>show(room); $("undoBtn").onclick=undoComputerTurn;
-replayBtn.onclick = watchReplay;
+replayBtn.addEventListener("click", watchReplay);
 document.querySelectorAll(".difficulty-option").forEach((button)=>button.onclick=()=>startComputer(button.dataset.difficulty));
 document.querySelectorAll(".side-option").forEach((button)=>button.onclick=()=>selectSide(button.dataset.color));
 $("createRoomBtn").onclick=async()=>{const code=Math.random().toString(36).slice(2,8).toUpperCase();const result=await supabaseClient.from("chess_rooms").insert({code});if(result.error){error.textContent="Could not create the room. Check Supabase setup.";return;}joinPrivate(code,true);};
