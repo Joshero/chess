@@ -7,7 +7,7 @@
     <!-- Loading chess.js for move validation and game logic -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="styles.css?v=19" />
+    <link rel="stylesheet" href="styles.css?v=20" />
     <!-- Legacy inline styles retained temporarily for reference.
     <style>
       :root {
@@ -489,7 +489,33 @@
               room.</small
             >
           </button>
+          <button class="mode-card" id="timedModeBtn">
+            <strong>Timed game</strong>
+            <small>Choose a chess clock and race against the board.</small>
+          </button>
         </div>
+      </section>
+
+      <section class="screen hidden" id="timedScreen">
+        <h2>Choose time control</h2>
+        <p>Each setting shows minutes per player plus increment per move.</p>
+        <div class="difficulty-panel time-options">
+          <button class="difficulty-option" data-time="1+0">
+            <strong>Bullet</strong><br />1 + 0 minutes
+          </button>
+          <button class="difficulty-option" data-time="3+2">
+            <strong>Blitz</strong><br />3 + 2 minutes
+          </button>
+          <button class="difficulty-option" data-time="5+0">
+            <strong>Rapid</strong><br />5 + 0 minutes
+          </button>
+          <button class="difficulty-option" data-time="10+0">
+            <strong>Long game</strong><br />10 + 0 minutes
+          </button>
+        </div>
+        <button class="text-btn" id="backFromTimedBtn">
+          Back to game choices
+        </button>
       </section>
 
       <section class="screen hidden" id="playerModeScreen">
@@ -591,6 +617,10 @@
           <aside class="game-info">
             <div class="status" id="status">White's turn</div>
             <div class="connection-status" id="connectionStatus"></div>
+            <div class="clocks hidden" id="clocks">
+              <div class="clock" id="blackClock">05:00</div>
+              <div class="clock" id="whiteClock">05:00</div>
+            </div>
             <div id="roomDetails">
               <p class="room-label">Room code</p>
               <p class="room-code" id="roomCodeDisplay">LOCAL</p>
@@ -1295,6 +1325,6 @@
       createBoard();
     </script>
     -->
-    <script src="app.js?v=14"></script>
+    <script src="app.js?v=15"></script>
   </body>
 </html>

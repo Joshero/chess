@@ -69,6 +69,10 @@ body {
 .difficulty-panel { display: grid; gap: 12px; max-width: 520px; }
 .difficulty-option { background: transparent; border: 2px solid var(--line); color: var(--ink); cursor: pointer; font: inherit; padding: 16px 18px; text-align: left; }
 .difficulty-option:hover, .difficulty-option:focus-visible { background: #fff7ef; border-color: var(--accent); outline: none; }
+.time-options { max-width: 520px; }
+.clocks { display: grid; gap: 8px; margin: 0 0 18px; }
+.clock { background: #253640; border: 2px solid #536773; color: #fff; font-family: Georgia, "Times New Roman", serif; font-size: 1.8rem; font-variant-numeric: tabular-nums; padding: 8px 12px; text-align: center; }
+.clock.active { background: #66552d; border-color: #f2c879; color: #fff7d6; }
 .board { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); grid-template-rows: repeat(8, minmax(0, 1fr)); aspect-ratio: 1; width: 100%; max-width: 760px; justify-self: center; border: 5px solid var(--ink); box-shadow: 0 12px 24px rgba(54, 42, 26, 0.2); transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .board.flipped { transform: rotate(180deg); }
 .board.replaying { transition: none !important; }
