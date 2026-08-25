@@ -7,10 +7,10 @@ const $ = (id) => document.getElementById(id);
 const board = $("board"), status = $("status"), error = $("roomError");
 const start = $("startScreen"), playerMode = $("playerModeScreen"), computer = $("computerScreen"), room = $("roomScreen"), lobby = $("lobbyScreen"), game = $("gameScreen");
 const codeDisplay = $("roomCodeDisplay"), connection = $("connectionStatus"), lobbyError = $("lobbyError"), lobbyPlayers = $("lobbyPlayers"), startPrivate = $("startPrivateBtn"), undo = $("undoBtn");
-const moveHistoryBody = $("moveHistoryBody");
+const moveHistoryBody = $("moveHistoryBody"), replayBtn = $("replayBtn");
 const roomLinkInput = $("roomLinkInput"), copyRoomLinkBtn = $("copyRoomLinkBtn"), copyStatus = $("copyStatus"), shareRoom = $("shareRoom");
 const files = ["a","b","c","d","e","f","g","h"], ranks = ["8","7","6","5","4","3","2","1"];
-let selected = null, lastMove = null, moveHistory = [], channel = null, privateRoom = false, computerMode = false, thinking = false, difficulty = "medium", color = null, host = false, started = false, undoState = null;
+let selected = null, lastMove = null, moveHistory = [], replaying = false, channel = null, privateRoom = false, computerMode = false, thinking = false, difficulty = "medium", color = null, host = false, started = false, undoState = null;
 const id = crypto.randomUUID();
 
 function show(screen) { [start, playerMode, computer, room, lobby, game].forEach((item) => item.classList.add("hidden")); screen.classList.remove("hidden"); }
@@ -27,7 +27,7 @@ function draw() {
 }
 function buildBoard() { board.innerHTML = ""; for (let r=0;r<8;r++) for (let f=0;f<8;f++) { const square = document.createElement("div"); square.className = `square ${(r+f)%2 ? "dark" : "light"}`; square.id = files[f]+ranks[r]; if (r === 7 || r === 0) { const fileLabel = document.createElement("span"); fileLabel.className = `coordinate file-coordinate ${r === 0 ? "file-top" : "file-bottom"}`; fileLabel.textContent = files[f]; square.appendChild(fileLabel); } if (f === 0 || f === 7) { const rankLabel = document.createElement("span"); rankLabel.className = `coordinate rank-coordinate ${f === 7 ? "rank-right" : "rank-left"}`; rankLabel.textContent = ranks[r]; square.appendChild(rankLabel); } square.onclick = () => clickSquare(square.id); board.appendChild(square); } draw(); }
 async function clickSquare(square) {
-  if (chess.game_over() || thinking || (computerMode && chess.turn() !== "w")) return;
+  if (chess.game_over() || thinking || replaying || (computerMode && chess.turn() !== "w")) return;
   if (selected) {
     if (selected === square) { selected = null; draw(); return; }
     const previous = computerMode ? { fen: chess.fen(), lastMove } : null;
@@ -74,6 +74,37 @@ function minimax(position, depth) {
 }
 function computerMove() { thinking=true; connection.textContent="Computer is thinking..."; setTimeout(() => { if (!computerMode || chess.game_over()) return; const move=chooseComputerMove(); const played=chess.move({from:move.from,to:move.to,promotion:"q"}); lastMove={from:move.from,to:move.to}; moveHistory.push(played.san); thinking=false; connection.textContent=`Computer: ${difficulty}`; draw(); }, 300); }
 function undoComputerTurn() { if (!undoState || thinking) return; chess.load(undoState.fen); lastMove=undoState.lastMove; moveHistory=moveHistory.slice(0, -2); undoState=null; selected=null; draw(); }
+function watchReplay() {
+  if (replaying || moveHistory.length === 0) return;
+  const liveFen = chess.fen();
+  const liveLastMove = lastMove;
+  const replayMoves = [...moveHistory];
+  const replayChess = new Chess();
+  let index = 0;
+  replaying = true;
+  replayBtn.disabled = true;
+  replayBtn.textContent = "Replay in progress...";
+  chess.reset();
+  lastMove = null;
+  draw();
+  const timer = window.setInterval(() => {
+    if (index >= replayMoves.length) {
+      window.clearInterval(timer);
+      chess.load(liveFen);
+      lastMove = liveLastMove;
+      replaying = false;
+      replayBtn.disabled = false;
+      replayBtn.textContent = "Watch replay";
+      draw();
+      return;
+    }
+    const move = replayChess.move(replayMoves[index]);
+    chess.load(replayChess.fen());
+    lastMove = { from: move.from, to: move.to };
+    index += 1;
+    draw();
+  }, 650);
+}
 function players() { return Object.values(channel.presenceState()).flat(); }
 function updateLobby() { const list=players(); lobbyPlayers.textContent=list.length===2?"Both players connected. Choose your sides.":"Waiting for an opponent..."; startPrivate.classList.toggle("hidden",!host || list.length!==2 || !list.every((p)=>p.color) || list[0].color===list[1].color); document.querySelectorAll(".side-option").forEach((button)=>{ button.disabled=false; button.classList.toggle("selected",color===button.dataset.color); button.setAttribute("aria-pressed",color===button.dataset.color?"true":"false"); }); }
 async function selectSide(next) { const opponent=players().find((p)=>p.playerId!==id); if(opponent?.color===next){lobbyError.textContent="Your opponent has already chosen that side.";return;} color=next; lobbyError.textContent=""; updateLobby(); try { const result=await channel.track({playerId:id,color}); if(result?.error){lobbyError.textContent="Could not save your side. Please try again.";} } catch (trackError) { lobbyError.textContent="Connection delayed. Your side will retry automatically."; } }
@@ -177,6 +208,7 @@ async function joinRoomFromLink() {
 }
 
 $("computerModeBtn").onclick=()=>show(computer); $("playerModeBtn").onclick=()=>show(playerMode); $("backToStartBtn").onclick=()=>show(start); $("backFromComputerBtn").onclick=()=>show(start); $("localModeBtn").onclick=startLocal; $("privateModeBtn").onclick=()=>show(room); $("undoBtn").onclick=undoComputerTurn;
+replayBtn.onclick = watchReplay;
 document.querySelectorAll(".difficulty-option").forEach((button)=>button.onclick=()=>startComputer(button.dataset.difficulty));
 document.querySelectorAll(".side-option").forEach((button)=>button.onclick=()=>selectSide(button.dataset.color));
 $("createRoomBtn").onclick=async()=>{const code=Math.random().toString(36).slice(2,8).toUpperCase();const result=await supabaseClient.from("chess_rooms").insert({code});if(result.error){error.textContent="Could not create the room. Check Supabase setup.";return;}joinPrivate(code,true);};
