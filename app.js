@@ -89,6 +89,7 @@ function watchReplay() {
   let index = 0;
   replayBoardFlipped = board.classList.contains("flipped");
   replaying = true;
+  board.classList.add("replaying");
   replayBtn.disabled = true;
   replayBtn.textContent = "Replay in progress...";
   chess.reset();
@@ -100,6 +101,7 @@ function watchReplay() {
       chess.load(liveFen);
       lastMove = liveLastMove;
       replaying = false;
+      board.classList.remove("replaying");
       replayBtn.disabled = false;
       replayBtn.textContent = "Watch replay";
       draw();
@@ -111,6 +113,7 @@ function watchReplay() {
       chess.load(liveFen);
       lastMove = liveLastMove;
       replaying = false;
+      board.classList.remove("replaying");
       replayBtn.disabled = false;
       replayBtn.textContent = "Watch replay";
       connection.textContent = "Replay unavailable for this move history.";

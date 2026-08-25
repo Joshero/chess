@@ -71,6 +71,7 @@ body {
 .difficulty-option:hover, .difficulty-option:focus-visible { background: #fff7ef; border-color: var(--accent); outline: none; }
 .board { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); grid-template-rows: repeat(8, minmax(0, 1fr)); aspect-ratio: 1; width: 100%; max-width: 760px; justify-self: center; border: 5px solid var(--ink); box-shadow: 0 12px 24px rgba(54, 42, 26, 0.2); transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .board.flipped { transform: rotate(180deg); }
+.board.replaying { transition: none !important; }
 .board.flipped .piece { transform: rotate(180deg); }
 .square { display: flex; align-items: center; justify-content: center; font-size: clamp(1.8rem, 7vw, 3.7rem); cursor: pointer; position: relative; user-select: none; transition: background-color 0.2s; }
 .coordinate { background: rgba(255, 255, 255, 0.4); border-radius: 2px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(0.65rem, 1.4vw, 0.9rem); font-weight: bold; line-height: 1; opacity: 1; padding: 2px 3px; pointer-events: none; position: absolute; z-index: 2; }
