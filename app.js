@@ -10,7 +10,7 @@ const codeDisplay = $("roomCodeDisplay"), connection = $("connectionStatus"), lo
 const moveHistoryBody = $("moveHistoryBody"), replayBtn = $("replayBtn");
 const roomLinkInput = $("roomLinkInput"), copyRoomLinkBtn = $("copyRoomLinkBtn"), copyStatus = $("copyStatus"), shareRoom = $("shareRoom");
 const files = ["a","b","c","d","e","f","g","h"], ranks = ["8","7","6","5","4","3","2","1"];
-let selected = null, lastMove = null, moveHistory = [], replaying = false, channel = null, privateRoom = false, computerMode = false, thinking = false, difficulty = "medium", color = null, host = false, started = false, undoState = null;
+let selected = null, lastMove = null, moveHistory = [], replaying = false, replayBoardFlipped = false, channel = null, privateRoom = false, computerMode = false, thinking = false, difficulty = "medium", color = null, host = false, started = false, undoState = null;
 const id = crypto.randomUUID();
 
 function show(screen) { [start, playerMode, computer, room, lobby, game].forEach((item) => item.classList.add("hidden")); screen.classList.remove("hidden"); }
@@ -19,7 +19,8 @@ function draw() {
   chess.board().forEach((row, r) => row.forEach((piece, f) => { if (!piece) return; const el = $(files[f] + ranks[r]); const span = document.createElement("span"); span.className = `piece ${piece.color}`; span.textContent = symbols[piece.color === "w" ? piece.type.toUpperCase() : piece.type]; el.appendChild(span); }));
   if (lastMove) { $(lastMove.from)?.classList.add("last-move"); $(lastMove.to)?.classList.add("last-move"); }
   status.textContent = chess.game_over() ? (chess.in_checkmate() ? "Checkmate! Game over." : "Game over: Draw!") : `${chess.turn() === "w" ? "White" : "Black"}'s turn${chess.in_check() ? " (Check!)" : ""}`;
-  board.classList.toggle("flipped", privateRoom ? color === "b" : !computerMode && chess.turn() === "b");
+  const shouldFlip = replaying ? replayBoardFlipped : privateRoom ? color === "b" : !computerMode && chess.turn() === "b";
+  board.classList.toggle("flipped", shouldFlip);
   moveHistoryBody.innerHTML = moveHistory.length ? moveHistory.reduce((rows, move, index) => {
     if (index % 2 === 0) rows.push(`<tr><td>${Math.floor(index / 2) + 1}</td><td>${move}</td><td>${moveHistory[index + 1] || ""}</td></tr>`);
     return rows;
@@ -86,6 +87,7 @@ function watchReplay() {
   const replayMoves = [...moveHistory];
   const replayChess = new Chess();
   let index = 0;
+  replayBoardFlipped = board.classList.contains("flipped");
   replaying = true;
   replayBtn.disabled = true;
   replayBtn.textContent = "Replay in progress...";
