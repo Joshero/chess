@@ -18,8 +18,9 @@ const files = ["a", "b", "c", "d", "e", "f", "g", "h"], ranks = ["8", "7", "6", 
 let selected = null, lastMove = null, moveHistory = [], replaying = false, replayBoardFlipped = false;
 let channel = null, privateRoom = false, computerMode = false, timedMode = false, thinking = false;
 let difficulty = "medium", selectedTimeControl = "5+0", color = null, host = false, started = false;
-let undoStack = []; // Unlimited move undo stack
+let undoStack = []; // Unlimited undo move stack
 let modalShownForGame = false;
+let showMoveHints = localStorage.getItem("chess_show_move_hints") !== "false";
 
 let clockIncrement = 0, clockMs = { w: 300000, b: 300000 }, clockTimer = null, clockLastTick = 0, clockExpired = false;
 const id = crypto.randomUUID();
@@ -27,6 +28,18 @@ const id = crypto.randomUUID();
 function show(screen) {
   [start, playerMode, computer, timed, room, lobby, game].forEach((item) => item.classList.add("hidden"));
   screen.classList.remove("hidden");
+}
+
+function syncMoveHintsToggles() {
+  document.querySelectorAll(".move-hints-input").forEach((input) => {
+    input.checked = showMoveHints;
+    input.onchange = (e) => {
+      showMoveHints = e.target.checked;
+      localStorage.setItem("chess_show_move_hints", showMoveHints);
+      document.querySelectorAll(".move-hints-input").forEach((i) => (i.checked = showMoveHints));
+      draw();
+    };
+  });
 }
 
 function showGameOverModal(titleText, messageText) {
@@ -234,6 +247,12 @@ function draw() {
     $(lastMove.to)?.classList.add("last-move");
   }
 
+  if (selected && showMoveHints) {
+    chess.moves({ square: selected, verbose: true }).forEach((move) => {
+      $(move.to)?.classList.add("highlighted");
+    });
+  }
+
   if (clockExpired) {
     // Status already handled on timeout
   } else if (chess.game_over()) {
@@ -353,7 +372,11 @@ async function clickSquare(square) {
     selected = square;
     draw();
     $(square).classList.add("selected");
-    chess.moves({ square, verbose: true }).forEach((move) => $(move.to).classList.add("highlighted"));
+    if (showMoveHints) {
+      chess.moves({ square, verbose: true }).forEach((move) => {
+        $(move.to)?.classList.add("highlighted");
+      });
+    }
   } else {
     selected = null;
     draw();
@@ -834,25 +857,12 @@ $("showJoinBtn").onclick = () => {
 
 $("backBtn").onclick = () => show(start);
 $("leaveLobbyBtn").onclick = () => leavePrivate();
-$("leaveBtn").onclick = () => leavePrivate(true);
+$("leaveBtn").onclick = () => leaveBtnClick();
 
-$("startPrivateBtn").onclick = async () => {
-  const list = players();
-  const colors = Object.fromEntries(list.map((p) => [p.playerId, p.color]));
-  await channel.send({ type: "broadcast", event: "start", payload: { colors, timeControl: selectedTimeControl } });
-  enterGame(selectedTimeControl);
-};
-
-$("joinRoomPanel").onsubmit = async (e) => {
-  e.preventDefault();
-  const code = $("roomInput").value.trim().toUpperCase();
-  const result = await supabaseClient.from("chess_rooms").select("code").eq("code", code).maybeSingle();
-  if (result.error || !result.data) {
-    error.textContent = "That room does not exist.";
-    return;
-  }
-  joinPrivate(code, false);
-};
+function leaveBtnClick() {
+  if (privateRoom) leavePrivate(true);
+  else show(start);
+}
 
 $("resetBtn").onclick = async () => {
   if (privateRoom) {
@@ -882,5 +892,6 @@ $("resetBtn").onclick = async () => {
 
 window.addEventListener("pagehide", () => channel && supabaseClient.removeChannel(channel));
 
+syncMoveHintsToggles();
 buildBoard();
 joinRoomFromLink();

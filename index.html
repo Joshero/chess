@@ -7,7 +7,7 @@
     <!-- Loading chess.js for move validation and game logic -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="styles.css?v=300" />
+    <link rel="stylesheet" href="styles.css?v=400" />
   </head>
   <body>
     <div class="background-pieces" aria-hidden="true">
@@ -161,6 +161,16 @@
           </div>
         </div>
 
+        <div class="setting-group">
+          <div class="setting-toggle-wrap">
+            <label class="toggle-label" for="setupMoveHintsToggle">
+              <span>Show move guide lines</span>
+              <input type="checkbox" class="move-hints-input" id="setupMoveHintsToggle" checked />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
         <button class="btn" id="startComputerBtn" type="button">Start Game</button>
         <br />
         <button class="text-btn" id="backFromComputerBtn">
@@ -242,6 +252,15 @@
               <p class="room-label">Room code</p>
               <p class="room-code" id="roomCodeDisplay">LOCAL</p>
             </div>
+
+            <div class="setting-toggle-wrap">
+              <label class="toggle-label" for="moveHintsToggle">
+                <span>Move guide lines</span>
+                <input type="checkbox" class="move-hints-input" id="moveHintsToggle" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
             <button class="btn" id="resetBtn">New game</button>
             <button class="btn" id="undoBtn">Undo move</button>
             <br />
@@ -331,6 +350,7 @@
       let difficulty = "medium", selectedTimeControl = "5+0", color = null, host = false, started = false;
       let undoStack = []; // Unlimited undo move stack
       let modalShownForGame = false;
+      let showMoveHints = localStorage.getItem("chess_show_move_hints") !== "false";
 
       let clockIncrement = 0, clockMs = { w: 300000, b: 300000 }, clockTimer = null, clockLastTick = 0, clockExpired = false;
       const id = crypto.randomUUID();
@@ -338,6 +358,18 @@
       function show(screen) {
         [start, playerMode, computer, timed, room, lobby, game].forEach((item) => item.classList.add("hidden"));
         screen.classList.remove("hidden");
+      }
+
+      function syncMoveHintsToggles() {
+        document.querySelectorAll(".move-hints-input").forEach((input) => {
+          input.checked = showMoveHints;
+          input.onchange = (e) => {
+            showMoveHints = e.target.checked;
+            localStorage.setItem("chess_show_move_hints", showMoveHints);
+            document.querySelectorAll(".move-hints-input").forEach((i) => (i.checked = showMoveHints));
+            draw();
+          };
+        });
       }
 
       function showGameOverModal(titleText, messageText) {
@@ -545,6 +577,12 @@
           $(lastMove.to)?.classList.add("last-move");
         }
 
+        if (selected && showMoveHints) {
+          chess.moves({ square: selected, verbose: true }).forEach((move) => {
+            $(move.to)?.classList.add("highlighted");
+          });
+        }
+
         if (clockExpired) {
           // Status already handled on timeout
         } else if (chess.game_over()) {
@@ -664,7 +702,11 @@
           selected = square;
           draw();
           $(square).classList.add("selected");
-          chess.moves({ square, verbose: true }).forEach((move) => $(move.to).classList.add("highlighted"));
+          if (showMoveHints) {
+            chess.moves({ square, verbose: true }).forEach((move) => {
+              $(move.to)?.classList.add("highlighted");
+            });
+          }
         } else {
           selected = null;
           draw();
@@ -1193,6 +1235,7 @@
 
       window.addEventListener("pagehide", () => channel && supabaseClient.removeChannel(channel));
 
+      syncMoveHintsToggles();
       buildBoard();
       joinRoomFromLink();
     </script>
