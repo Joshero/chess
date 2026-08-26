@@ -55,11 +55,11 @@ function stopClock() {
 
 function startClock() {
   stopClock();
-  if (!timedMode || clockExpired || chess.game_over() || replaying || moveHistory.length === 0) return;
+  if (!timedMode || clockExpired || chess.game_over() || replaying) return;
 
   clockLastTick = Date.now();
   clockTimer = setInterval(() => {
-    if (replaying || clockExpired || chess.game_over() || moveHistory.length === 0) return;
+    if (replaying || clockExpired || chess.game_over()) return;
     const now = Date.now();
     const delta = now - clockLastTick;
     clockLastTick = now;
@@ -71,6 +71,7 @@ function startClock() {
       clockMs[turn] = 0;
       clockExpired = true;
       stopClock();
+      selected = null;
       const loser = turn === "w" ? "White" : "Black";
       const winner = turn === "w" ? "Black" : "White";
       status.textContent = `${loser} ran out of time! ${winner} wins.`;
@@ -78,6 +79,8 @@ function startClock() {
       if (privateRoom && channel) {
         channel.send({ type: "broadcast", event: "timeout", payload: { loser, winner } });
       }
+      draw();
+      return;
     }
     renderClocks();
   }, 50);
@@ -116,7 +119,7 @@ function renderClocks() {
   bottomClock.textContent = formatClock(clockMs[bottomColor]);
 
   const activeTurn = chess.turn();
-  const isActive = !clockExpired && !replaying && !chess.game_over() && moveHistory.length > 0;
+  const isActive = !clockExpired && !replaying && !chess.game_over();
 
   topClock.classList.toggle("active", isActive && activeTurn === topColor);
   bottomClock.classList.toggle("active", isActive && activeTurn === bottomColor);
@@ -328,6 +331,7 @@ function startLocal(tc = selectedTimeControl) {
   selected = null;
   draw();
   show(game);
+  if (timedMode) startClock();
 }
 
 function startComputer(level = difficulty, tc = selectedTimeControl) {
@@ -350,6 +354,7 @@ function startComputer(level = difficulty, tc = selectedTimeControl) {
   selected = null;
   draw();
   show(game);
+  if (timedMode) startClock();
 }
 
 function evaluate(position) {
@@ -524,6 +529,7 @@ function enterGame(tc = selectedTimeControl) {
   selected = null;
   draw();
   show(game);
+  if (timedMode) startClock();
 }
 
 async function leavePrivate(notify = false) {
@@ -771,6 +777,7 @@ $("resetBtn").onclick = async () => {
   undoState = null;
   thinking = false;
   draw();
+  if (timedMode) startClock();
 };
 
 window.addEventListener("pagehide", () => channel && supabaseClient.removeChannel(channel));
