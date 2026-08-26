@@ -17,7 +17,7 @@ const files = ["a", "b", "c", "d", "e", "f", "g", "h"], ranks = ["8", "7", "6", 
 
 let selected = null, lastMove = null, moveHistory = [], replaying = false, replayBoardFlipped = false;
 let channel = null, privateRoom = false, computerMode = false, timedMode = false, thinking = false;
-let difficulty = "medium", selectedTimeControl = "unlimited", color = null, host = false, started = false, undoState = null;
+let difficulty = "medium", selectedTimeControl = "5+0", color = null, host = false, started = false, undoState = null;
 
 let clockIncrement = 0, clockMs = { w: 300000, b: 300000 }, clockTimer = null, clockLastTick = 0, clockExpired = false;
 const id = crypto.randomUUID();
@@ -101,14 +101,16 @@ function renderClocks() {
   const topColor = isFlipped ? "w" : "b";
   const bottomColor = isFlipped ? "b" : "w";
 
-  if (!timedMode) {
-    topClock.classList.add("hidden");
-    bottomClock.classList.add("hidden");
-    return;
-  }
-
   topClock.classList.remove("hidden");
   bottomClock.classList.remove("hidden");
+
+  if (!timedMode) {
+    topClock.textContent = "∞";
+    bottomClock.textContent = "∞";
+    topClock.classList.remove("active", "low-time");
+    bottomClock.classList.remove("active", "low-time");
+    return;
+  }
 
   topClock.textContent = formatClock(clockMs[topColor]);
   bottomClock.textContent = formatClock(clockMs[bottomColor]);
