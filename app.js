@@ -328,7 +328,6 @@ function startLocal(tc = selectedTimeControl) {
   selected = null;
   draw();
   show(game);
-  if (timedMode) startClock();
 }
 
 function startComputer(level = difficulty, tc = selectedTimeControl) {
@@ -351,7 +350,6 @@ function startComputer(level = difficulty, tc = selectedTimeControl) {
   selected = null;
   draw();
   show(game);
-  if (timedMode) startClock();
 }
 
 function evaluate(position) {
@@ -526,7 +524,6 @@ function enterGame(tc = selectedTimeControl) {
   selected = null;
   draw();
   show(game);
-  if (timedMode) startClock();
 }
 
 async function leavePrivate(notify = false) {
@@ -774,7 +771,6 @@ $("resetBtn").onclick = async () => {
   undoState = null;
   thinking = false;
   draw();
-  if (timedMode) startClock();
 };
 
 window.addEventListener("pagehide", () => channel && supabaseClient.removeChannel(channel));
