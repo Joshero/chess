@@ -17,7 +17,9 @@ const files = ["a", "b", "c", "d", "e", "f", "g", "h"], ranks = ["8", "7", "6", 
 
 let selected = null, lastMove = null, moveHistory = [], replaying = false, replayBoardFlipped = false;
 let channel = null, privateRoom = false, computerMode = false, timedMode = false, thinking = false;
-let difficulty = "medium", selectedTimeControl = "5+0", color = null, host = false, started = false, undoState = null;
+let difficulty = "medium", selectedTimeControl = "5+0", color = null, host = false, started = false;
+let undoStack = []; // Unlimited move undo stack
+let modalShownForGame = false;
 
 let clockIncrement = 0, clockMs = { w: 300000, b: 300000 }, clockTimer = null, clockLastTick = 0, clockExpired = false;
 const id = crypto.randomUUID();
@@ -25,6 +27,16 @@ const id = crypto.randomUUID();
 function show(screen) {
   [start, playerMode, computer, timed, room, lobby, game].forEach((item) => item.classList.add("hidden"));
   screen.classList.remove("hidden");
+}
+
+function showGameOverModal(titleText, messageText) {
+  $("modalTitle").textContent = titleText;
+  $("modalMessage").textContent = messageText;
+  $("gameOverModal").classList.remove("hidden");
+}
+
+function hideGameOverModal() {
+  $("gameOverModal").classList.add("hidden");
 }
 
 function setClock(tc) {
@@ -74,12 +86,17 @@ function startClock() {
       selected = null;
       const loser = turn === "w" ? "White" : "Black";
       const winner = turn === "w" ? "Black" : "White";
-      status.textContent = `${loser} ran out of time! ${winner} wins.`;
+      const msg = `${loser} ran out of time! ${winner} wins.`;
+      status.textContent = msg;
 
       if (privateRoom && channel) {
         channel.send({ type: "broadcast", event: "timeout", payload: { loser, winner } });
       }
       draw();
+      if (!modalShownForGame) {
+        modalShownForGame = true;
+        showGameOverModal("Time Out!", msg);
+      }
       return;
     }
     renderClocks();
@@ -218,9 +235,22 @@ function draw() {
   }
 
   if (clockExpired) {
-    // Status set by clock timeout
+    // Status already handled on timeout
   } else if (chess.game_over()) {
-    status.textContent = chess.in_checkmate() ? "Checkmate! Game over." : "Game over: Draw!";
+    if (chess.in_checkmate()) {
+      const winner = chess.turn() === "w" ? "Black" : "White";
+      status.textContent = `Checkmate! ${winner} wins.`;
+      if (!modalShownForGame) {
+        modalShownForGame = true;
+        showGameOverModal("Checkmate!", `Game over! ${winner} wins by checkmate.`);
+      }
+    } else if (chess.in_draw()) {
+      status.textContent = "Game over: Draw!";
+      if (!modalShownForGame) {
+        modalShownForGame = true;
+        showGameOverModal("Draw!", "Game over: The game ended in a draw.");
+      }
+    }
   } else {
     status.textContent = `${chess.turn() === "w" ? "White" : "Black"}'s turn${chess.in_check() ? " (Check!)" : ""}`;
   }
@@ -234,6 +264,13 @@ function draw() {
   }, []).join("") : '<tr><td colspan="3">No moves yet</td></tr>';
 
   replayBtn.disabled = replaying || moveHistory.length === 0;
+
+  if (privateRoom) {
+    undo.classList.add("hidden");
+  } else {
+    undo.classList.remove("hidden");
+    undo.disabled = undoStack.length === 0 || thinking || replaying;
+  }
 
   renderClocks();
   renderPlayerBars();
@@ -276,7 +313,15 @@ async function clickSquare(square) {
       draw();
       return;
     }
-    const previous = computerMode ? { fen: chess.fen(), lastMove, clockMs: { ...clockMs } } : null;
+    
+    // Save snapshot for unlimited undo BEFORE move
+    undoStack.push({
+      fen: chess.fen(),
+      lastMove: lastMove ? { ...lastMove } : null,
+      clockMs: { ...clockMs },
+      moveHistory: [...moveHistory]
+    });
+
     const move = chess.move({ from: selected, to: square, promotion: "q" });
 
     if (move) {
@@ -284,7 +329,6 @@ async function clickSquare(square) {
       selected = null;
       lastMove = { from: move.from, to: move.to };
       moveHistory.push(chess.history().slice(-1)[0]);
-      if (computerMode) undoState = previous;
 
       if (privateRoom) {
         await channel.send({
@@ -298,6 +342,9 @@ async function clickSquare(square) {
       if (timedMode) startClock();
       if (computerMode && !chess.game_over()) computerMove();
       return;
+    } else {
+      // Invalid move: remove pushed snapshot
+      undoStack.pop();
     }
   }
 
@@ -315,11 +362,12 @@ async function clickSquare(square) {
 
 function startLocal(tc = selectedTimeControl) {
   stopClock();
+  hideGameOverModal();
+  modalShownForGame = false;
   privateRoom = false;
   computerMode = false;
   thinking = false;
   color = null;
-  undo.classList.add("hidden");
   codeDisplay.textContent = "LOCAL";
 
   setClock(tc);
@@ -328,6 +376,7 @@ function startLocal(tc = selectedTimeControl) {
   chess.reset();
   lastMove = null;
   moveHistory = [];
+  undoStack = [];
   selected = null;
   draw();
   show(game);
@@ -336,12 +385,13 @@ function startLocal(tc = selectedTimeControl) {
 
 function startComputer(level = difficulty, tc = selectedTimeControl) {
   stopClock();
+  hideGameOverModal();
+  modalShownForGame = false;
   privateRoom = false;
   computerMode = true;
   thinking = false;
   difficulty = level;
   color = "w";
-  undo.classList.remove("hidden");
   codeDisplay.textContent = "COMPUTER";
 
   setClock(tc);
@@ -350,7 +400,7 @@ function startComputer(level = difficulty, tc = selectedTimeControl) {
   chess.reset();
   lastMove = null;
   moveHistory = [];
-  undoState = null;
+  undoStack = [];
   selected = null;
   draw();
   show(game);
@@ -401,8 +451,20 @@ function computerMove() {
   connection.textContent = "Computer is thinking...";
   setTimeout(() => {
     if (!computerMode || chess.game_over() || clockExpired) return;
+
+    // Save snapshot for unlimited undo BEFORE computer move
+    undoStack.push({
+      fen: chess.fen(),
+      lastMove: lastMove ? { ...lastMove } : null,
+      clockMs: { ...clockMs },
+      moveHistory: [...moveHistory]
+    });
+
     const move = chooseComputerMove();
-    if (!move) return;
+    if (!move) {
+      undoStack.pop();
+      return;
+    }
     chess.move({ from: move.from, to: move.to, promotion: "q" });
     if (timedMode) clockMs.b += clockIncrement;
     lastMove = { from: move.from, to: move.to };
@@ -414,16 +476,35 @@ function computerMove() {
   }, 300);
 }
 
-function undoComputerTurn() {
-  if (!undoState || thinking) return;
-  chess.load(undoState.fen);
-  lastMove = undoState.lastMove;
-  if (undoState.clockMs) clockMs = { ...undoState.clockMs };
-  moveHistory = moveHistory.slice(0, -2);
-  undoState = null;
-  selected = null;
-  draw();
-  if (timedMode) startClock();
+function undoTurn() {
+  if (thinking || undoStack.length === 0 || replaying) return;
+
+  let targetState = null;
+  if (computerMode) {
+    // Pop computer move + human move
+    if (undoStack.length >= 2) {
+      undoStack.pop();
+      targetState = undoStack.pop();
+    } else if (undoStack.length === 1) {
+      targetState = undoStack.pop();
+    }
+  } else {
+    // Pop 1 move for Pass & Play
+    targetState = undoStack.pop();
+  }
+
+  if (targetState) {
+    chess.load(targetState.fen);
+    lastMove = targetState.lastMove;
+    clockMs = { ...targetState.clockMs };
+    moveHistory = [...targetState.moveHistory];
+    clockExpired = false;
+    selected = null;
+    hideGameOverModal();
+    modalShownForGame = false;
+    draw();
+    if (timedMode && !chess.game_over()) startClock();
+  }
 }
 
 function watchReplay() {
@@ -521,11 +602,14 @@ async function selectSide(next) {
 
 function enterGame(tc = selectedTimeControl) {
   started = true;
+  hideGameOverModal();
+  modalShownForGame = false;
   setClock(tc);
   connection.textContent = timedMode ? `Connected as ${color === "w" ? "White" : "Black"} (${tc})` : `Connected as ${color === "w" ? "White" : "Black"}`;
   chess.reset();
   lastMove = null;
   moveHistory = [];
+  undoStack = [];
   selected = null;
   draw();
   show(game);
@@ -534,6 +618,8 @@ function enterGame(tc = selectedTimeControl) {
 
 async function leavePrivate(notify = false) {
   stopClock();
+  hideGameOverModal();
+  modalShownForGame = false;
   timedMode = false;
   if (channel) {
     if (notify) await channel.send({ type: "broadcast", event: "player-left" });
@@ -561,6 +647,8 @@ function clearRoomLink() {
 
 async function joinPrivate(code, isHost) {
   stopClock();
+  hideGameOverModal();
+  modalShownForGame = false;
   privateRoom = true;
   computerMode = false;
   host = isHost;
@@ -571,9 +659,7 @@ async function joinPrivate(code, isHost) {
   updateRoomLink(code);
   shareRoom.classList.toggle("hidden", !isHost);
   copyStatus.textContent = "";
-  $("undoBtn").classList.add("hidden");
 
-  // Time control lobby selection only enabled for host
   $("lobbyTimeControlGroup").style.display = isHost ? "block" : "none";
 
   show(lobby);
@@ -615,8 +701,13 @@ async function joinPrivate(code, isHost) {
     .on("broadcast", { event: "timeout" }, function (message) {
       clockExpired = true;
       stopClock();
-      status.textContent = `${message.payload.loser} ran out of time! ${message.payload.winner} wins.`;
+      const msg = `${message.payload.loser} ran out of time! ${message.payload.winner} wins.`;
+      status.textContent = msg;
       renderClocks();
+      if (!modalShownForGame) {
+        modalShownForGame = true;
+        showGameOverModal("Time Out!", msg);
+      }
     })
     .on("broadcast", { event: "new-game" }, function () {
       started = false;
@@ -624,6 +715,8 @@ async function joinPrivate(code, isHost) {
       chess.reset();
       lastMove = null;
       moveHistory = [];
+      hideGameOverModal();
+      modalShownForGame = false;
       show(lobby);
       channel.track({ playerId: id, color: null });
       updateLobby();
@@ -658,7 +751,6 @@ async function joinRoomFromLink() {
   await joinPrivate(code.toUpperCase(), false);
 }
 
-// Setup Pill Selection logic for setting containers
 function setupPills(containerId, callback) {
   const pills = document.querySelectorAll(`#${containerId} .pill-btn`);
   pills.forEach((pill) => {
@@ -675,7 +767,6 @@ setupPills("playerTimeControlPills", (tc) => { selectedTimeControl = tc; });
 setupPills("computerTimeControlPills", (tc) => { selectedTimeControl = tc; });
 setupPills("lobbyTimeControlPills", (tc) => { selectedTimeControl = tc; });
 
-// Difficulty buttons selection
 document.querySelectorAll(".difficulty-option").forEach((button) => {
   button.onclick = () => {
     document.querySelectorAll(".difficulty-option").forEach((b) => b.classList.remove("selected"));
@@ -684,33 +775,38 @@ document.querySelectorAll(".difficulty-option").forEach((button) => {
   };
 });
 
-// Main Screen buttons
 $("computerModeBtn").onclick = () => show(computer);
 $("playerModeBtn").onclick = () => show(playerMode);
 $("timedModeBtn").onclick = () => {
-  selectedTimeControl = "3+2"; // Default timed control
+  selectedTimeControl = "3+2";
   const pills = document.querySelectorAll("#timedControlPills .pill-btn");
   pills.forEach((p) => p.classList.toggle("selected", p.dataset.time === "3+2"));
   show(timed);
 };
 
-// Back navigation
 $("backToStartBtn").onclick = () => show(start);
 $("backFromComputerBtn").onclick = () => show(start);
 $("backFromTimedBtn").onclick = () => show(start);
 
-// Start game triggers
 $("startComputerBtn").onclick = () => startComputer(difficulty, selectedTimeControl);
 $("localModeBtn").onclick = () => startLocal(selectedTimeControl);
 $("privateModeBtn").onclick = () => show(room);
 
-// Opponent selection from Timed screen
 $("timedVsComputerBtn").onclick = () => startComputer(difficulty, selectedTimeControl);
 $("timedVsLocalBtn").onclick = () => startLocal(selectedTimeControl);
 $("timedVsPrivateBtn").onclick = () => show(room);
 
-$("undoBtn").onclick = undoComputerTurn;
+$("undoBtn").onclick = undoTurn;
 replayBtn.addEventListener("click", watchReplay);
+
+$("modalNewGameBtn").onclick = () => {
+  hideGameOverModal();
+  $("resetBtn").click();
+};
+
+$("modalCloseBtn").onclick = () => {
+  hideGameOverModal();
+};
 
 document.querySelectorAll(".side-option").forEach((button) => button.onclick = () => selectSide(button.dataset.color));
 
@@ -764,17 +860,21 @@ $("resetBtn").onclick = async () => {
     started = false;
     color = null;
     moveHistory = [];
+    hideGameOverModal();
+    modalShownForGame = false;
     show(lobby);
     await channel.track({ playerId: id, color: null });
     updateLobby();
     return;
   }
   stopClock();
+  hideGameOverModal();
+  modalShownForGame = false;
   if (timedMode) setClock(selectedTimeControl);
   chess.reset();
   lastMove = null;
   moveHistory = [];
-  undoState = null;
+  undoStack = [];
   thinking = false;
   draw();
   if (timedMode) startClock();
