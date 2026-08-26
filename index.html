@@ -7,443 +7,7 @@
     <!-- Loading chess.js for move validation and game logic -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="stylesheet" href="styles.css?v=20" />
-    <!-- Legacy inline styles retained temporarily for reference.
-    <style>
-      :root {
-        --ink: #17212b;
-        --muted: #65727e;
-        --paper: #f7f4ed;
-        --panel: #fffdf9;
-        --accent: #e76f51;
-        --accent-dark: #bb4d35;
-        --line: #ddd6c9;
-        --light-square: #f1dfc5;
-        --dark-square: #698c87;
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: Georgia, "Times New Roman", serif;
-        background:
-          radial-gradient(circle at 15% 10%, #fffdf5 0, transparent 32%),
-          #e5ded1;
-        color: var(--ink);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        min-height: 100dvh;
-        margin: 0;
-        padding: clamp(8px, 3vh, 28px) clamp(10px, 3vw, 16px);
-        overflow-x: hidden;
-        overflow-y: hidden;
-      }
-
-      .app {
-        width: min(100%, 1040px);
-        max-height: 100%;
-        min-width: 0;
-        margin: auto 0;
-      }
-
-      .brand {
-        margin: 0 0 24px;
-        font-size: clamp(2rem, 5vw, 3.6rem);
-        letter-spacing: 0;
-      }
-
-      .brand span {
-        color: var(--accent);
-      }
-
-      .screen {
-        width: 100%;
-        max-height: 100%;
-        background: var(--panel);
-        border: 1px solid var(--line);
-        box-shadow: 0 18px 50px rgba(54, 42, 26, 0.13);
-        overflow: hidden;
-        padding: clamp(16px, 4vw, 52px);
-      }
-
-      .screen h2 {
-        font-size: clamp(1.7rem, 4vw, 2.5rem);
-        margin: 0 0 8px;
-      }
-
-      .screen p {
-        color: var(--muted);
-        margin: 0 0 28px;
-        line-height: 1.5;
-      }
-
-      .mode-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .mode-card {
-        background: transparent;
-        border: 2px solid var(--line);
-        color: var(--ink);
-        cursor: pointer;
-        padding: 22px;
-        text-align: left;
-        min-height: 126px;
-        transition:
-          border-color 0.2s,
-          transform 0.2s,
-          background 0.2s;
-      }
-
-      .mode-card:hover,
-      .mode-card:focus-visible {
-        border-color: var(--accent);
-        background: #fff7ef;
-        transform: translateY(-2px);
-        outline: none;
-      }
-
-      .mode-card strong,
-      .mode-card small {
-        display: block;
-      }
-
-      .mode-card strong {
-        font-size: 1.2rem;
-        margin-bottom: 8px;
-      }
-
-      .mode-card small {
-        color: var(--muted);
-        line-height: 1.4;
-      }
-
-      .difficulty-panel {
-        display: grid;
-        gap: 12px;
-        max-width: 520px;
-      }
-
-      .difficulty-option {
-        background: transparent;
-        border: 2px solid var(--line);
-        color: var(--ink);
-        cursor: pointer;
-        font: inherit;
-        padding: 16px 18px;
-        text-align: left;
-      }
-
-      .difficulty-option:hover,
-      .difficulty-option:focus-visible {
-        background: #fff7ef;
-        border-color: var(--accent);
-        outline: none;
-      }
-
-      .board {
-        display: grid;
-        grid-template-columns: repeat(8, minmax(0, 1fr));
-        grid-template-rows: repeat(8, minmax(0, 1fr));
-        aspect-ratio: 1;
-        width: min(100%, calc(100dvh - 180px));
-        max-width: 640px;
-        justify-self: center;
-        border: 5px solid var(--ink);
-        box-shadow: 0 12px 24px rgba(54, 42, 26, 0.2);
-        transition: transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1);
-      }
-
-      .board.flipped {
-        transform: rotate(180deg);
-      }
-
-      .board.flipped .piece {
-        transform: rotate(180deg);
-      }
-
-      .square {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: clamp(1.8rem, 7vw, 3.7rem);
-        cursor: pointer;
-        user-select: none;
-        transition: background-color 0.2s;
-      }
-
-      /* Chessboard Colors */
-      .light {
-        background-color: var(--light-square);
-      }
-
-      .dark {
-        background-color: var(--dark-square);
-      }
-
-      /* Highlights */
-      .square.selected {
-        background-color: #7ab3d5 !important;
-      }
-
-      .square.highlighted {
-        background-color: #abdca7 !important;
-      }
-
-      .square.last-move {
-        background-color: #e7c86e !important;
-      }
-
-      /* Piece Colors */
-      .piece.w {
-        color: #ffffff;
-        text-shadow:
-          0 0 4px #000,
-          0 0 4px #000;
-      }
-
-      .piece.b {
-        color: #000000;
-        text-shadow: 0 0 2px #fff;
-      }
-
-      .game-layout {
-        display: grid;
-        grid-template-columns: minmax(0, 0.36fr) minmax(0, 0.64fr);
-        gap: clamp(18px, 4vw, 48px);
-        align-items: center;
-        min-width: 0;
-      }
-
-      #gameScreen .game-layout {
-        max-height: 100%;
-      }
-
-      .game-layout > * {
-        min-width: 0;
-      }
-
-      .game-info {
-        order: -1;
-      }
-
-      .status {
-        font-size: 1.25rem;
-        font-weight: bold;
-        margin: 0 0 18px;
-      }
-
-      .room-label {
-        color: var(--muted);
-        font-size: 0.9rem;
-        margin: 0 0 5px;
-        text-transform: uppercase;
-      }
-
-      .room-code {
-        color: var(--accent-dark);
-        font-size: 2rem;
-        font-weight: bold;
-        letter-spacing: 0.16em;
-        margin: 0 0 24px;
-      }
-
-      .btn {
-        margin-top: 18px;
-        padding: 10px 20px;
-        font-size: 1rem;
-        background-color: var(--accent);
-        color: #fff;
-        border: none;
-        border-radius: 2px;
-        cursor: pointer;
-        font-weight: bold;
-        min-height: 44px;
-        transition: background-color 0.2s;
-      }
-
-      .btn:hover {
-        background-color: var(--accent-dark);
-      }
-
-      .text-btn {
-        background: none;
-        border: 0;
-        color: var(--accent-dark);
-        cursor: pointer;
-        font: inherit;
-        margin-top: 14px;
-        padding: 4px 0;
-        min-height: 36px;
-        text-decoration: underline;
-      }
-
-      .room-form {
-        display: flex;
-        gap: 10px;
-        max-width: 440px;
-        width: 100%;
-      }
-
-      .room-form input {
-        border: 2px solid var(--line);
-        color: var(--ink);
-        flex: 1;
-        font: inherit;
-        font-size: 1.1rem;
-        min-width: 0;
-        padding: 11px 12px;
-        text-transform: uppercase;
-      }
-
-      .error {
-        color: var(--accent-dark);
-        min-height: 1.4em;
-        margin: 12px 0 0 !important;
-      }
-
-      .lobby-code {
-        color: var(--accent-dark);
-        font-size: 2.4rem;
-        font-weight: bold;
-        letter-spacing: 0.16em;
-        margin: 14px 0 24px;
-      }
-
-      .side-options {
-        display: flex;
-        gap: 12px;
-        margin: 18px 0;
-        flex-wrap: wrap;
-      }
-
-      .side-option {
-        background: transparent;
-        border: 2px solid var(--line);
-        color: var(--ink);
-        cursor: pointer;
-        font: inherit;
-        font-weight: bold;
-        padding: 12px 22px;
-      }
-
-      .side-option.selected {
-        background: var(--ink);
-        border-color: var(--ink);
-        color: #fff;
-      }
-
-      .side-option:disabled {
-        cursor: not-allowed;
-        opacity: 0.45;
-      }
-
-      .connection-status {
-        color: var(--muted);
-        font-size: 0.9rem;
-        margin: -10px 0 18px;
-      }
-
-      .hidden {
-        display: none !important;
-      }
-
-      @media (max-width: 760px) {
-        .mode-grid,
-        .game-layout {
-          grid-template-columns: 1fr;
-        }
-
-        .game-info {
-          order: 0;
-        }
-
-        .board {
-          width: min(100%, calc(100dvh - 300px));
-          max-width: 640px;
-        }
-      }
-
-      @media (max-width: 420px) {
-        body {
-          padding: 8px 10px;
-        }
-
-        .brand {
-          margin-bottom: 16px;
-        }
-
-        .screen {
-          padding: 16px;
-        }
-
-        .mode-grid {
-          gap: 10px;
-        }
-
-        .mode-card {
-          min-height: auto;
-          padding: 18px;
-        }
-
-        .room-form {
-          flex-direction: column;
-        }
-
-        .room-form .btn {
-          margin-top: 0;
-          width: 100%;
-        }
-
-        .side-options {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-        }
-
-        .side-option {
-          padding: 12px 8px;
-          width: 100%;
-        }
-
-        .lobby-code {
-          font-size: 2rem;
-        }
-      }
-
-      @media (max-height: 620px) and (orientation: landscape) {
-        body {
-          align-items: flex-start;
-          padding-top: 12px;
-        }
-
-        .brand {
-          font-size: 2rem;
-          margin-bottom: 12px;
-        }
-
-        .screen {
-          padding: 18px;
-        }
-
-        .game-layout {
-          grid-template-columns: 170px minmax(0, 1fr);
-          gap: 18px;
-        }
-
-        .board {
-          max-height: calc(100dvh - 100px);
-          width: auto;
-          height: min(calc(100dvh - 100px), 640px);
-        }
-      }
-    </style>
-    -->
+    <link rel="stylesheet" href="styles.css?v=21" />
   </head>
   <body>
     <div class="background-pieces" aria-hidden="true">
@@ -474,45 +38,64 @@
       <section class="screen" id="startScreen">
         <h2>Choose your game</h2>
         <p>
-          Set up a board for two players. Private rooms use a six-character code
-          and accept only one guest in this browser.
+          Select your preferred game mode. Play against computer AI or challenge another player locally or online.
         </p>
         <div class="mode-grid">
           <button class="mode-card" id="computerModeBtn">
             <strong>Play computer</strong>
-            <small>Play against the computer and choose its difficulty.</small>
+            <small>Play against the computer with configurable difficulty and clock settings.</small>
           </button>
           <button class="mode-card" id="playerModeBtn">
             <strong>Play another player</strong>
-            <small
-              >Choose Pass &amp; Play on one device or join a private
-              room.</small
-            >
+            <small>Choose Pass &amp; Play on one device or create/join a private online room.</small>
           </button>
           <button class="mode-card" id="timedModeBtn">
             <strong>Timed game</strong>
-            <small>Choose a chess clock and race against the board.</small>
+            <small>Set a chess clock (Bullet, Blitz, Rapid) and pick your opponent.</small>
           </button>
         </div>
       </section>
 
       <section class="screen hidden" id="timedScreen">
         <h2>Choose time control</h2>
-        <p>Each setting shows minutes per player plus increment per move.</p>
-        <div class="difficulty-panel time-options">
-          <button class="difficulty-option" data-time="1+0">
-            <strong>Bullet</strong><br />1 + 0 minutes
-          </button>
-          <button class="difficulty-option" data-time="3+2">
-            <strong>Blitz</strong><br />3 + 2 minutes
-          </button>
-          <button class="difficulty-option" data-time="5+0">
-            <strong>Rapid</strong><br />5 + 0 minutes
-          </button>
-          <button class="difficulty-option" data-time="10+0">
-            <strong>Long game</strong><br />10 + 0 minutes
-          </button>
+        <p>Select a time limit per player and choose your opponent type.</p>
+        
+        <div class="setting-group">
+          <label class="setting-label">Time Control</label>
+          <div class="option-pills" id="timedControlPills">
+            <button class="pill-btn selected" data-time="1+0">
+              <strong>Bullet</strong> 1 + 0 m
+            </button>
+            <button class="pill-btn" data-time="3+2">
+              <strong>Blitz</strong> 3 + 2 m
+            </button>
+            <button class="pill-btn" data-time="5+0">
+              <strong>Rapid</strong> 5 + 0 m
+            </button>
+            <button class="pill-btn" data-time="10+0">
+              <strong>Long</strong> 10 + 0 m
+            </button>
+          </div>
         </div>
+
+        <div class="setting-group">
+          <label class="setting-label">Choose Opponent</label>
+          <div class="mode-grid opponent-select-grid">
+            <button class="mode-card" id="timedVsComputerBtn">
+              <strong>Play Computer</strong>
+              <small>Race against the clock versus AI opponent.</small>
+            </button>
+            <button class="mode-card" id="timedVsLocalBtn">
+              <strong>Pass &amp; Play</strong>
+              <small>Two players sharing the same device with clock.</small>
+            </button>
+            <button class="mode-card" id="timedVsPrivateBtn">
+              <strong>Private Room</strong>
+              <small>Online match with real-time chess clock.</small>
+            </button>
+          </div>
+        </div>
+
         <button class="text-btn" id="backFromTimedBtn">
           Back to game choices
         </button>
@@ -521,12 +104,22 @@
       <section class="screen hidden" id="playerModeScreen">
         <h2>Choose player mode</h2>
         <p>Select how you want to play against another person.</p>
+        
+        <div class="setting-group">
+          <label class="setting-label">Time Control</label>
+          <div class="option-pills" id="playerTimeControlPills">
+            <button class="pill-btn selected" data-time="unlimited">Unlimited</button>
+            <button class="pill-btn" data-time="1+0">1 + 0 m</button>
+            <button class="pill-btn" data-time="3+2">3 + 2 m</button>
+            <button class="pill-btn" data-time="5+0">5 + 0 m</button>
+            <button class="pill-btn" data-time="10+0">10 + 0 m</button>
+          </div>
+        </div>
+
         <div class="mode-grid">
           <button class="mode-card" id="localModeBtn">
             <strong>Pass &amp; Play</strong>
-            <small
-              >Two players, one device. Take turns at the same board.</small
-            >
+            <small>Two players, one device. Take turns at the same board.</small>
           </button>
           <button class="mode-card" id="privateModeBtn">
             <strong>Private room</strong>
@@ -540,19 +133,36 @@
 
       <section class="screen hidden" id="computerScreen">
         <h2>Play computer</h2>
-        <p>Choose the computer's difficulty before starting.</p>
-        <div class="difficulty-panel">
-          <button class="difficulty-option" data-difficulty="easy">
-            <strong>Easy</strong><br />A relaxed opponent with random legal
-            moves.
-          </button>
-          <button class="difficulty-option" data-difficulty="medium">
-            <strong>Medium</strong><br />Looks for captures and useful moves.
-          </button>
-          <button class="difficulty-option" data-difficulty="hard">
-            <strong>Hard</strong><br />Searches ahead for the strongest move.
-          </button>
+        <p>Choose difficulty and clock settings before starting.</p>
+
+        <div class="setting-group">
+          <label class="setting-label">Difficulty</label>
+          <div class="difficulty-panel">
+            <button class="difficulty-option selected" data-difficulty="easy">
+              <strong>Easy</strong><br />A relaxed opponent with random legal moves.
+            </button>
+            <button class="difficulty-option" data-difficulty="medium">
+              <strong>Medium</strong><br />Looks for captures and useful moves.
+            </button>
+            <button class="difficulty-option" data-difficulty="hard">
+              <strong>Hard</strong><br />Searches ahead for the strongest move.
+            </button>
+          </div>
         </div>
+
+        <div class="setting-group">
+          <label class="setting-label">Time Control</label>
+          <div class="option-pills" id="computerTimeControlPills">
+            <button class="pill-btn selected" data-time="unlimited">Unlimited</button>
+            <button class="pill-btn" data-time="1+0">1 + 0 m</button>
+            <button class="pill-btn" data-time="3+2">3 + 2 m</button>
+            <button class="pill-btn" data-time="5+0">5 + 0 m</button>
+            <button class="pill-btn" data-time="10+0">10 + 0 m</button>
+          </div>
+        </div>
+
+        <button class="btn" id="startComputerBtn" type="button">Start Game</button>
+        <br />
         <button class="text-btn" id="backFromComputerBtn">
           Back to game choices
         </button>
@@ -561,8 +171,7 @@
       <section class="screen hidden" id="roomScreen">
         <h2>Private room</h2>
         <p id="roomDescription">
-          Create a room and share its code with one opponent. Realtime play is
-          enabled through Supabase.
+          Create a room and share its code with one opponent. Realtime play is enabled through Supabase.
         </p>
         <div id="createRoomPanel">
           <button class="btn" id="createRoomBtn">Create room</button>
@@ -583,7 +192,7 @@
 
       <section class="screen hidden" id="lobbyScreen">
         <h2>Room lobby</h2>
-        <p>Share this code, wait for your opponent, then choose a side.</p>
+        <p>Share this code, wait for your opponent, choose side and clock settings.</p>
         <div class="lobby-code" id="lobbyCodeDisplay"></div>
         <div class="share-room hidden" id="shareRoom">
           <input
@@ -598,14 +207,26 @@
         </div>
         <p class="copy-status" id="copyStatus"></p>
         <p id="lobbyPlayers">Waiting for an opponent...</p>
-        <div class="side-options">
-          <button class="side-option" type="button" data-color="w">
-            White
-          </button>
-          <button class="side-option" type="button" data-color="b">
-            Black
-          </button>
+        
+        <div class="setting-group">
+          <label class="setting-label">Choose Side</label>
+          <div class="side-options">
+            <button class="side-option" type="button" data-color="w">White</button>
+            <button class="side-option" type="button" data-color="b">Black</button>
+          </div>
         </div>
+
+        <div class="setting-group" id="lobbyTimeControlGroup">
+          <label class="setting-label">Time Control</label>
+          <div class="option-pills" id="lobbyTimeControlPills">
+            <button class="pill-btn selected" data-time="unlimited">Unlimited</button>
+            <button class="pill-btn" data-time="1+0">1 + 0 m</button>
+            <button class="pill-btn" data-time="3+2">3 + 2 m</button>
+            <button class="pill-btn" data-time="5+0">5 + 0 m</button>
+            <button class="pill-btn" data-time="10+0">10 + 0 m</button>
+          </div>
+        </div>
+
         <p class="error" id="lobbyError"></p>
         <button class="btn hidden" id="startPrivateBtn">Start game</button>
         <br />
@@ -617,10 +238,6 @@
           <aside class="game-info">
             <div class="status" id="status">White's turn</div>
             <div class="connection-status" id="connectionStatus"></div>
-            <div class="clocks hidden" id="clocks">
-              <div class="clock" id="blackClock">05:00</div>
-              <div class="clock" id="whiteClock">05:00</div>
-            </div>
             <div id="roomDetails">
               <p class="room-label">Room code</p>
               <p class="room-code" id="roomCodeDisplay">LOCAL</p>
@@ -630,7 +247,29 @@
             <br />
             <button class="text-btn" id="leaveBtn">Leave game</button>
           </aside>
-          <div class="board" id="board" aria-label="Chess board"></div>
+
+          <div class="board-container">
+            <div class="player-bar top-player" id="topPlayerBar">
+              <div class="player-info">
+                <span class="player-avatar" id="topAvatar">♚</span>
+                <span class="player-name" id="topPlayerName">Opponent</span>
+                <span class="captured-pieces" id="topCaptured"></span>
+              </div>
+              <div class="board-clock hidden" id="topClock">05:00</div>
+            </div>
+
+            <div class="board" id="board" aria-label="Chess board"></div>
+
+            <div class="player-bar bottom-player" id="bottomPlayerBar">
+              <div class="player-info">
+                <span class="player-avatar" id="bottomAvatar">♔</span>
+                <span class="player-name" id="bottomPlayerName">You</span>
+                <span class="captured-pieces" id="bottomCaptured"></span>
+              </div>
+              <div class="board-clock hidden" id="bottomClock">05:00</div>
+            </div>
+          </div>
+
           <aside class="move-sidebar" aria-label="Move history">
             <h3>Move history</h3>
             <button class="replay-btn" id="replayBtn" type="button">
@@ -656,675 +295,6 @@
         </div>
       </section>
     </main>
-
-    <!-- Legacy inline application script retained temporarily for reference.
-    <script>
-      const SUPABASE_URL = "https://yaauwnvcjjetdybeixfr.supabase.co";
-      const SUPABASE_KEY = "sb_publishable_POH2JdWG0JMCzEkt9lhrPg_SmLG0Y1I";
-      const supabaseClient = window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY,
-      );
-
-      // Unicode chess symbols mapping from chess.js notation
-      const pieceSymbols = {
-        p: "♟",
-        r: "♜",
-        n: "♞",
-        b: "♝",
-        q: "♛",
-        k: "♚",
-        P: "♙",
-        R: "♖",
-        N: "♘",
-        B: "♗",
-        Q: "♕",
-        K: "♔",
-      };
-
-      const chess = new Chess();
-      const boardElement = document.getElementById("board");
-      const statusElement = document.getElementById("status");
-      const resetBtn = document.getElementById("resetBtn");
-      const undoBtn = document.getElementById("undoBtn");
-      const startScreen = document.getElementById("startScreen");
-      const playerModeScreen = document.getElementById("playerModeScreen");
-      const computerScreen = document.getElementById("computerScreen");
-      const roomScreen = document.getElementById("roomScreen");
-      const lobbyScreen = document.getElementById("lobbyScreen");
-      const gameScreen = document.getElementById("gameScreen");
-      const roomCodeDisplay = document.getElementById("roomCodeDisplay");
-      const roomError = document.getElementById("roomError");
-      const roomInput = document.getElementById("roomInput");
-      const createRoomPanel = document.getElementById("createRoomPanel");
-      const joinRoomPanel = document.getElementById("joinRoomPanel");
-      const connectionStatusElement =
-        document.getElementById("connectionStatus");
-      const lobbyCodeDisplay = document.getElementById("lobbyCodeDisplay");
-      const lobbyPlayersElement = document.getElementById("lobbyPlayers");
-      const lobbyError = document.getElementById("lobbyError");
-      const startPrivateBtn = document.getElementById("startPrivateBtn");
-      const sideButtons = document.querySelectorAll(".side-option");
-
-      let selectedSquare = null;
-      let roomCode = "LOCAL";
-      let roomChannel = null;
-      let isPrivateRoom = false;
-      let isComputerMode = false;
-      let computerDifficulty = "medium";
-      let computerThinking = false;
-      let computerUndoState = null;
-      let lastMove = null;
-      let playerColor = null;
-      let isRoomHost = false;
-      let gameStarted = false;
-      let opponentLeaveHandled = false;
-      const playerId = crypto.randomUUID();
-
-      // Generate coordinates for an 8x8 board ('a8' to 'h1')
-      const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
-      const ranks = ["8", "7", "6", "5", "4", "3", "2", "1"];
-
-      function createBoard() {
-        boardElement.innerHTML = "";
-        for (let r = 0; r < 8; r++) {
-          for (let f = 0; f < 8; f++) {
-            const squareId = files[f] + ranks[r];
-            const squareSquare = document.createElement("div");
-
-            squareSquare.classList.add("square");
-            squareSquare.classList.add((r + f) % 2 === 0 ? "light" : "dark");
-            squareSquare.setAttribute("id", squareId);
-
-            squareSquare.addEventListener("click", () =>
-              handleSquareClick(squareId),
-            );
-            boardElement.appendChild(squareSquare);
-          }
-        }
-        updateBoardVisuals();
-      }
-
-      function updateBoardVisuals() {
-        // Clear current pieces and highlights
-        document.querySelectorAll(".square").forEach((sq) => {
-          sq.innerHTML = "";
-          sq.classList.remove("selected", "highlighted", "last-move");
-        });
-
-        // Draw pieces based on current chess game state
-        chess.board().forEach((row, rIndex) => {
-          row.forEach((square, fIndex) => {
-            if (square) {
-              const squareId = files[fIndex] + ranks[rIndex];
-              const squareElement = document.getElementById(squareId);
-
-              const pieceElement = document.createElement("span");
-              pieceElement.classList.add("piece", square.color);
-              // Convert symbol case depending on color for correct rendering
-              const symbolKey =
-                square.color === "w"
-                  ? square.type.toUpperCase()
-                  : square.type.toLowerCase();
-              pieceElement.textContent = pieceSymbols[symbolKey];
-
-              squareElement.appendChild(pieceElement);
-            }
-          });
-        });
-
-        if (lastMove) {
-          document.getElementById(lastMove.from)?.classList.add("last-move");
-          document.getElementById(lastMove.to)?.classList.add("last-move");
-        }
-
-        // Update Status text
-        if (chess.in_checkmate()) {
-          statusElement.textContent = `Checkmate! Game Over.`;
-        } else if (chess.in_draw()) {
-          statusElement.textContent = `Game Over: Draw!`;
-        } else {
-          statusElement.textContent =
-            chess.turn() === "w" ? "White's turn" : "Black's turn";
-          if (chess.in_check()) {
-            statusElement.textContent += " (Check!)";
-          }
-        }
-
-        const shouldFlipBoard = isComputerMode
-          ? false
-          : isPrivateRoom
-            ? playerColor === "b"
-            : chess.turn() === "b";
-        boardElement.classList.toggle("flipped", shouldFlipBoard);
-      }
-
-      async function handleSquareClick(squareId) {
-        if (chess.game_over() || computerThinking) return;
-        if (isComputerMode && chess.turn() !== "w") return;
-
-        const clickedSquare = document.getElementById(squareId);
-
-        // If a square is already selected, try to move there
-        if (selectedSquare) {
-          if (selectedSquare === squareId) {
-            // Clicking the same square deselects it
-            selectedSquare = null;
-            updateBoardVisuals();
-            return;
-          }
-
-          // Attempt to move
-          const previousComputerState = isComputerMode
-            ? { fen: chess.fen(), lastMove }
-            : null;
-          const move = chess.move({
-            from: selectedSquare,
-            to: squareId,
-            promotion: "q", // Auto-promote to Queen for simplicity
-          });
-
-          if (move) {
-            if (isComputerMode) {
-              computerUndoState = previousComputerState;
-            }
-            selectedSquare = null;
-            lastMove = { from: move.from, to: move.to };
-            if (isPrivateRoom) {
-              await roomChannel.send({
-                type: "broadcast",
-                event: "move",
-                payload: { fen: chess.fen(), from: move.from, to: move.to },
-              });
-            }
-            updateBoardVisuals();
-            if (isComputerMode && !chess.game_over()) makeComputerMove();
-            return;
-          }
-        }
-
-        // Select a piece if it belongs to the current player
-        const piece = chess.get(squareId);
-        if (
-          piece &&
-          piece.color === chess.turn() &&
-          (!isPrivateRoom || piece.color === playerColor)
-        ) {
-          selectedSquare = squareId;
-          updateBoardVisuals();
-
-          // Highlight selected square
-          clickedSquare.classList.add("selected");
-
-          // Highlight valid possible moves
-          const moves = chess.moves({ square: squareId, verbose: true });
-          moves.forEach((m) => {
-            document.getElementById(m.to).classList.add("highlighted");
-          });
-        } else {
-          // Clicked empty space or enemy piece without a valid move configuration
-          selectedSquare = null;
-          updateBoardVisuals();
-        }
-      }
-
-      resetBtn.addEventListener("click", async () => {
-        if (isPrivateRoom) {
-          await requestNewPrivateGame();
-          return;
-        }
-        chess.reset();
-        computerThinking = false;
-        computerUndoState = null;
-        lastMove = null;
-        selectedSquare = null;
-        updateBoardVisuals();
-        undoBtn.classList.add("hidden");
-        if (isComputerMode) connectionStatusElement.textContent = "Your turn";
-      });
-
-      undoBtn.addEventListener("click", undoComputerTurn);
-
-      function showScreen(screen) {
-        [
-          startScreen,
-          playerModeScreen,
-          computerScreen,
-          roomScreen,
-          lobbyScreen,
-          gameScreen,
-        ].forEach((item) => item.classList.add("hidden"));
-        screen.classList.remove("hidden");
-      }
-
-      function startLocalGame() {
-        isPrivateRoom = false;
-        isComputerMode = false;
-        computerThinking = false;
-        playerColor = null;
-        roomCode = "LOCAL";
-        roomCodeDisplay.textContent = roomCode;
-        connectionStatusElement.textContent = "Pass & Play";
-        undoBtn.classList.add("hidden");
-        chess.reset();
-        computerUndoState = null;
-        lastMove = null;
-        selectedSquare = null;
-        updateBoardVisuals();
-        showScreen(gameScreen);
-      }
-
-      function startComputerGame(difficulty) {
-        isPrivateRoom = false;
-        isComputerMode = true;
-        computerThinking = false;
-        computerDifficulty = difficulty;
-        playerColor = "w";
-        roomCode = "COMPUTER";
-        roomCodeDisplay.textContent = roomCode;
-        connectionStatusElement.textContent = `Computer: ${difficulty}`;
-        undoBtn.classList.remove("hidden");
-        chess.reset();
-        computerUndoState = null;
-        lastMove = null;
-        selectedSquare = null;
-        updateBoardVisuals();
-        showScreen(gameScreen);
-      }
-
-      function chooseComputerMove() {
-        const legalMoves = chess.moves({ verbose: true });
-        if (computerDifficulty === "easy") {
-          return legalMoves[Math.floor(Math.random() * legalMoves.length)];
-        }
-        if (computerDifficulty === "medium") {
-          const captures = legalMoves.filter((move) => move.captured);
-          const candidateMoves = captures.length ? captures : legalMoves;
-          return candidateMoves[
-            Math.floor(Math.random() * candidateMoves.length)
-          ];
-        }
-        let bestMove = legalMoves[0];
-        let bestScore = -Infinity;
-        legalMoves.forEach((move) => {
-          const simulation = new Chess(chess.fen());
-          simulation.move({ from: move.from, to: move.to, promotion: "q" });
-          const score = minimax(simulation, 2, true);
-          if (score > bestScore) {
-            bestScore = score;
-            bestMove = move;
-          }
-        });
-        return bestMove;
-      }
-
-      function minimax(position, depth, maximizing) {
-        if (depth === 0 || position.game_over())
-          return evaluatePosition(position);
-        const moves = position.moves({ verbose: true });
-        const scores = moves.map((move) => {
-          const nextPosition = new Chess(position.fen());
-          nextPosition.move({ from: move.from, to: move.to, promotion: "q" });
-          return minimax(nextPosition, depth - 1, !maximizing);
-        });
-        return maximizing ? Math.max(...scores) : Math.min(...scores);
-      }
-
-      function evaluatePosition(position) {
-        const values = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
-        return position
-          .board()
-          .flat()
-          .reduce((score, piece) => {
-            if (!piece) return score;
-            return score + values[piece.type] * (piece.color === "b" ? 1 : -1);
-          }, 0);
-      }
-
-      function makeComputerMove() {
-        computerThinking = true;
-        connectionStatusElement.textContent = "Computer is thinking...";
-        window.setTimeout(() => {
-          if (chess.game_over() || !isComputerMode) return;
-          const move = chooseComputerMove();
-          chess.move({ from: move.from, to: move.to, promotion: "q" });
-          lastMove = { from: move.from, to: move.to };
-          computerThinking = false;
-          connectionStatusElement.textContent = `Computer: ${computerDifficulty}`;
-          updateBoardVisuals();
-        }, 300);
-      }
-
-      function undoComputerTurn() {
-        if (!isComputerMode || !computerUndoState || computerThinking) return;
-        chess.load(computerUndoState.fen);
-        lastMove = computerUndoState.lastMove;
-        computerUndoState = null;
-        selectedSquare = null;
-        updateBoardVisuals();
-        connectionStatusElement.textContent = `Computer: ${computerDifficulty}`;
-      }
-
-      function getRoomPlayers() {
-        return Object.values(roomChannel.presenceState()).flat();
-      }
-
-      function updateLobby() {
-        const players = getRoomPlayers();
-        const opponentPresent = players.some(
-          (player) => player.playerId !== playerId,
-        );
-        lobbyPlayersElement.textContent = opponentPresent
-          ? `${players.length} of 2 players connected. Choose your side.`
-          : "Waiting for an opponent...";
-        startPrivateBtn.classList.toggle(
-          "hidden",
-          !isRoomHost ||
-            players.length !== 2 ||
-            !players.every((player) => player.color) ||
-            players[0].color === players[1].color,
-        );
-        sideButtons.forEach((button) => {
-          const colorTaken = players.some(
-            (player) =>
-              player.playerId !== playerId &&
-              player.color === button.dataset.color,
-          );
-          button.disabled = colorTaken;
-          button.classList.toggle(
-            "selected",
-            playerColor === button.dataset.color,
-          );
-        });
-      }
-
-      async function selectSide(color) {
-        const opponent = getRoomPlayers().find(
-          (player) => player.playerId !== playerId,
-        );
-        if (opponent && opponent.color === color) {
-          lobbyError.textContent =
-            "Your opponent has already chosen that side.";
-          return;
-        }
-        playerColor = color;
-        lobbyError.textContent = "";
-        await roomChannel.track({ playerId, color });
-        updateLobby();
-      }
-
-      function enterPrivateGame() {
-        gameStarted = true;
-        opponentLeaveHandled = false;
-        connectionStatusElement.textContent = `Connected as ${playerColor === "w" ? "White" : "Black"}`;
-        chess.reset();
-        lastMove = null;
-        selectedSquare = null;
-        updateBoardVisuals();
-        showScreen(gameScreen);
-      }
-
-      async function startPrivateGame(code, host) {
-        isPrivateRoom = true;
-        isComputerMode = false;
-        computerThinking = false;
-        isRoomHost = host;
-        gameStarted = false;
-        opponentLeaveHandled = false;
-        playerColor = null;
-        roomCode = code;
-        roomCodeDisplay.textContent = code;
-        undoBtn.classList.add("hidden");
-        lobbyCodeDisplay.textContent = code;
-        lobbyError.textContent = "";
-        startPrivateBtn.classList.add("hidden");
-        showScreen(lobbyScreen);
-
-        roomChannel = supabaseClient.channel(`chess-room-${code}`, {
-          config: {
-            presence: { key: playerId },
-            broadcast: { self: false },
-          },
-        });
-
-        roomChannel
-          .on("presence", { event: "sync" }, () => {
-            const players = getRoomPlayers();
-            if (players.length > 2) {
-              lobbyError.textContent = "This room already has two players.";
-              alert("This room already has two players.");
-              leavePrivateRoom();
-              return;
-            }
-            updateLobby();
-          })
-          .on("presence", { event: "leave" }, ({ key }) => {
-            if (key !== playerId && gameStarted) {
-              handleOpponentLeave();
-            } else {
-              updateLobby();
-            }
-          })
-          .on("broadcast", { event: "start" }, ({ payload }) => {
-            if (payload.colors[playerId]) {
-              playerColor = payload.colors[playerId];
-              enterPrivateGame();
-            }
-          })
-          .on("broadcast", { event: "new-game" }, () => {
-            preparePrivateRematch();
-          })
-          .on("broadcast", { event: "player-left" }, () => {
-            if (gameStarted) handleOpponentLeave();
-          })
-          .on("broadcast", { event: "move" }, ({ payload }) => {
-            chess.load(payload.fen);
-            selectedSquare = null;
-            lastMove =
-              payload.from && payload.to
-                ? { from: payload.from, to: payload.to }
-                : null;
-            updateBoardVisuals();
-          })
-          .on("broadcast", { event: "reset" }, ({ payload }) => {
-            chess.load(payload.fen);
-            selectedSquare = null;
-            lastMove = null;
-            updateBoardVisuals();
-          });
-
-        roomChannel.subscribe(async (channelStatus) => {
-          if (channelStatus === "SUBSCRIBED") {
-            const existingPlayers = getRoomPlayers().length;
-            if (existingPlayers >= 2) {
-              roomError.textContent = "This room already has two players.";
-              await leavePrivateRoom();
-              return;
-            }
-            await roomChannel.track({ playerId, color: null });
-            updateLobby();
-          } else if (
-            channelStatus === "CHANNEL_ERROR" ||
-            channelStatus === "TIMED_OUT"
-          ) {
-            roomError.textContent = "Could not connect to the private room.";
-            await leavePrivateRoom();
-          }
-        });
-      }
-
-      async function leavePrivateRoom(notifyOpponent = false) {
-        if (roomChannel) {
-          if (notifyOpponent) {
-            await roomChannel.send({
-              type: "broadcast",
-              event: "player-left",
-            });
-          }
-          await roomChannel.unsubscribe();
-          roomChannel = null;
-        }
-        isPrivateRoom = false;
-        playerColor = null;
-        isRoomHost = false;
-        gameStarted = false;
-        connectionStatusElement.textContent = "";
-        showScreen(roomScreen);
-      }
-
-      function handleOpponentLeave() {
-        if (opponentLeaveHandled) return;
-        opponentLeaveHandled = true;
-        alert("Your opponent left the game.");
-        leavePrivateRoom();
-      }
-
-      function preparePrivateRematch() {
-        gameStarted = false;
-        playerColor = null;
-        selectedSquare = null;
-        chess.reset();
-        lobbyError.textContent = "Choose a side for the new game.";
-        sideButtons.forEach((button) => button.classList.remove("selected"));
-        showScreen(lobbyScreen);
-        updateLobby();
-        roomChannel.track({ playerId, color: null });
-      }
-
-      async function requestNewPrivateGame() {
-        await roomChannel.send({
-          type: "broadcast",
-          event: "new-game",
-        });
-        preparePrivateRematch();
-      }
-
-      function makeRoomCode() {
-        return Math.random().toString(36).slice(2, 8).toUpperCase();
-      }
-
-      document
-        .getElementById("computerModeBtn")
-        .addEventListener("click", () => showScreen(computerScreen));
-      document
-        .getElementById("playerModeBtn")
-        .addEventListener("click", () => showScreen(playerModeScreen));
-      document
-        .getElementById("backToStartBtn")
-        .addEventListener("click", () => showScreen(startScreen));
-      document
-        .getElementById("backFromComputerBtn")
-        .addEventListener("click", () => showScreen(startScreen));
-      document.querySelectorAll(".difficulty-option").forEach((button) => {
-        button.addEventListener("click", () =>
-          startComputerGame(button.dataset.difficulty),
-        );
-      });
-
-      sideButtons.forEach((button) => {
-        button.addEventListener("click", () =>
-          selectSide(button.dataset.color),
-        );
-      });
-      startPrivateBtn.addEventListener("click", async () => {
-        const players = getRoomPlayers();
-        if (
-          !isRoomHost ||
-          players.length !== 2 ||
-          !players.every((player) => player.color) ||
-          players[0].color === players[1].color
-        ) {
-          lobbyError.textContent =
-            "Both players must choose different sides first.";
-          return;
-        }
-        const colors = Object.fromEntries(
-          players.map((player) => [player.playerId, player.color]),
-        );
-        await roomChannel.send({
-          type: "broadcast",
-          event: "start",
-          payload: { colors },
-        });
-        enterPrivateGame();
-      });
-
-      document
-        .getElementById("localModeBtn")
-        .addEventListener("click", startLocalGame);
-      document
-        .getElementById("privateModeBtn")
-        .addEventListener("click", () => {
-          roomError.textContent = "";
-          showScreen(roomScreen);
-        });
-      document
-        .getElementById("createRoomBtn")
-        .addEventListener("click", async () => {
-          const code = makeRoomCode();
-          const { error } = await supabaseClient
-            .from("chess_rooms")
-            .insert({ code });
-          if (error) {
-            roomError.textContent =
-              error.code === "PGRST205"
-                ? "Supabase setup incomplete: create the chess_rooms table first."
-                : "Could not create the room. Check your Supabase settings.";
-            return;
-          }
-          await startPrivateGame(code, true);
-        });
-      document.getElementById("showJoinBtn").addEventListener("click", () => {
-        createRoomPanel.classList.add("hidden");
-        joinRoomPanel.classList.remove("hidden");
-        roomInput.focus();
-      });
-      document
-        .getElementById("leaveLobbyBtn")
-        .addEventListener("click", async () => {
-          if (isPrivateRoom) await leavePrivateRoom();
-          showScreen(startScreen);
-        });
-      joinRoomPanel.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        const code = roomInput.value.trim().toUpperCase();
-        if (!/^[A-Z0-9]{6}$/.test(code)) {
-          roomError.textContent = "Enter a valid six-character room code.";
-          return;
-        }
-        const { data, error } = await supabaseClient
-          .from("chess_rooms")
-          .select("code")
-          .eq("code", code)
-          .maybeSingle();
-        if (error || !data) {
-          roomError.textContent = "That room does not exist.";
-          return;
-        }
-        await startPrivateGame(code, false);
-      });
-      document.getElementById("backBtn").addEventListener("click", () => {
-        createRoomPanel.classList.remove("hidden");
-        joinRoomPanel.classList.add("hidden");
-        roomInput.value = "";
-        roomError.textContent = "";
-        showScreen(startScreen);
-      });
-      document
-        .getElementById("leaveBtn")
-        .addEventListener("click", async () => {
-          if (isPrivateRoom) await leavePrivateRoom(true);
-          showScreen(startScreen);
-        });
-
-      window.addEventListener("pagehide", () => {
-        if (roomChannel) supabaseClient.removeChannel(roomChannel);
-      });
-
-      // Initialize board on load
-      createBoard();
-    </script>
-    -->
-    <script src="app.js?v=15"></script>
+    <script src="app.js?v=21"></script>
   </body>
 </html>
