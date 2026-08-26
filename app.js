@@ -6,8 +6,83 @@ const symbols = { p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚", P:
 const chess = new Chess();
 const $ = (id) => document.getElementById(id);
 
+const PUZZLES = [
+  {
+    id: "puzzle_1",
+    title: "Back-Rank Checkmate",
+    category: "Beginner",
+    goal: "White to move: Find the back-rank checkmate in 1 move!",
+    fen: "6k1/5ppp/8/8/8/8/5PPP/1R4K1 w - - 0 1",
+    solution: ["b1b8"],
+    hint: "Look at Black's undefended 8th rank. Move your Rook to b8!"
+  },
+  {
+    id: "puzzle_2",
+    title: "Scholar's Touch",
+    category: "Beginner",
+    goal: "White to move: Deliver checkmate on f7!",
+    fen: "r1bqkb1r/pppp1ppp/2n5/4p3/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1",
+    solution: ["f3f7"],
+    hint: "The f7 pawn is attacked by both Queen and Bishop. Capture on f7!"
+  },
+  {
+    id: "puzzle_3",
+    title: "Smothered Knight Mate",
+    category: "Intermediate",
+    goal: "White to move: Deliver a smothered checkmate with your Knight!",
+    fen: "6nk/6pp/5N2/8/8/8/5PPP/6K1 w - - 0 1",
+    solution: ["f6f7"],
+    hint: "Black's King is trapped by its own pawns. Move your Knight to f7!"
+  },
+  {
+    id: "puzzle_4",
+    title: "Royal Knight Fork",
+    category: "Intermediate",
+    goal: "White to move: Fork Black's King and Queen!",
+    fen: "r3k2r/ppp2ppp/8/3q4/4N3/8/PPPP1PPP/R3K2R w KQkq - 0 1",
+    solution: ["e4f6"],
+    hint: "Check Black's King on f6 with your Knight while simultaneously attacking the Queen."
+  },
+  {
+    id: "puzzle_5",
+    title: "Rook Back-Rank Exchange",
+    category: "Intermediate",
+    goal: "White to move: Force checkmate on the back rank!",
+    fen: "3r2k1/1p3ppp/8/8/8/8/1Q3PPP/3R2K1 w - - 0 1",
+    solution: ["d1d8"],
+    hint: "Capture the Rook on d8 with your Rook for checkmate."
+  },
+  {
+    id: "puzzle_6",
+    title: "Bishop Pin Tactics",
+    category: "Advanced",
+    goal: "White to move: Eliminate the dangerous Queen!",
+    fen: "r1b1k2r/pppp1ppp/8/4n3/4Pq2/2P5/PPP2PPP/R1BQK2R w KQkq - 0 1",
+    solution: ["c1f4"],
+    hint: "Use your Bishop to capture Black's undefended Queen on f4."
+  },
+  {
+    id: "puzzle_7",
+    title: "Corridor Checkmate",
+    category: "Advanced",
+    goal: "White to move: Strike on c8 for checkmate!",
+    fen: "2r3k1/5ppp/8/8/8/8/5PPP/2R3K1 w - - 0 1",
+    solution: ["c1c8"],
+    hint: "Swoop down to c8 with your Rook to deliver checkmate!"
+  },
+  {
+    id: "puzzle_8",
+    title: "Back Rank Defense",
+    category: "Advanced",
+    goal: "Black to move: Escape checkmate by moving your King!",
+    fen: "r1b1k2r/pppp1ppp/5n2/4Q3/4P3/8/PPP2PPP/R1B1KB1R b KQkq - 0 1",
+    solution: ["e8f8"],
+    hint: "Escape check by moving your King to safety on f8."
+  }
+];
+
 const board = $("board"), status = $("status"), error = $("roomError");
-const start = $("startScreen"), playerMode = $("playerModeScreen"), computer = $("computerScreen"), timed = $("timedScreen"), room = $("roomScreen"), lobby = $("lobbyScreen"), game = $("gameScreen");
+const start = $("startScreen"), playerMode = $("playerModeScreen"), computer = $("computerScreen"), timed = $("timedScreen"), puzzleScreen = $("puzzleScreen"), room = $("roomScreen"), lobby = $("lobbyScreen"), game = $("gameScreen");
 const codeDisplay = $("roomCodeDisplay"), connection = $("connectionStatus"), lobbyError = $("lobbyError"), lobbyPlayers = $("lobbyPlayers"), startPrivate = $("startPrivateBtn"), undo = $("undoBtn");
 const moveHistoryBody = $("moveHistoryBody"), replayBtn = $("replayBtn");
 const roomLinkInput = $("roomLinkInput"), copyRoomLinkBtn = $("copyRoomLinkBtn"), copyStatus = $("copyStatus"), shareRoom = $("shareRoom");
@@ -16,18 +91,31 @@ const topClock = $("topClock"), bottomClock = $("bottomClock");
 const files = ["a", "b", "c", "d", "e", "f", "g", "h"], ranks = ["8", "7", "6", "5", "4", "3", "2", "1"];
 
 let selected = null, lastMove = null, moveHistory = [], replaying = false, replayBoardFlipped = false;
-let channel = null, privateRoom = false, computerMode = false, timedMode = false, thinking = false;
+let channel = null, privateRoom = false, computerMode = false, timedMode = false, puzzleMode = false, thinking = false;
 let difficulty = "medium", selectedTimeControl = "5+0", color = null, host = false, started = false;
 let undoStack = []; // Unlimited undo move stack
 let modalShownForGame = false;
 let showMoveHints = localStorage.getItem("chess_show_move_hints") !== "false";
 
+let currentPuzzleIndex = 0, currentPuzzleStep = 0;
+let solvedPuzzles = JSON.parse(localStorage.getItem("chess_solved_puzzles") || "[]");
+
 let clockIncrement = 0, clockMs = { w: 300000, b: 300000 }, clockTimer = null, clockLastTick = 0, clockExpired = false;
 const id = crypto.randomUUID();
 
 function show(screen) {
-  [start, playerMode, computer, timed, room, lobby, game].forEach((item) => item.classList.add("hidden"));
+  [start, playerMode, computer, timed, puzzleScreen, room, lobby, game].forEach((item) => item.classList.add("hidden"));
   screen.classList.remove("hidden");
+}
+
+function showToast(message) {
+  const existing = document.querySelector(".toast-message");
+  if (existing) existing.remove();
+  const toast = document.createElement("div");
+  toast.className = "toast-message";
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
 }
 
 function syncMoveHintsToggles() {
@@ -50,6 +138,62 @@ function showGameOverModal(titleText, messageText) {
 
 function hideGameOverModal() {
   $("gameOverModal").classList.add("hidden");
+}
+
+function renderPuzzleGrid() {
+  $("puzzleScoreDisplay").textContent = `Solved: ${solvedPuzzles.length} / ${PUZZLES.length}`;
+  const grid = $("puzzleGrid");
+  grid.innerHTML = "";
+
+  PUZZLES.forEach((p, idx) => {
+    const isSolved = solvedPuzzles.includes(p.id);
+    const card = document.createElement("div");
+    card.className = `puzzle-card ${isSolved ? "solved" : ""}`;
+    card.innerHTML = `
+      <div>
+        <div class="puzzle-card-header">
+          <span class="puzzle-badge ${p.category.toLowerCase()}">${p.category}</span>
+          ${isSolved ? '<span class="solved-tag">Solved ✓</span>' : ''}
+        </div>
+        <h3 class="puzzle-card-title">#${idx + 1} ${p.title}</h3>
+        <p class="puzzle-card-desc">${p.goal}</p>
+      </div>
+    `;
+    card.onclick = () => loadPuzzle(idx);
+    grid.appendChild(card);
+  });
+}
+
+function loadPuzzle(idx) {
+  currentPuzzleIndex = idx;
+  currentPuzzleStep = 0;
+  const puzzle = PUZZLES[idx];
+
+  stopClock();
+  hideGameOverModal();
+  modalShownForGame = false;
+  privateRoom = false;
+  computerMode = false;
+  timedMode = false;
+  puzzleMode = true;
+  color = puzzle.fen.split(" ")[1] || "w";
+
+  $("standardControls").classList.add("hidden");
+  $("puzzleControls").classList.remove("hidden");
+  $("nextPuzzleBtn").classList.add("hidden");
+
+  codeDisplay.textContent = `PUZZLE #${idx + 1}`;
+  connection.textContent = `Puzzle #${idx + 1}: ${puzzle.title}`;
+
+  chess.load(puzzle.fen);
+  lastMove = null;
+  moveHistory = [];
+  undoStack = [];
+  selected = null;
+
+  draw();
+  status.textContent = puzzle.goal;
+  show(game);
 }
 
 function setClock(tc) {
@@ -164,6 +308,9 @@ function renderPlayerBars() {
   const bottomColor = isFlipped ? "b" : "w";
 
   function getTitle(col) {
+    if (puzzleMode) {
+      return col === color ? "You (Puzzle)" : "Target";
+    }
     if (computerMode) {
       return col === "b" ? `Computer (${difficulty})` : "You";
     }
@@ -253,28 +400,30 @@ function draw() {
     });
   }
 
-  if (clockExpired) {
-    // Status already handled on timeout
-  } else if (chess.game_over()) {
-    if (chess.in_checkmate()) {
-      const winner = chess.turn() === "w" ? "Black" : "White";
-      status.textContent = `Checkmate! ${winner} wins.`;
-      if (!modalShownForGame) {
-        modalShownForGame = true;
-        showGameOverModal("Checkmate!", `Game over! ${winner} wins by checkmate.`);
+  if (!puzzleMode) {
+    if (clockExpired) {
+      // Status already handled on timeout
+    } else if (chess.game_over()) {
+      if (chess.in_checkmate()) {
+        const winner = chess.turn() === "w" ? "Black" : "White";
+        status.textContent = `Checkmate! ${winner} wins.`;
+        if (!modalShownForGame) {
+          modalShownForGame = true;
+          showGameOverModal("Checkmate!", `Game over! ${winner} wins by checkmate.`);
+        }
+      } else if (chess.in_draw()) {
+        status.textContent = "Game over: Draw!";
+        if (!modalShownForGame) {
+          modalShownForGame = true;
+          showGameOverModal("Draw!", "Game over: The game ended in a draw.");
+        }
       }
-    } else if (chess.in_draw()) {
-      status.textContent = "Game over: Draw!";
-      if (!modalShownForGame) {
-        modalShownForGame = true;
-        showGameOverModal("Draw!", "Game over: The game ended in a draw.");
-      }
+    } else {
+      status.textContent = `${chess.turn() === "w" ? "White" : "Black"}'s turn${chess.in_check() ? " (Check!)" : ""}`;
     }
-  } else {
-    status.textContent = `${chess.turn() === "w" ? "White" : "Black"}'s turn${chess.in_check() ? " (Check!)" : ""}`;
   }
 
-  const shouldFlip = replaying ? replayBoardFlipped : privateRoom ? color === "b" : !computerMode && chess.turn() === "b";
+  const shouldFlip = replaying ? replayBoardFlipped : puzzleMode ? color === "b" : privateRoom ? color === "b" : !computerMode && chess.turn() === "b";
   board.classList.toggle("flipped", shouldFlip);
 
   moveHistoryBody.innerHTML = moveHistory.length ? moveHistory.reduce((rows, move, index) => {
@@ -286,7 +435,7 @@ function draw() {
 
   if (privateRoom) {
     undo.classList.add("hidden");
-  } else {
+  } else if (!puzzleMode) {
     undo.classList.remove("hidden");
     undo.disabled = undoStack.length === 0 || thinking || replaying;
   }
@@ -333,17 +482,51 @@ async function clickSquare(square) {
       return;
     }
     
-    // Save snapshot for unlimited undo BEFORE move
-    undoStack.push({
-      fen: chess.fen(),
-      lastMove: lastMove ? { ...lastMove } : null,
-      clockMs: { ...clockMs },
-      moveHistory: [...moveHistory]
-    });
+    if (!puzzleMode) {
+      // Save snapshot for unlimited undo BEFORE move
+      undoStack.push({
+        fen: chess.fen(),
+        lastMove: lastMove ? { ...lastMove } : null,
+        clockMs: { ...clockMs },
+        moveHistory: [...moveHistory]
+      });
+    }
 
     const move = chess.move({ from: selected, to: square, promotion: "q" });
 
     if (move) {
+      if (puzzleMode) {
+        const puzzle = PUZZLES[currentPuzzleIndex];
+        const userAttempt = move.from + move.to;
+        const targetSolution = puzzle.solution[currentPuzzleStep];
+
+        if (userAttempt === targetSolution) {
+          currentPuzzleStep++;
+          selected = null;
+          lastMove = { from: move.from, to: move.to };
+          moveHistory.push(chess.history().slice(-1)[0]);
+          draw();
+
+          if (currentPuzzleStep >= puzzle.solution.length) {
+            // Puzzle Solved!
+            if (!solvedPuzzles.includes(puzzle.id)) {
+              solvedPuzzles.push(puzzle.id);
+              localStorage.setItem("chess_solved_puzzles", JSON.stringify(solvedPuzzles));
+            }
+            $("nextPuzzleBtn").classList.remove("hidden");
+            showToast("Puzzle Solved! 🎉 Great job!");
+            showGameOverModal("Puzzle Solved! 🎉", `Fantastic! You successfully solved "${puzzle.title}".`);
+          }
+        } else {
+          // Incorrect Move in Puzzle
+          chess.undo();
+          selected = null;
+          draw();
+          showToast("Incorrect move! Try again ❌");
+        }
+        return;
+      }
+
       if (timedMode) clockMs[move.color] += clockIncrement;
       selected = null;
       lastMove = { from: move.from, to: move.to };
@@ -363,7 +546,7 @@ async function clickSquare(square) {
       return;
     } else {
       // Invalid move: remove pushed snapshot
-      undoStack.pop();
+      if (!puzzleMode) undoStack.pop();
     }
   }
 
@@ -389,9 +572,13 @@ function startLocal(tc = selectedTimeControl) {
   modalShownForGame = false;
   privateRoom = false;
   computerMode = false;
+  puzzleMode = false;
   thinking = false;
   color = null;
   codeDisplay.textContent = "LOCAL";
+
+  $("standardControls").classList.remove("hidden");
+  $("puzzleControls").classList.add("hidden");
 
   setClock(tc);
   connection.textContent = timedMode ? `Pass & Play (${selectedTimeControl})` : "Pass & Play";
@@ -412,10 +599,14 @@ function startComputer(level = difficulty, tc = selectedTimeControl) {
   modalShownForGame = false;
   privateRoom = false;
   computerMode = true;
+  puzzleMode = false;
   thinking = false;
   difficulty = level;
   color = "w";
   codeDisplay.textContent = "COMPUTER";
+
+  $("standardControls").classList.remove("hidden");
+  $("puzzleControls").classList.add("hidden");
 
   setClock(tc);
   connection.textContent = timedMode ? `Computer: ${level} (${selectedTimeControl})` : `Computer: ${level}`;
@@ -500,7 +691,7 @@ function computerMove() {
 }
 
 function undoTurn() {
-  if (thinking || undoStack.length === 0 || replaying) return;
+  if (thinking || undoStack.length === 0 || replaying || puzzleMode) return;
 
   let targetState = null;
   if (computerMode) {
@@ -627,6 +818,9 @@ function enterGame(tc = selectedTimeControl) {
   started = true;
   hideGameOverModal();
   modalShownForGame = false;
+  puzzleMode = false;
+  $("standardControls").classList.remove("hidden");
+  $("puzzleControls").classList.add("hidden");
   setClock(tc);
   connection.textContent = timedMode ? `Connected as ${color === "w" ? "White" : "Black"} (${tc})` : `Connected as ${color === "w" ? "White" : "Black"}`;
   chess.reset();
@@ -644,6 +838,7 @@ async function leavePrivate(notify = false) {
   hideGameOverModal();
   modalShownForGame = false;
   timedMode = false;
+  puzzleMode = false;
   if (channel) {
     if (notify) await channel.send({ type: "broadcast", event: "player-left" });
     await channel.unsubscribe();
@@ -674,6 +869,7 @@ async function joinPrivate(code, isHost) {
   modalShownForGame = false;
   privateRoom = true;
   computerMode = false;
+  puzzleMode = false;
   host = isHost;
   started = false;
   color = null;
@@ -806,10 +1002,15 @@ $("timedModeBtn").onclick = () => {
   pills.forEach((p) => p.classList.toggle("selected", p.dataset.time === "3+2"));
   show(timed);
 };
+$("puzzleModeBtn").onclick = () => {
+  renderPuzzleGrid();
+  show(puzzleScreen);
+};
 
 $("backToStartBtn").onclick = () => show(start);
 $("backFromComputerBtn").onclick = () => show(start);
 $("backFromTimedBtn").onclick = () => show(start);
+$("backFromPuzzleBtn").onclick = () => show(start);
 
 $("startComputerBtn").onclick = () => startComputer(difficulty, selectedTimeControl);
 $("localModeBtn").onclick = () => startLocal(selectedTimeControl);
@@ -822,9 +1023,41 @@ $("timedVsPrivateBtn").onclick = () => show(room);
 $("undoBtn").onclick = undoTurn;
 replayBtn.addEventListener("click", watchReplay);
 
+$("hintBtn").onclick = () => {
+  const puzzle = PUZZLES[currentPuzzleIndex];
+  showToast(`💡 Hint: ${puzzle.hint}`);
+};
+
+$("retryPuzzleBtn").onclick = () => {
+  loadPuzzle(currentPuzzleIndex);
+};
+
+$("nextPuzzleBtn").onclick = () => {
+  const nextIdx = (currentPuzzleIndex + 1) % PUZZLES.length;
+  loadPuzzle(nextIdx);
+};
+
+$("puzzleListBtn").onclick = () => {
+  renderPuzzleGrid();
+  show(puzzleScreen);
+};
+
+$("resetPuzzlesProgressBtn").onclick = () => {
+  if (confirm("Are you sure you want to reset your puzzle progress?")) {
+    solvedPuzzles = [];
+    localStorage.removeItem("chess_solved_puzzles");
+    renderPuzzleGrid();
+  }
+};
+
 $("modalNewGameBtn").onclick = () => {
   hideGameOverModal();
-  $("resetBtn").click();
+  if (puzzleMode) {
+    const nextIdx = (currentPuzzleIndex + 1) % PUZZLES.length;
+    loadPuzzle(nextIdx);
+  } else {
+    $("resetBtn").click();
+  }
 };
 
 $("modalCloseBtn").onclick = () => {
@@ -860,8 +1093,14 @@ $("leaveLobbyBtn").onclick = () => leavePrivate();
 $("leaveBtn").onclick = () => leaveBtnClick();
 
 function leaveBtnClick() {
-  if (privateRoom) leavePrivate(true);
-  else show(start);
+  if (puzzleMode) {
+    renderPuzzleGrid();
+    show(puzzleScreen);
+  } else if (privateRoom) {
+    leavePrivate(true);
+  } else {
+    show(start);
+  }
 }
 
 $("resetBtn").onclick = async () => {
