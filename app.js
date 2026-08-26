@@ -55,11 +55,11 @@ function stopClock() {
 
 function startClock() {
   stopClock();
-  if (!timedMode || clockExpired || chess.game_over() || replaying) return;
+  if (!timedMode || clockExpired || chess.game_over() || replaying || moveHistory.length === 0) return;
 
   clockLastTick = Date.now();
   clockTimer = setInterval(() => {
-    if (replaying || clockExpired || chess.game_over()) return;
+    if (replaying || clockExpired || chess.game_over() || moveHistory.length === 0) return;
     const now = Date.now();
     const delta = now - clockLastTick;
     clockLastTick = now;
@@ -116,7 +116,7 @@ function renderClocks() {
   bottomClock.textContent = formatClock(clockMs[bottomColor]);
 
   const activeTurn = chess.turn();
-  const isActive = !clockExpired && !replaying && !chess.game_over();
+  const isActive = !clockExpired && !replaying && !chess.game_over() && moveHistory.length > 0;
 
   topClock.classList.toggle("active", isActive && activeTurn === topColor);
   bottomClock.classList.toggle("active", isActive && activeTurn === bottomColor);
