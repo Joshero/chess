@@ -196,12 +196,12 @@ const PUZZLES = [
   },
   {
     id: "puzzle_21",
-    title: "Clearance Sacrifice",
+    title: "Clearance Queen Sacrifice",
     category: "Advanced",
-    goal: "White to move: Mate in 2! Break open Black's defense.",
-    fen: "5rk1/5ppp/8/8/8/8/1Q3PPP/5RK1 w - - 0 1",
+    goal: "White to move: Mate in 2! Sacrifice the Queen to force back-rank mate.",
+    fen: "1r3rk1/5ppp/8/8/8/8/1Q3PPP/5RK1 w - - 0 1",
     solution: ["b2b8", "f8b8", "f1b8"],
-    hint: "Sacrifice your Queen on b8 to draw the Rook away, then recapture with your Rook for mate!"
+    hint: "Smash through on b8 by capturing Black's Rook with your Queen, forcing Black to recapture with their f8 Rook, then deliver checkmate with your Rook on b8!"
   },
   {
     id: "puzzle_22",
