@@ -1564,11 +1564,8 @@
 
       function updateLobby() {
         const list = players();
-        lobbyPlayers.textContent = list.length === 2 ? "Both players connected. Choose your sides." : "Waiting for an opponent...";
-        startPrivate.classList.toggle(
-          "hidden",
-          !host || list.length !== 2 || !list.every((p) => p.color) || list[0].color === list[1].color
-        );
+        lobbyPlayers.textContent = list.length >= 2 ? "Both players connected! Select your side or start the game." : "Waiting for an opponent...";
+        startPrivate.classList.toggle("hidden", !host);
         document.querySelectorAll(".side-option").forEach((button) => {
           button.disabled = false;
           button.classList.toggle("selected", color === button.dataset.color);
@@ -1665,7 +1662,7 @@
         show(lobby);
 
         channel = supabaseClient.channel(`chess-room-${code}`, {
-          config: { presence: { key: id }, broadcast: { self: false } },
+          config: { presence: { key: id }, broadcast: { self: true } },
         });
 
         channel
@@ -1891,24 +1888,27 @@
 
       startPrivate.onclick = async () => {
         const list = players();
-        if (list.length !== 2) return;
-        const hostPlayer = list.find((p) => p.playerId === id);
+        const hostPlayer = list.find((p) => p.playerId === id) || { playerId: id, color: color };
         const guestPlayer = list.find((p) => p.playerId !== id);
-        if (!hostPlayer || !guestPlayer || !hostPlayer.color || !guestPlayer.color) return;
+
+        let hostColor = hostPlayer.color || color || "w";
+        let guestColor = guestPlayer ? guestPlayer.color : (hostColor === "w" ? "b" : "w");
+        if (hostColor === guestColor) {
+          guestColor = hostColor === "w" ? "b" : "w";
+        }
 
         const colors = {
-          [hostPlayer.playerId]: hostPlayer.color,
-          [guestPlayer.playerId]: guestPlayer.color
+          [id]: hostColor
         };
+        if (guestPlayer) {
+          colors[guestPlayer.playerId] = guestColor;
+        }
 
         await channel.send({
           type: "broadcast",
           event: "start",
           payload: { colors, timeControl: selectedTimeControl }
         });
-
-        color = hostPlayer.color;
-        enterGame(selectedTimeControl);
       };
 
       $("showJoinBtn").onclick = () => {
