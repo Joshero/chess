@@ -1500,6 +1500,28 @@ copyRoomLinkBtn.onclick = async () => {
   copyStatus.textContent = "Link copied. Send it to your opponent.";
 };
 
+startPrivate.onclick = async () => {
+  const list = players();
+  if (list.length !== 2) return;
+  const hostPlayer = list.find((p) => p.playerId === id);
+  const guestPlayer = list.find((p) => p.playerId !== id);
+  if (!hostPlayer || !guestPlayer || !hostPlayer.color || !guestPlayer.color) return;
+
+  const colors = {
+    [hostPlayer.playerId]: hostPlayer.color,
+    [guestPlayer.playerId]: guestPlayer.color
+  };
+
+  await channel.send({
+    type: "broadcast",
+    event: "start",
+    payload: { colors, timeControl: selectedTimeControl }
+  });
+
+  color = hostPlayer.color;
+  enterGame(selectedTimeControl);
+};
+
 $("showJoinBtn").onclick = () => {
   $("createRoomPanel").classList.add("hidden");
   $("joinRoomPanel").classList.remove("hidden");
