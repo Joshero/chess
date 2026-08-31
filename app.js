@@ -1539,9 +1539,6 @@ startPrivate.onclick = async () => {
       console.log("Broadcast error:", e);
     }
   }
-
-  color = hostColor;
-  enterGame(selectedTimeControl);
 };
 
 $("showJoinBtn").onclick = () => {
