@@ -33,7 +33,9 @@
       <span class="piece-twenty">♙</span>
     </div>
     <main class="app">
-      <h1 class="brand">Chess<span>.</span></h1>
+      <h1 class="brand">
+        <button type="button" class="brand-home" id="homeLogoBtn" aria-label="Go to home page">Chess<span>.</span></button>
+      </h1>
 
       <section class="screen" id="startScreen">
         <h2>Choose your game</h2>
@@ -1960,6 +1962,20 @@
           show(start);
         }
       }
+
+      $("homeLogoBtn").onclick = async () => {
+        const wasInGame = !game.classList.contains("hidden");
+        if (wasInGame) {
+          showToast("Taking you straight home.");
+        }
+        if (privateRoom) {
+          await leavePrivate(wasInGame);
+          return;
+        }
+        stopClock();
+        hideGameOverModal();
+        show(start);
+      };
 
       $("resetBtn").onclick = async () => {
         if (privateRoom) {

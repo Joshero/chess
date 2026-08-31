@@ -1572,6 +1572,20 @@ function leaveBtnClick() {
   }
 }
 
+$("homeLogoBtn").onclick = async () => {
+  const wasInGame = !game.classList.contains("hidden");
+  if (wasInGame) {
+    showToast("Taking you straight home.");
+  }
+  if (privateRoom) {
+    await leavePrivate(wasInGame);
+    return;
+  }
+  stopClock();
+  hideGameOverModal();
+  show(start);
+};
+
 $("resetBtn").onclick = async () => {
   if (privateRoom) {
     await channel.send({ type: "broadcast", event: "new-game" });
