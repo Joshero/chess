@@ -318,9 +318,34 @@ async function fetchOnlineDailyPuzzle(todayKey) {
     const data = await res.json();
     if (data && data.puzzle && data.puzzle.solution && data.game && data.game.fen) {
       const p = data.puzzle;
-      const fen = data.game.fen;
-      const solution = p.solution;
-      const cleanFen = fen.split(" ").slice(0, 4).join(" ") + " 0 1";
+      const initialFen = data.game.fen;
+      const fullSolution = p.solution;
+      
+      let tempChess = new Chess();
+      const loaded = tempChess.load(initialFen);
+      let playerFen = initialFen;
+      let playerSolution = fullSolution;
+
+      if (loaded && fullSolution.length > 1) {
+        const setupMoveStr = fullSolution[0];
+        let setupMove = null;
+        if (setupMoveStr.length >= 4) {
+          setupMove = tempChess.move({
+            from: setupMoveStr.slice(0, 2),
+            to: setupMoveStr.slice(2, 4),
+            promotion: setupMoveStr[4] || "q"
+          });
+        }
+        if (!setupMove) {
+          setupMove = tempChess.move(setupMoveStr);
+        }
+        if (setupMove) {
+          playerFen = tempChess.fen();
+          playerSolution = fullSolution.slice(1);
+        }
+      }
+
+      const cleanFen = playerFen.split(" ").slice(0, 4).join(" ") + " 0 1";
       
       dailyPuzzle = {
         id: `daily_${todayKey}`,
@@ -328,7 +353,7 @@ async function fetchOnlineDailyPuzzle(todayKey) {
         category: "Advanced",
         goal: `${cleanFen.split(" ")[1] === "w" ? "White" : "Black"} to move: Find the best tactical move!`,
         fen: cleanFen,
-        solution: solution,
+        solution: playerSolution,
         hint: `Daily puzzle rating: ${p.rating || 1500}. Focus on the strongest tactical forcing move!`,
         isDaily: true,
         date: todayKey
@@ -336,7 +361,7 @@ async function fetchOnlineDailyPuzzle(todayKey) {
       renderDailyPuzzleBanner();
     }
   } catch (e) {
-    console.log("Using local daily puzzle fallback");
+    console.log("Using local daily puzzle fallback:", e);
   }
 }
 
