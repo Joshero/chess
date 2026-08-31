@@ -53,9 +53,14 @@
             <strong>Timed game</strong>
             <small>Set a chess clock (Bullet, Blitz, Rapid) and pick your opponent.</small>
           </button>
+          <button class="mode-card daily-mode-card" id="dailyChallengeBtn">
+            <div class="daily-card-badge">⭐ NEW DAILY</div>
+            <strong>Daily Puzzle 🎯</strong>
+            <small>A fresh tactical challenge from the global API every 24 hours!</small>
+          </button>
           <button class="mode-card" id="puzzleModeBtn">
             <strong>Practice &amp; Puzzles 🧩</strong>
-            <small>Solve tactical puzzles (Mate in 1, Royal Forks, Pin Attack) to improve!</small>
+            <small>Solve 24 tactical puzzles (Beginner, Intermediate, Advanced) to improve!</small>
           </button>
         </div>
       </section>
@@ -1705,6 +1710,11 @@
         pills.forEach((p) => p.classList.toggle("selected", p.dataset.time === "3+2"));
         show(timed);
       };
+      $("dailyChallengeBtn").onclick = () => {
+        const p = getDailyPuzzle();
+        loadCustomPuzzle(p);
+      };
+
       $("puzzleModeBtn").onclick = () => {
         renderPuzzleGrid();
         renderDailyPuzzleBanner();

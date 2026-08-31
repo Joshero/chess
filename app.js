@@ -1330,8 +1330,18 @@ $("timedModeBtn").onclick = () => {
   pills.forEach((p) => p.classList.toggle("selected", p.dataset.time === "3+2"));
   show(timed);
 };
+$("dailyChallengeBtn").onclick = () => {
+  const p = getDailyPuzzle();
+  loadCustomPuzzle(p);
+};
+
 $("puzzleModeBtn").onclick = () => {
   renderPuzzleGrid();
+  renderDailyPuzzleBanner();
+  updateDailyTimer();
+  if (!dailyTimerInterval) {
+    dailyTimerInterval = setInterval(updateDailyTimer, 1000);
+  }
   show(puzzleScreen);
 };
 
@@ -1352,16 +1362,20 @@ $("undoBtn").onclick = undoTurn;
 replayBtn.addEventListener("click", watchReplay);
 
 $("hintBtn").onclick = () => {
-  const puzzle = PUZZLES[currentPuzzleIndex];
-  showToast(`💡 Hint: ${puzzle.hint}`);
+  const puzzle = currentPuzzleIndex === -1 ? dailyPuzzle : PUZZLES[currentPuzzleIndex];
+  if (puzzle) showToast(`💡 Hint: ${puzzle.hint}`);
 };
 
 $("retryPuzzleBtn").onclick = () => {
-  loadPuzzle(currentPuzzleIndex);
+  if (currentPuzzleIndex === -1 && dailyPuzzle) {
+    loadCustomPuzzle(dailyPuzzle);
+  } else {
+    loadPuzzle(currentPuzzleIndex);
+  }
 };
 
 $("nextPuzzleBtn").onclick = () => {
-  const nextIdx = (currentPuzzleIndex + 1) % PUZZLES.length;
+  const nextIdx = currentPuzzleIndex === -1 ? 0 : (currentPuzzleIndex + 1) % PUZZLES.length;
   loadPuzzle(nextIdx);
 };
 

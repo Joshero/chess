@@ -62,11 +62,36 @@ body {
 .screen p { color: var(--muted); margin: 0 0 28px; line-height: 1.5; }
 
 .mode-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-.mode-card { background: transparent; border: 2px solid var(--line); color: var(--ink); cursor: pointer; padding: 22px; text-align: left; min-height: 126px; transition: border-color 0.2s, transform 0.2s, background 0.2s; }
+.mode-card { background: transparent; border: 2px solid var(--line); color: var(--ink); cursor: pointer; padding: 22px; text-align: left; min-height: 126px; transition: border-color 0.2s, transform 0.2s, background 0.2s; position: relative; }
 .mode-card:hover, .mode-card:focus-visible { border-color: var(--accent); background: #fff7ef; transform: translateY(-2px); outline: none; }
 .mode-card strong, .mode-card small { display: block; }
 .mode-card strong { font-size: 1.2rem; margin-bottom: 8px; }
 .mode-card small { color: var(--muted); line-height: 1.4; }
+
+.mode-card.daily-mode-card {
+  border-color: #e7c86e;
+  background: linear-gradient(135deg, #fffdf8 0%, #fff6e5 100%);
+}
+
+.mode-card.daily-mode-card:hover {
+  border-color: #d4af37;
+  background: #fff0d4;
+  box-shadow: 0 6px 20px rgba(231, 200, 110, 0.35);
+}
+
+.daily-card-badge {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: #f2c879;
+  color: #17212b;
+  font-size: 0.72rem;
+  font-weight: bold;
+  padding: 2px 7px;
+  border-radius: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 
 .opponent-select-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
