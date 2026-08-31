@@ -1175,8 +1175,16 @@ function players() {
 
 function updateLobby() {
   const list = players();
-  lobbyPlayers.textContent = list.length >= 2 ? "Both players connected! Select your side or start the game." : "Waiting for an opponent...";
-  startPrivate.classList.toggle("hidden", !host);
+  const connectedCount = list.length;
+  if (connectedCount >= 2) {
+    lobbyPlayers.textContent = "Both players connected! Select sides or click Start Game.";
+    startPrivate.classList.toggle("hidden", !host);
+    startPrivate.disabled = false;
+  } else {
+    lobbyPlayers.textContent = `Waiting for opponent... (${connectedCount}/2 connected)`;
+    startPrivate.classList.add("hidden");
+    startPrivate.disabled = true;
+  }
   document.querySelectorAll(".side-option").forEach((button) => {
     button.disabled = false;
     button.classList.toggle("selected", color === button.dataset.color);
@@ -1498,6 +1506,12 @@ copyRoomLinkBtn.onclick = async () => {
 
 startPrivate.onclick = async () => {
   const list = players();
+  if (list.length < 2) {
+    lobbyError.textContent = "Cannot start game: Waiting for an opponent to join!";
+    return;
+  }
+  lobbyError.textContent = "";
+
   const hostPlayer = list.find((p) => p.playerId === id) || { playerId: id, color: color };
   const guestPlayer = list.find((p) => p.playerId !== id);
 
