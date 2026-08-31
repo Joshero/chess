@@ -797,17 +797,20 @@ async function clickSquare(square) {
     if (move) {
       if (puzzleMode) {
         const puzzle = currentPuzzleIndex === -1 ? dailyPuzzle : PUZZLES[currentPuzzleIndex];
-        const userAttempt = move.from + move.to;
-        const targetSolution = puzzle.solution[currentPuzzleStep];
+        const targetSolution = puzzle && puzzle.solution ? puzzle.solution[currentPuzzleStep] : null;
+        const expected = targetSolution ? targetSolution.toLowerCase().replace(/[\+#x=\s]/g, "") : "";
+        const uci = (move.from + move.to + (move.promotion || "")).toLowerCase();
+        const sanClean = (move.san || "").toLowerCase().replace(/[\+#x=\s]/g, "");
+        const isMatch = (uci === expected) || (sanClean === expected) || (expected.startsWith(uci.slice(0, 4))) || chess.in_checkmate();
 
-        if (userAttempt === targetSolution) {
+        if (isMatch) {
           currentPuzzleStep++;
           selected = null;
           lastMove = { from: move.from, to: move.to };
           moveHistory.push(chess.history().slice(-1)[0]);
           draw();
 
-          if (currentPuzzleStep >= puzzle.solution.length) {
+          if (currentPuzzleStep >= puzzle.solution.length || chess.in_checkmate()) {
             // Puzzle Solved!
             if (!solvedPuzzles.includes(puzzle.id)) {
               solvedPuzzles.push(puzzle.id);
@@ -823,11 +826,18 @@ async function clickSquare(square) {
               showToast("Good move! Keep going...");
               thinking = true;
               setTimeout(() => {
-                const oppMove = chess.move({
-                  from: oppMoveStr.slice(0, 2),
-                  to: oppMoveStr.slice(2, 4),
-                  promotion: "q"
-                });
+                let oppMove = null;
+                const cleanOpp = oppMoveStr.trim();
+                if (cleanOpp.length >= 4 && cleanOpp[0] >= 'a' && cleanOpp[0] <= 'h') {
+                  oppMove = chess.move({
+                    from: cleanOpp.slice(0, 2),
+                    to: cleanOpp.slice(2, 4),
+                    promotion: cleanOpp[4] || "q"
+                  });
+                }
+                if (!oppMove) {
+                  oppMove = chess.move(cleanOpp);
+                }
                 if (oppMove) {
                   currentPuzzleStep++;
                   lastMove = { from: oppMove.from, to: oppMove.to };
@@ -835,7 +845,7 @@ async function clickSquare(square) {
                 }
                 thinking = false;
                 draw();
-                if (currentPuzzleStep >= puzzle.solution.length) {
+                if (currentPuzzleStep >= puzzle.solution.length || chess.in_checkmate()) {
                   if (!solvedPuzzles.includes(puzzle.id)) {
                     solvedPuzzles.push(puzzle.id);
                     localStorage.setItem("chess_solved_puzzles", JSON.stringify(solvedPuzzles));
