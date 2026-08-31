@@ -287,8 +287,120 @@ function showGameOverModal(titleText, messageText) {
   $("gameOverModal").classList.remove("hidden");
 }
 
-function hideGameOverModal() {
-  $("gameOverModal").classList.add("hidden");
+let dailyPuzzle = null;
+let dailyTimerInterval = null;
+
+function getDailyPuzzle() {
+  const todayKey = new Date().toISOString().slice(0, 10);
+  let hash = 0;
+  for (let i = 0; i < todayKey.length; i++) {
+    hash = (hash << 5) - hash + todayKey.charCodeAt(i);
+    hash |= 0;
+  }
+  const dailyIndex = Math.abs(hash) % PUZZLES.length;
+  const localDaily = { ...PUZZLES[dailyIndex], isDaily: true, date: todayKey };
+
+  if (!dailyPuzzle || dailyPuzzle.date !== todayKey) {
+    dailyPuzzle = localDaily;
+    fetchOnlineDailyPuzzle(todayKey);
+  }
+  return dailyPuzzle;
+}
+
+async function fetchOnlineDailyPuzzle(todayKey) {
+  try {
+    const res = await fetch("https://lichess.org/api/puzzle/daily");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data && data.puzzle && data.puzzle.solution && data.game && data.game.fen) {
+      const p = data.puzzle;
+      const fen = data.game.fen;
+      const solution = p.solution;
+      const cleanFen = fen.split(" ").slice(0, 4).join(" ") + " 0 1";
+      
+      dailyPuzzle = {
+        id: `daily_${todayKey}`,
+        title: `Daily: ${p.themes && p.themes[0] ? p.themes[0].replace(/([A-Z])/g, ' $1') : 'Tactical Shot'}`,
+        category: "Advanced",
+        goal: `${cleanFen.split(" ")[1] === "w" ? "White" : "Black"} to move: Find the best tactical move!`,
+        fen: cleanFen,
+        solution: solution,
+        hint: `Daily puzzle rating: ${p.rating || 1500}. Focus on the strongest tactical forcing move!`,
+        isDaily: true,
+        date: todayKey
+      };
+      renderDailyPuzzleBanner();
+    }
+  } catch (e) {
+    console.log("Using local daily puzzle fallback");
+  }
+}
+
+function updateDailyTimer() {
+  const now = new Date();
+  const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+  const diff = tomorrow - now;
+  const hours = String(Math.floor((diff / (1000 * 60 * 60)) % 24)).padStart(2, '0');
+  const mins = String(Math.floor((diff / (1000 * 60)) % 60)).padStart(2, '0');
+  const secs = String(Math.floor((diff / 1000) % 60)).padStart(2, '0');
+  const timerEl = $("dailyTimer");
+  if (timerEl) {
+    timerEl.textContent = `Next in: ${hours}:${mins}:${secs}`;
+  }
+}
+
+function renderDailyPuzzleBanner() {
+  const p = getDailyPuzzle();
+  if (!p) return;
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const isSolved = solvedPuzzles.includes(p.id) || solvedPuzzles.includes(`daily_${todayKey}`);
+  
+  $("dailyTitle").textContent = p.title;
+  $("dailyDesc").textContent = `${p.goal} (${p.category} tier)`;
+  const playBtn = $("playDailyBtn");
+  if (playBtn) {
+    playBtn.textContent = isSolved ? "Solved! Replay 🎯" : "Play Today's Puzzle 🎯";
+    playBtn.onclick = () => loadCustomPuzzle(p);
+  }
+}
+
+function loadCustomPuzzle(puzzle) {
+  currentPuzzleIndex = -1;
+  currentPuzzleStep = 0;
+
+  stopClock();
+  hideGameOverModal();
+  modalShownForGame = false;
+  privateRoom = false;
+  computerMode = false;
+  timedMode = false;
+  thinking = false;
+  clockExpired = false;
+  puzzleMode = true;
+  color = puzzle.fen.split(" ")[1] || "w";
+
+  $("standardControls").classList.add("hidden");
+  $("puzzleControls").classList.remove("hidden");
+  $("nextPuzzleBtn").classList.add("hidden");
+
+  codeDisplay.textContent = `⭐ DAILY PUZZLE`;
+  connection.textContent = `Daily Challenge: ${puzzle.title}`;
+
+  chess.reset();
+  const loaded = chess.load(puzzle.fen);
+  if (!loaded) {
+    console.error("Daily Puzzle FEN failed to load:", puzzle.fen);
+    status.textContent = "Error: daily puzzle could not be loaded.";
+  }
+
+  lastMove = null;
+  moveHistory = [];
+  undoStack = [];
+  selected = null;
+
+  draw();
+  if (loaded) status.textContent = puzzle.goal;
+  show(game);
 }
 
 function renderPuzzleGrid() {
@@ -683,7 +795,7 @@ async function clickSquare(square) {
 
     if (move) {
       if (puzzleMode) {
-        const puzzle = PUZZLES[currentPuzzleIndex];
+        const puzzle = currentPuzzleIndex === -1 ? dailyPuzzle : PUZZLES[currentPuzzleIndex];
         const userAttempt = move.from + move.to;
         const targetSolution = puzzle.solution[currentPuzzleStep];
 

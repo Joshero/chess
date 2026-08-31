@@ -267,6 +267,89 @@ input:checked + .toggle-slider::before {
 }
 
 /* Puzzle Mode Styling */
+/* Daily Puzzle Banner */
+.daily-puzzle-banner {
+  background: linear-gradient(135deg, #1b2838 0%, #0d1b2a 100%);
+  border: 2px solid #e7c86e;
+  border-radius: 10px;
+  padding: 18px 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  color: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.daily-puzzle-banner:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(231, 200, 110, 0.22);
+}
+
+.daily-badge-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.daily-badge {
+  background: #f2c879;
+  color: #17212b;
+  font-weight: bold;
+  font-size: 0.82rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.daily-timer {
+  color: #c9d3d8;
+  font-size: 0.88rem;
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.daily-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.daily-title {
+  font-size: 1.35rem;
+  color: #fff;
+  margin: 0 0 4px;
+}
+
+.daily-desc {
+  font-size: 0.9rem;
+  color: #a0aec0;
+  margin: 0;
+}
+
+.daily-play-btn {
+  background: #f2c879 !important;
+  color: #17212b !important;
+  font-weight: bold;
+  white-space: nowrap;
+  margin-top: 0 !important;
+  border: 0;
+  cursor: pointer;
+  padding: 10px 22px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.daily-play-btn:hover {
+  background: #ffe0a0 !important;
+}
+
 .puzzle-stats-bar {
   display: flex;
   justify-content: space-between;
