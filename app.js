@@ -772,7 +772,8 @@ function buildBoard() {
 }
 
 async function clickSquare(square) {
-  if (chess.game_over() || thinking || replaying || clockExpired || (computerMode && chess.turn() !== "w")) return;
+  if (!puzzleMode && (chess.game_over() || clockExpired || (computerMode && chess.turn() !== "w"))) return;
+  if (thinking || replaying) return;
 
   if (selected) {
     if (selected === square) {
@@ -879,7 +880,8 @@ async function clickSquare(square) {
   }
 
   const piece = chess.get(square);
-  if (piece && piece.color === chess.turn() && (!privateRoom || piece.color === color)) {
+  const canSelect = piece && (puzzleMode ? piece.color === chess.turn() : piece.color === chess.turn() && (!privateRoom || piece.color === color));
+  if (canSelect) {
     selected = square;
     draw();
     $(square).classList.add("selected");
