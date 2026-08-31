@@ -253,10 +253,13 @@ let solvedPuzzles = JSON.parse(localStorage.getItem("chess_solved_puzzles") || "
 
 let clockIncrement = 0, clockMs = { w: 300000, b: 300000 }, clockTimer = null, clockLastTick = 0, clockExpired = false;
 const id = crypto.randomUUID();
+const ACTIVE_SCREEN_KEY = "chess_active_screen";
+const GAME_STATE_KEY = "chess_game_state";
 
 function show(screen) {
   [start, playerMode, computer, timed, puzzleScreen, room, lobby, game].forEach((item) => item.classList.add("hidden"));
   screen.classList.remove("hidden");
+  saveAppState(screen.id);
 }
 
 function showToast(message) {
@@ -267,6 +270,108 @@ function showToast(message) {
   toast.textContent = message;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 2500);
+}
+
+function saveAppState(screenId) {
+  if (!screenId) return;
+  localStorage.setItem(ACTIVE_SCREEN_KEY, screenId);
+  if (screenId !== game.id || privateRoom || replaying) return;
+
+  localStorage.setItem(GAME_STATE_KEY, JSON.stringify({
+    fen: chess.fen(),
+    lastMove,
+    moveHistory,
+    undoStack,
+    computerMode,
+    timedMode,
+    puzzleMode,
+    difficulty,
+    selectedTimeControl,
+    color,
+    clockMs,
+    clockExpired,
+    currentPuzzleIndex,
+    currentPuzzleStep,
+    dailyPuzzle
+  }));
+}
+
+function restoreAppState() {
+  if (new URLSearchParams(window.location.search).get("room")) return;
+
+  const savedScreenId = localStorage.getItem(ACTIVE_SCREEN_KEY);
+  if (!savedScreenId || savedScreenId === start.id) return;
+
+  if (savedScreenId === game.id && restoreGameState()) return;
+  if (savedScreenId === puzzleScreen.id) {
+    renderPuzzleGrid();
+    renderDailyPuzzleBanner();
+    updateDailyTimer();
+  }
+
+  const savedScreen = $(savedScreenId === lobby.id ? room.id : savedScreenId);
+  if (savedScreen && savedScreen.classList.contains("screen")) {
+    show(savedScreen);
+  }
+}
+
+function restoreGameState() {
+  const raw = localStorage.getItem(GAME_STATE_KEY);
+  if (!raw) return false;
+
+  try {
+    const saved = JSON.parse(raw);
+    if (!saved || !saved.fen || saved.privateRoom) return false;
+
+    stopClock();
+    hideGameOverModal();
+    modalShownForGame = false;
+    privateRoom = false;
+    computerMode = Boolean(saved.computerMode);
+    timedMode = Boolean(saved.timedMode);
+    puzzleMode = Boolean(saved.puzzleMode);
+    thinking = false;
+    difficulty = saved.difficulty || difficulty;
+    selectedTimeControl = saved.selectedTimeControl || selectedTimeControl;
+    color = saved.color || null;
+    clockMs = saved.clockMs || clockMs;
+    clockExpired = Boolean(saved.clockExpired);
+    lastMove = saved.lastMove || null;
+    moveHistory = Array.isArray(saved.moveHistory) ? saved.moveHistory : [];
+    undoStack = Array.isArray(saved.undoStack) ? saved.undoStack : [];
+    currentPuzzleIndex = Number.isInteger(saved.currentPuzzleIndex) ? saved.currentPuzzleIndex : currentPuzzleIndex;
+    currentPuzzleStep = Number.isInteger(saved.currentPuzzleStep) ? saved.currentPuzzleStep : currentPuzzleStep;
+    dailyPuzzle = saved.dailyPuzzle || dailyPuzzle;
+    selected = null;
+    replaying = false;
+
+    if (!chess.load(saved.fen)) return false;
+
+    $("standardControls").classList.toggle("hidden", puzzleMode);
+    $("puzzleControls").classList.toggle("hidden", !puzzleMode);
+    $("nextPuzzleBtn").classList.add("hidden");
+
+    if (puzzleMode) {
+      const puzzle = currentPuzzleIndex === -1 ? dailyPuzzle : PUZZLES[currentPuzzleIndex];
+      codeDisplay.textContent = currentPuzzleIndex === -1 ? "DAILY PUZZLE" : `PUZZLE #${currentPuzzleIndex + 1}`;
+      connection.textContent = puzzle ? `${currentPuzzleIndex === -1 ? "Daily Challenge" : `Puzzle #${currentPuzzleIndex + 1}`}: ${puzzle.title}` : "Puzzle";
+    } else if (computerMode) {
+      codeDisplay.textContent = "COMPUTER";
+      connection.textContent = timedMode ? `Computer: ${difficulty} (${selectedTimeControl})` : `Computer: ${difficulty}`;
+    } else {
+      codeDisplay.textContent = "LOCAL";
+      connection.textContent = timedMode ? `Pass & Play (${selectedTimeControl})` : "Pass & Play";
+    }
+
+    draw();
+    show(game);
+    if (timedMode && !clockExpired && !chess.game_over()) startClock();
+    if (computerMode && chess.turn() === "b" && !chess.game_over() && !clockExpired) computerMove();
+    return true;
+  } catch (e) {
+    localStorage.removeItem(GAME_STATE_KEY);
+    return false;
+  }
 }
 
 function syncMoveHintsToggles() {
@@ -788,6 +893,7 @@ function draw() {
 
   renderClocks();
   renderPlayerBars();
+  if (!game.classList.contains("hidden")) saveAppState(game.id);
 }
 
 function buildBoard() {
@@ -1616,6 +1722,7 @@ window.addEventListener("pagehide", () => channel && supabaseClient.removeChanne
 
 syncMoveHintsToggles();
 buildBoard();
+restoreAppState();
 joinRoomFromLink();
 updateDailyTimer();
 if (!dailyTimerInterval) {
