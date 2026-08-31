@@ -804,8 +804,9 @@ async function clickSquare(square) {
         const targetSolution = puzzle && puzzle.solution ? puzzle.solution[currentPuzzleStep] : null;
         const expected = targetSolution ? targetSolution.toLowerCase().replace(/[\+#x=\s]/g, "") : "";
         const uci = (move.from + move.to + (move.promotion || "")).toLowerCase();
+        const uciNoProm = (move.from + move.to).toLowerCase();
         const sanClean = (move.san || "").toLowerCase().replace(/[\+#x=\s]/g, "");
-        const isMatch = (uci === expected) || (sanClean === expected) || (expected.startsWith(uci.slice(0, 4))) || chess.in_checkmate();
+        const isMatch = expected ? ((uci === expected) || (uciNoProm === expected) || (sanClean === expected) || (expected.length >= 4 && expected.startsWith(uciNoProm))) : chess.in_checkmate();
 
         if (isMatch) {
           currentPuzzleStep++;
