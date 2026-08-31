@@ -196,12 +196,12 @@ const PUZZLES = [
   },
   {
     id: "puzzle_21",
-    title: "Clearance Queen Strike",
+    title: "Rook Back-Rank Decoy Strike",
     category: "Advanced",
-    goal: "White to move: Smash through Black's defense on the back rank!",
-    fen: "3r2k1/5ppp/8/8/8/8/1Q3PPP/6K1 w - - 0 1",
-    solution: ["b2b8"],
-    hint: "Black's back rank is vulnerable. Deliver the decisive Queen infiltration on b8!"
+    goal: "White to move: Use your White Rook to smash Black's defense!",
+    fen: "3r2k1/5ppp/8/8/8/8/1Q3PPP/3R2K1 w - - 0 1",
+    solution: ["d1d8"],
+    hint: "Your White Rook on d1 can capture Black's Rook on d8 directly to deliver checkmate!"
   },
   {
     id: "puzzle_22",
