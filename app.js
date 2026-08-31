@@ -1473,13 +1473,25 @@ $("modalCloseBtn").onclick = () => {
 document.querySelectorAll(".side-option").forEach((button) => button.onclick = () => selectSide(button.dataset.color));
 
 $("createRoomBtn").onclick = async () => {
+  error.textContent = "";
   const code = Math.random().toString(36).slice(2, 8).toUpperCase();
-  const result = await supabaseClient.from("chess_rooms").insert({ code });
-  if (result.error) {
-    error.textContent = "Could not create the room. Check Supabase setup.";
-    return;
+  try {
+    await supabaseClient.from("chess_rooms").insert({ code });
+  } catch (e) {
+    console.log("Supabase DB insert optional fallback:", e);
   }
   joinPrivate(code, true);
+};
+
+$("joinRoomPanel").onsubmit = async (e) => {
+  e.preventDefault();
+  error.textContent = "";
+  const inputCode = $("roomInput").value.trim().toUpperCase();
+  if (!inputCode || inputCode.length !== 6) {
+    error.textContent = "Please enter a valid 6-character room code.";
+    return;
+  }
+  joinPrivate(inputCode, false);
 };
 
 copyRoomLinkBtn.onclick = async () => {
