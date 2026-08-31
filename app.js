@@ -1293,10 +1293,9 @@ async function joinPrivate(code, isHost) {
       }
     })
     .on("broadcast", { event: "start" }, function (message) {
-      if (message.payload.colors[id]) {
-        color = message.payload.colors[id];
-        enterGame(message.payload.timeControl || selectedTimeControl);
-      }
+      const assignedColor = message.payload.colors[id] || (host ? "w" : "b");
+      color = assignedColor;
+      enterGame(message.payload.timeControl || selectedTimeControl);
     })
     .on("broadcast", { event: "move" }, function (message) {
       chess.load(message.payload.fen);
@@ -1515,11 +1514,20 @@ startPrivate.onclick = async () => {
     colors[guestPlayer.playerId] = guestColor;
   }
 
-  await channel.send({
-    type: "broadcast",
-    event: "start",
-    payload: { colors, timeControl: selectedTimeControl }
-  });
+  if (channel) {
+    try {
+      await channel.send({
+        type: "broadcast",
+        event: "start",
+        payload: { colors, timeControl: selectedTimeControl }
+      });
+    } catch (e) {
+      console.log("Broadcast error:", e);
+    }
+  }
+
+  color = hostColor;
+  enterGame(selectedTimeControl);
 };
 
 $("showJoinBtn").onclick = () => {
