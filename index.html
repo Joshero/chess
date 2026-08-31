@@ -1137,10 +1137,20 @@
                 showGameOverModal("Checkmate!", `Game over! ${winner} wins by checkmate.`);
               }
             } else if (chess.in_draw()) {
-              status.textContent = "Game over: Draw!";
+              let drawReason = "The game ended in a draw.";
+              if (chess.in_threefold_repetition()) {
+                drawReason = "Draw by Threefold Repetition! The exact same position / moves occurred 3 times.";
+              } else if (chess.in_stalemate()) {
+                drawReason = "Draw by Stalemate! The player has no legal moves and is not in check.";
+              } else if (chess.insufficient_material()) {
+                drawReason = "Draw by Insufficient Material! Neither player has enough pieces to deliver checkmate.";
+              } else {
+                drawReason = "Draw by 50-Move Rule! 50 moves played without a pawn move or capture.";
+              }
+              status.textContent = `Game Over: ${drawReason}`;
               if (!modalShownForGame) {
                 modalShownForGame = true;
-                showGameOverModal("Draw!", "Game over: The game ended in a draw.");
+                showGameOverModal("Game Drawn! 🤝", drawReason);
               }
             }
           } else {
