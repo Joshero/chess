@@ -282,9 +282,13 @@ function syncMoveHintsToggles() {
 }
 
 function showGameOverModal(titleText, messageText) {
-  $("modalTitle").textContent = titleText;
-  $("modalMessage").textContent = messageText;
-  $("gameOverModal").classList.remove("hidden");
+  if ($("modalTitle")) $("modalTitle").textContent = titleText;
+  if ($("modalMessage")) $("modalMessage").textContent = messageText;
+  if ($("gameOverModal")) $("gameOverModal").classList.remove("hidden");
+}
+
+function hideGameOverModal() {
+  if ($("gameOverModal")) $("gameOverModal").classList.add("hidden");
 }
 
 let dailyPuzzle = null;

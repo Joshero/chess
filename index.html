@@ -657,6 +657,16 @@
         setTimeout(() => toast.remove(), 2500);
       }
 
+      function showGameOverModal(titleText, messageText) {
+        if ($("modalTitle")) $("modalTitle").textContent = titleText;
+        if ($("modalMessage")) $("modalMessage").textContent = messageText;
+        if ($("gameOverModal")) $("gameOverModal").classList.remove("hidden");
+      }
+
+      function hideGameOverModal() {
+        if ($("gameOverModal")) $("gameOverModal").classList.add("hidden");
+      }
+
       function syncMoveHintsToggles() {
         document.querySelectorAll(".move-hints-input").forEach((input) => {
           input.checked = showMoveHints;
