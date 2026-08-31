@@ -161,6 +161,7 @@ body {
   z-index: 1;
 }
 .square.last-move { background-color: #e7c86e !important; }
+.piece { pointer-events: none; }
 .piece.w { color: #fff; text-shadow: 0 0 4px #000, 0 0 4px #000; }
 .piece.b { color: #000; text-shadow: 0 0 2px #fff; }
 

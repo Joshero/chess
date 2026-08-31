@@ -1254,7 +1254,21 @@
             if (computerMode && !chess.game_over()) computerMove();
             return;
           } else {
-            // Invalid move: remove pushed snapshot
+            // Invalid move: if clicking another of your own pieces, switch selection directly
+            const clickedPiece = chess.get(square);
+            const canSwitch = clickedPiece && (puzzleMode ? clickedPiece.color === chess.turn() : clickedPiece.color === chess.turn() && (!privateRoom || clickedPiece.color === color));
+            if (canSwitch) {
+              if (!puzzleMode) undoStack.pop();
+              selected = square;
+              draw();
+              $(square).classList.add("selected");
+              if (showMoveHints) {
+                chess.moves({ square, verbose: true }).forEach((m) => {
+                  $(m.to)?.classList.add("highlighted");
+                });
+              }
+              return;
+            }
             if (!puzzleMode) undoStack.pop();
           }
         }
