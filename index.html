@@ -400,75 +400,75 @@
         // ==================== BEGINNER (1-Move & Simple 2-Move) ====================
         {
           id: "puzzle_1",
-          title: "Back-Rank Checkmate",
+          title: "Back-Rank Rook Mate",
           category: "Beginner",
           goal: "White to move: Strike the undefended 8th rank for mate in 1!",
           fen: "6k1/5ppp/8/8/8/8/5PPP/1R4K1 w - - 0 1",
           solution: ["b1b8"],
-          hint: "Black's King is trapped behind its own pawns. Move your Rook to b8!"
+          hint: "Black's King is trapped behind its pawns. Move your Rook from b1 to b8!"
         },
         {
           id: "puzzle_2",
-          title: "Scholar's Touch",
+          title: "Scholar's Touch Mate",
           category: "Beginner",
           goal: "White to move: Deliver checkmate on f7!",
           fen: "r1bqkb1r/pppp1ppp/2n5/4p3/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1",
           solution: ["f3f7"],
-          hint: "The f7 pawn is attacked by both Queen and Bishop. Capture on f7!"
+          hint: "The f7 pawn is defended only by the King. Capture f7 with your Queen!"
         },
         {
           id: "puzzle_3",
-          title: "Smothered Knight Mate",
+          title: "Smothered Knight Strike",
           category: "Beginner",
           goal: "White to move: Deliver a smothered checkmate with your Knight!",
           fen: "6nk/6pp/8/8/5N2/8/5PPP/6K1 w - - 0 1",
           solution: ["f4g6"],
-          hint: "Black's King on h8 is smothered by its own Knight and pawns. Jump your Knight from f4 to g6 for checkmate!"
+          hint: "Black's King on h8 is boxed in by its own pieces. Jump your Knight from f4 to g6!"
         },
         {
           id: "puzzle_4",
-          title: "Rook Back-Rank Exchange",
+          title: "Rook Back-Rank Takeover",
           category: "Beginner",
           goal: "White to move: Force checkmate on the back rank!",
           fen: "3r2k1/1p3ppp/8/8/8/8/1Q3PPP/3R2K1 w - - 0 1",
           solution: ["d1d8"],
-          hint: "Capture the Rook on d8 with your Rook for checkmate."
+          hint: "Capture Black's Rook on d8 with your Rook on d1 for checkmate!"
         },
         {
           id: "puzzle_5",
-          title: "Corridor Checkmate",
+          title: "Corridor Rook Mate",
           category: "Beginner",
           goal: "White to move: Strike on c8 for checkmate!",
           fen: "2r3k1/5ppp/8/8/8/8/5PPP/2R3K1 w - - 0 1",
           solution: ["c1c8"],
-          hint: "Swoop down to c8 with your Rook to deliver checkmate!"
+          hint: "Capture the Rook on c8 with your Rook for back-rank checkmate!"
         },
         {
           id: "puzzle_6",
-          title: "Arabian Rook Mate",
+          title: "Trapped King Back-Rank",
           category: "Beginner",
-          goal: "White to move: Deliver mate — trap the King in the corner!",
+          goal: "White to move: Deliver back-rank mate on f8!",
           fen: "7k/5Rpp/8/8/8/8/6PP/6K1 w - - 0 1",
           solution: ["f7f8"],
-          hint: "Slide your Rook from f7 to f8 — the Black King on h8 is completely trapped by its own pawns!"
+          hint: "Slide your Rook from f7 to f8 — Black's King is trapped behind its pawns!"
         },
         {
           id: "puzzle_7",
-          title: "Queen & Helper Battery",
+          title: "Queen Battery Infiltration",
           category: "Beginner",
-          goal: "White to move: Drive the Queen to h7 for checkmate!",
+          goal: "White to move: Bring the Queen into the attack!",
           fen: "r1bq1rk1/pppp1ppp/2n5/4p1N1/2B1P3/3P4/PPP2PPP/R2QK2R w KQ - 0 1",
           solution: ["d1h5"],
-          hint: "Bring your Queen to h5 to threaten mate on both f7 and h7!"
+          hint: "Move your Queen to h5 to create overwhelming threats against h7 and f7!"
         },
         {
           id: "puzzle_8",
-          title: "Anastasia's Mate Concept",
+          title: "Back-Rank Queen Infiltration",
           category: "Beginner",
-          goal: "White to move: Deliver back-rank mate with Queen support!",
+          goal: "White to move: Deliver back-rank mate with your Queen!",
           fen: "5rk1/5ppp/8/8/8/8/5PPP/4Q1K1 w - - 0 1",
           solution: ["e1e8"],
-          hint: "Sacrifice or pin the back rank! Push Queen to e8 for immediate checkmate."
+          hint: "Infiltrate Black's 8th rank! Push your Queen from e1 to e8 for checkmate."
         },
 
         // ==================== INTERMEDIATE (Tactical Forks, Pins, Discoveries) ====================
@@ -479,144 +479,144 @@
           goal: "White to move: Fork Black's King and Queen!",
           fen: "r3k2r/ppp2ppp/8/3q4/4N3/8/PPPP1PPP/R3K2R w KQkq - 0 1",
           solution: ["e4f6"],
-          hint: "Check Black's King on f6 with your Knight while simultaneously attacking the Queen."
+          hint: "Jump your Knight to f6 to check the King and attack the d5 Queen at the same time!"
         },
         {
           id: "puzzle_10",
-          title: "Bishop Pin Tactics",
+          title: "Winning the Loose Queen",
           category: "Intermediate",
-          goal: "White to move: Eliminate the dangerous Queen!",
+          goal: "White to move: Capture Black's undefended Queen!",
           fen: "r1b1k2r/pppp1ppp/8/4n3/4Pq2/2P5/PPP2PPP/R1BQK2R w KQkq - 0 1",
           solution: ["c1f4"],
-          hint: "Use your Bishop to capture Black's undefended Queen on f4."
+          hint: "Use your dark-squared Bishop on c1 to capture the exposed Black Queen on f4!"
         },
         {
           id: "puzzle_11",
-          title: "Queen & Knight Mate",
+          title: "Queen Takes Undefended Bishop",
           category: "Intermediate",
-          goal: "White to move: Deliver deadly Knight-assisted mate on g7!",
+          goal: "White to move: Win material by taking the loose piece!",
           fen: "r4rk1/pp1b1ppp/4pn2/8/8/2N2N2/PPP2PPP/3QR1K1 w - - 0 1",
           solution: ["d1d7"],
-          hint: "Capture the undefended Bishop on d7 with your Queen!"
+          hint: "Black left the Bishop on d7 undefended. Snatch it with your Queen!"
         },
         {
           id: "puzzle_12",
-          title: "Corner Trap Checkmate",
+          title: "Queen Infiltration Mate in 2",
           category: "Intermediate",
-          goal: "White to move: Mate in 2! First check on h7.",
+          goal: "White to move: Deliver checkmate in 2 moves!",
           fen: "r1b2rk1/pp3ppp/2n1p3/3p4/8/2N2Q2/PPP2PPP/R3KB1R w KQ - 0 1",
           solution: ["f3f7", "g8h8", "f7f8"],
-          hint: "Take on f7 with check, then follow through on f8 after King flees!"
+          hint: "Take the f7 pawn with check, then follow through with Qf8# after the King flees!"
         },
         {
           id: "puzzle_13",
-          title: "Two Rooks Staircase",
+          title: "Rook Capture Win",
           category: "Intermediate",
-          goal: "White to move: Execute the ladder mate!",
+          goal: "White to move: Win Black's hanging Rook!",
           fen: "8/8/8/8/8/r5k1/8/R6K w - - 0 1",
           solution: ["a1a3"],
-          hint: "Capture Black's loose Rook on a3 to win cleanly!"
+          hint: "Capture Black's undefended Rook on a3 with your Rook on a1!"
         },
         {
           id: "puzzle_14",
-          title: "Skewer on the Diagonal",
+          title: "Bishop Interposition Defense",
           category: "Intermediate",
-          goal: "White to move: Skewer the King to win the Queen behind it!",
+          goal: "White to move: Block the check and save your King!",
           fen: "4k3/8/8/8/8/8/4B3/4K1q1 w - - 0 1",
           solution: ["e2f1"],
-          hint: "Block and defend with your Bishop on f1."
+          hint: "Block the Black Queen's check by dropping your Bishop back to f1!"
         },
         {
           id: "puzzle_15",
-          title: "Discovery on the File",
+          title: "Winning Pinned Queen",
           category: "Intermediate",
-          goal: "White to move: Win the Black Queen with a discovered attack!",
+          goal: "White to move: Win the Black Queen on d4!",
           fen: "r1b1k2r/pppp1ppp/8/8/1b1q4/2N5/PPP2PPP/R1BQR1K1 w kq - 0 1",
           solution: ["d1d4"],
-          hint: "Capture Black's pinned Queen on d4 directly!"
+          hint: "Capture Black's undefended Queen on d4 directly with your Queen!"
         },
         {
           id: "puzzle_16",
-          title: "Greek Gift Follow-Through",
+          title: "Central Queen Domination",
           category: "Intermediate",
-          goal: "White to move: Win material after Black's defense weakens!",
+          goal: "White to move: Centralize your Queen with dual threats!",
           fen: "r1bq1rk1/pppp1ppp/2n5/4P3/1bB1n3/2N2N2/PPP2PPP/R1BQK2R w KQ - 0 1",
           solution: ["d1d5"],
-          hint: "Centralize your Queen with double threats on e4 and f7!"
+          hint: "Centralize your Queen to d5 to attack the knight on e4 and threaten f7!"
         },
 
         // ==================== ADVANCED (Multi-Move, Master Attacks & Defenses) ====================
         {
           id: "puzzle_17",
-          title: "Boden's Mate (Criss-Cross)",
+          title: "Bishop Diagonal Strike",
           category: "Advanced",
-          goal: "White to move: Deliver the classic double-Bishop mate in 2!",
+          goal: "White to move: Exploit Black's weak queenside pawns!",
           fen: "2kr4/ppp2p2/4b3/8/8/8/PPP2B2/2K1RB2 w - - 0 1",
           solution: ["f2a7"],
-          hint: "Slice Black's queenside pawn structure with Ba7!"
+          hint: "Slice through Black's pawn chain by capturing the pawn on a7 with your Bishop!"
         },
         {
           id: "puzzle_18",
-          title: "Rook Roller Finale",
+          title: "Back-Rank Rook Exchange Mate",
           category: "Advanced",
-          goal: "White to move: Trap Black's King in the corner with a 2-move net!",
+          goal: "White to move: Deliver checkmate on the back rank!",
           fen: "4r1k1/5ppp/8/8/8/8/5PPP/4R1K1 w - - 0 1",
           solution: ["e1e8"],
           hint: "Take Black's Rook on e8 with checkmate!"
         },
         {
           id: "puzzle_19",
-          title: "Damiano's Bishop Net",
+          title: "Kingside Castling & Safety",
           category: "Advanced",
-          goal: "White to move: Exploit Black's loose Queen!",
+          goal: "White to move: Secure your King and prepare to pin Black's Queen!",
           fen: "r1b1k2r/pp3ppp/2n1p3/2b5/4q3/2P2N2/PP2BPPP/R1BQK2R w KQkq - 0 1",
           solution: ["e1g1"],
-          hint: "Castle your King to safety and prepare to trap Black's overextended Queen with Re1!"
+          hint: "Castle your King to safety on g1, opening up the e-file for Re1!"
         },
         {
           id: "puzzle_20",
-          title: "Morphy's Opera Mate",
+          title: "Bishop Development & Control",
           category: "Advanced",
-          goal: "White to move: Deliver the iconic back-rank pin mate!",
+          goal: "White to move: Develop your Bishop to control key diagonal squares!",
           fen: "4kb1r/p2n1ppp/4p3/8/3P4/8/PPP2PPP/R1B1K1NR w KQk - 0 1",
           solution: ["c1f4"],
-          hint: "Develop the dark-squared Bishop to f4 controlling key exit squares!"
+          hint: "Bring your dark-squared Bishop to f4 to restrict Black's movement!"
         },
         {
           id: "puzzle_21",
-          title: "Rook Back-Rank Decoy Strike",
+          title: "Rook Back-Rank Exchange Mate",
           category: "Advanced",
-          goal: "White to move: Use your White Rook to smash Black's defense!",
+          goal: "White to move: Capture Black's Rook on d8 for checkmate!",
           fen: "3r2k1/5ppp/8/8/8/8/1Q3PPP/3R2K1 w - - 0 1",
           solution: ["d1d8"],
-          hint: "Your White Rook on d1 can capture Black's Rook on d8 directly to deliver checkmate!"
+          hint: "Your Rook on d1 can capture Black's Rook on d8 directly for back-rank checkmate!"
         },
         {
           id: "puzzle_22",
-          title: "Pawn Promotion Breakthrough",
+          title: "Pawn Promotion Queen",
           category: "Advanced",
-          goal: "White to move: Promote to Queen and seize victory!",
+          goal: "White to move: Promote your passed pawn to a Queen!",
           fen: "8/4P3/8/8/8/8/pk6/R3K3 w - - 0 1",
           solution: ["e7e8"],
-          hint: "Push the e-pawn to e8 to promote to a Queen!"
+          hint: "Push your e7 pawn to e8 to promote to a Queen and win!"
         },
         {
           id: "puzzle_23",
-          title: "Blackburne's Mate",
+          title: "Queen Back-Rank Infiltration",
           category: "Advanced",
-          goal: "White to move: Punish the pinned piece for a checkmate net!",
+          goal: "White to move: Infiltrate e8 with your Queen for checkmate!",
           fen: "6k1/5ppp/8/8/8/8/4QPPP/6K1 w - - 0 1",
           solution: ["e2e8"],
-          hint: "Infiltrate directly into e8 for the final strike!"
+          hint: "Fly your Queen from e2 to e8 to deliver checkmate!"
         },
         {
           id: "puzzle_24",
-          title: "Grandmaster Endgame Trap",
+          title: "Rook Exchange Mate Finale",
           category: "Advanced",
-          goal: "White to move: Eliminate Black's counterplay on the back rank!",
+          goal: "White to move: Capture on b8 for back-rank checkmate!",
           fen: "1r4k1/5ppp/8/8/8/8/5PPP/1R4K1 w - - 0 1",
           solution: ["b1b8"],
-          hint: "Exchange on b8 to enter an easily won king and pawn endgame!"
+          hint: "Capture Black's Rook on b8 with your Rook on b1 to finish the game with checkmate!"
         }
       ];
 
