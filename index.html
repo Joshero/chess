@@ -537,6 +537,8 @@
         privateRoom = false;
         computerMode = false;
         timedMode = false;
+        thinking = false;
+        clockExpired = false;
         puzzleMode = true;
         color = puzzle.fen.split(" ")[1] || "w";
 
@@ -547,14 +549,20 @@
         codeDisplay.textContent = `PUZZLE #${idx + 1}`;
         connection.textContent = `Puzzle #${idx + 1}: ${puzzle.title}`;
 
-        chess.load(puzzle.fen);
+        chess.reset();
+        const loaded = chess.load(puzzle.fen);
+        if (!loaded) {
+          console.error("Puzzle FEN failed to load:", puzzle.fen);
+          status.textContent = "Error: puzzle could not be loaded. Please try another.";
+        }
+
         lastMove = null;
         moveHistory = [];
         undoStack = [];
         selected = null;
 
         draw();
-        status.textContent = puzzle.goal;
+        if (loaded) status.textContent = puzzle.goal;
         show(game);
       }
 

@@ -175,6 +175,8 @@ function loadPuzzle(idx) {
   privateRoom = false;
   computerMode = false;
   timedMode = false;
+  thinking = false;        // reset so clicks aren't blocked after computer mode
+  clockExpired = false;    // reset so clicks aren't blocked after a timed game timeout
   puzzleMode = true;
   color = puzzle.fen.split(" ")[1] || "w";
 
@@ -185,14 +187,22 @@ function loadPuzzle(idx) {
   codeDisplay.textContent = `PUZZLE #${idx + 1}`;
   connection.textContent = `Puzzle #${idx + 1}: ${puzzle.title}`;
 
-  chess.load(puzzle.fen);
+  // Reset board to clean state before loading the custom FEN.
+  // chess.load() returns false if the FEN is invalid — we log it and bail.
+  chess.reset();
+  const loaded = chess.load(puzzle.fen);
+  if (!loaded) {
+    console.error("Puzzle FEN failed to load:", puzzle.fen);
+    status.textContent = "Error: puzzle could not be loaded. Please try another.";
+  }
+
   lastMove = null;
   moveHistory = [];
   undoStack = [];
   selected = null;
 
   draw();
-  status.textContent = puzzle.goal;
+  if (loaded) status.textContent = puzzle.goal;
   show(game);
 }
 
