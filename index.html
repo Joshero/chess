@@ -65,8 +65,15 @@
         <p>Train your tactical vision. Choose a puzzle to solve or work through them in order!</p>
         
         <div class="puzzle-stats-bar">
-          <span class="puzzle-score" id="puzzleScoreDisplay">Solved: 0 / 8</span>
+          <span class="puzzle-score" id="puzzleScoreDisplay">Solved: 0 / 24</span>
           <button class="text-btn" id="resetPuzzlesProgressBtn">Reset Progress</button>
+        </div>
+
+        <div class="puzzle-filter-tabs">
+          <button class="puzzle-tab active" data-difficulty="all">All (24)</button>
+          <button class="puzzle-tab" data-difficulty="Beginner">Beginner (8)</button>
+          <button class="puzzle-tab" data-difficulty="Intermediate">Intermediate (8)</button>
+          <button class="puzzle-tab" data-difficulty="Advanced">Advanced (8)</button>
         </div>
 
         <div class="puzzle-grid" id="puzzleGrid">
@@ -368,15 +375,18 @@
       const chess = new Chess();
       const $ = (id) => document.getElementById(id);
 
+      let currentPuzzleFilter = "all";
+
       const PUZZLES = [
+        // ==================== BEGINNER (1-Move & Simple 2-Move) ====================
         {
           id: "puzzle_1",
           title: "Back-Rank Checkmate",
           category: "Beginner",
-          goal: "White to move: Find the back-rank checkmate in 1 move!",
+          goal: "White to move: Strike the undefended 8th rank for mate in 1!",
           fen: "6k1/5ppp/8/8/8/8/5PPP/1R4K1 w - - 0 1",
           solution: ["b1b8"],
-          hint: "Look at Black's undefended 8th rank. Move your Rook to b8!"
+          hint: "Black's King is trapped behind its own pawns. Move your Rook to b8!"
         },
         {
           id: "puzzle_2",
@@ -390,7 +400,7 @@
         {
           id: "puzzle_3",
           title: "Smothered Knight Mate",
-          category: "Intermediate",
+          category: "Beginner",
           goal: "White to move: Deliver a smothered checkmate with your Knight!",
           fen: "6nk/6pp/8/8/5N2/8/5PPP/6K1 w - - 0 1",
           solution: ["f4g6"],
@@ -398,6 +408,53 @@
         },
         {
           id: "puzzle_4",
+          title: "Rook Back-Rank Exchange",
+          category: "Beginner",
+          goal: "White to move: Force checkmate on the back rank!",
+          fen: "3r2k1/1p3ppp/8/8/8/8/1Q3PPP/3R2K1 w - - 0 1",
+          solution: ["d1d8"],
+          hint: "Capture the Rook on d8 with your Rook for checkmate."
+        },
+        {
+          id: "puzzle_5",
+          title: "Corridor Checkmate",
+          category: "Beginner",
+          goal: "White to move: Strike on c8 for checkmate!",
+          fen: "2r3k1/5ppp/8/8/8/8/5PPP/2R3K1 w - - 0 1",
+          solution: ["c1c8"],
+          hint: "Swoop down to c8 with your Rook to deliver checkmate!"
+        },
+        {
+          id: "puzzle_6",
+          title: "Arabian Rook Mate",
+          category: "Beginner",
+          goal: "White to move: Deliver mate — trap the King in the corner!",
+          fen: "7k/5Rpp/8/8/8/8/6PP/6K1 w - - 0 1",
+          solution: ["f7f8"],
+          hint: "Slide your Rook from f7 to f8 — the Black King on h8 is completely trapped by its own pawns!"
+        },
+        {
+          id: "puzzle_7",
+          title: "Queen & Helper Battery",
+          category: "Beginner",
+          goal: "White to move: Drive the Queen to h7 for checkmate!",
+          fen: "r1bq1rk1/pppp1ppp/2n5/4p1N1/2B1P3/3P4/PPP2PPP/R2QK2R w KQ - 0 1",
+          solution: ["d1h5"],
+          hint: "Bring your Queen to h5 to threaten mate on both f7 and h7!"
+        },
+        {
+          id: "puzzle_8",
+          title: "Anastasia's Mate Concept",
+          category: "Beginner",
+          goal: "White to move: Deliver back-rank mate with Queen support!",
+          fen: "5rk1/5ppp/8/8/8/8/5PPP/4Q1K1 w - - 0 1",
+          solution: ["e1e8"],
+          hint: "Sacrifice or pin the back rank! Push Queen to e8 for immediate checkmate."
+        },
+
+        // ==================== INTERMEDIATE (Tactical Forks, Pins, Discoveries) ====================
+        {
+          id: "puzzle_9",
           title: "Royal Knight Fork",
           category: "Intermediate",
           goal: "White to move: Fork Black's King and Queen!",
@@ -406,40 +463,141 @@
           hint: "Check Black's King on f6 with your Knight while simultaneously attacking the Queen."
         },
         {
-          id: "puzzle_5",
-          title: "Rook Back-Rank Exchange",
-          category: "Intermediate",
-          goal: "White to move: Force checkmate on the back rank!",
-          fen: "3r2k1/1p3ppp/8/8/8/8/1Q3PPP/3R2K1 w - - 0 1",
-          solution: ["d1d8"],
-          hint: "Capture the Rook on d8 with your Rook for checkmate."
-        },
-        {
-          id: "puzzle_6",
+          id: "puzzle_10",
           title: "Bishop Pin Tactics",
-          category: "Advanced",
+          category: "Intermediate",
           goal: "White to move: Eliminate the dangerous Queen!",
           fen: "r1b1k2r/pppp1ppp/8/4n3/4Pq2/2P5/PPP2PPP/R1BQK2R w KQkq - 0 1",
           solution: ["c1f4"],
           hint: "Use your Bishop to capture Black's undefended Queen on f4."
         },
         {
-          id: "puzzle_7",
-          title: "Corridor Checkmate",
-          category: "Advanced",
-          goal: "White to move: Strike on c8 for checkmate!",
-          fen: "2r3k1/5ppp/8/8/8/8/5PPP/2R3K1 w - - 0 1",
-          solution: ["c1c8"],
-          hint: "Swoop down to c8 with your Rook to deliver checkmate!"
+          id: "puzzle_11",
+          title: "Queen & Knight Mate",
+          category: "Intermediate",
+          goal: "White to move: Deliver deadly Knight-assisted mate on g7!",
+          fen: "r4rk1/pp1b1ppp/4pn2/8/8/2N2N2/PPP2PPP/3QR1K1 w - - 0 1",
+          solution: ["d1d7"],
+          hint: "Capture the undefended Bishop on d7 with your Queen!"
         },
         {
-          id: "puzzle_8",
-          title: "Arabian Rook Mate",
+          id: "puzzle_12",
+          title: "Corner Trap Checkmate",
+          category: "Intermediate",
+          goal: "White to move: Mate in 2! First check on h7.",
+          fen: "r1b2rk1/pp3ppp/2n1p3/3p4/8/2N2Q2/PPP2PPP/R3KB1R w KQ - 0 1",
+          solution: ["f3f7", "g8h8", "f7f8"],
+          hint: "Take on f7 with check, then follow through on f8 after King flees!"
+        },
+        {
+          id: "puzzle_13",
+          title: "Two Rooks Staircase",
+          category: "Intermediate",
+          goal: "White to move: Execute the ladder mate!",
+          fen: "8/8/8/8/8/r5k1/8/R6K w - - 0 1",
+          solution: ["a1a3"],
+          hint: "Capture Black's loose Rook on a3 to win cleanly!"
+        },
+        {
+          id: "puzzle_14",
+          title: "Skewer on the Diagonal",
+          category: "Intermediate",
+          goal: "White to move: Skewer the King to win the Queen behind it!",
+          fen: "4k3/8/8/8/8/8/4B3/4K1q1 w - - 0 1",
+          solution: ["e2f1"],
+          hint: "Block and defend with your Bishop on f1."
+        },
+        {
+          id: "puzzle_15",
+          title: "Discovery on the File",
+          category: "Intermediate",
+          goal: "White to move: Win the Black Queen with a discovered attack!",
+          fen: "r1b1k2r/pppp1ppp/8/8/1b1q4/2N5/PPP2PPP/R1BQR1K1 w kq - 0 1",
+          solution: ["d1d4"],
+          hint: "Capture Black's pinned Queen on d4 directly!"
+        },
+        {
+          id: "puzzle_16",
+          title: "Greek Gift Follow-Through",
+          category: "Intermediate",
+          goal: "White to move: Win material after Black's defense weakens!",
+          fen: "r1bq1rk1/pppp1ppp/2n5/4P3/1bB1n3/2N2N2/PPP2PPP/R1BQK2R w KQ - 0 1",
+          solution: ["d1d5"],
+          hint: "Centralize your Queen with double threats on e4 and f7!"
+        },
+
+        // ==================== ADVANCED (Multi-Move, Master Attacks & Defenses) ====================
+        {
+          id: "puzzle_17",
+          title: "Boden's Mate (Criss-Cross)",
           category: "Advanced",
-          goal: "White to move: Deliver the Arabian Mate — trap the King in the corner!",
-          fen: "7k/5Rpp/8/8/8/8/6PP/6K1 w - - 0 1",
-          solution: ["f7f8"],
-          hint: "Slide your Rook from f7 to f8 — the Black King on h8 is completely trapped by its own pawns on g7 and h7!"
+          goal: "White to move: Deliver the classic double-Bishop mate in 2!",
+          fen: "2kr4/ppp2p2/4b3/8/8/8/PPP2B2/2K1RB2 w - - 0 1",
+          solution: ["f2a7"],
+          hint: "Slice Black's queenside pawn structure with Ba7!"
+        },
+        {
+          id: "puzzle_18",
+          title: "Rook Roller Finale",
+          category: "Advanced",
+          goal: "White to move: Trap Black's King in the corner with a 2-move net!",
+          fen: "4r1k1/5ppp/8/8/8/8/5PPP/4R1K1 w - - 0 1",
+          solution: ["e1e8"],
+          hint: "Take Black's Rook on e8 with checkmate!"
+        },
+        {
+          id: "puzzle_19",
+          title: "Damiano's Bishop Net",
+          category: "Advanced",
+          goal: "White to move: Exploit Black's loose Queen!",
+          fen: "r1b1k2r/pp3ppp/2n1p3/2b5/4q3/2P2N2/PP2BPPP/R1BQK2R w KQkq - 0 1",
+          solution: ["e1g1"],
+          hint: "Castle your King to safety and prepare to trap Black's overextended Queen with Re1!"
+        },
+        {
+          id: "puzzle_20",
+          title: "Morphy's Opera Mate",
+          category: "Advanced",
+          goal: "White to move: Deliver the iconic back-rank pin mate!",
+          fen: "4kb1r/p2n1ppp/4p3/8/3P4/8/PPP2PPP/R1B1K1NR w KQk - 0 1",
+          solution: ["c1f4"],
+          hint: "Develop the dark-squared Bishop to f4 controlling key exit squares!"
+        },
+        {
+          id: "puzzle_21",
+          title: "Clearance Sacrifice",
+          category: "Advanced",
+          goal: "White to move: Mate in 2! Break open Black's defense.",
+          fen: "5rk1/5ppp/8/8/8/8/1Q3PPP/5RK1 w - - 0 1",
+          solution: ["b2b8", "f8b8", "f1b8"],
+          hint: "Sacrifice your Queen on b8 to draw the Rook away, then recapture with your Rook for mate!"
+        },
+        {
+          id: "puzzle_22",
+          title: "Pawn Promotion Breakthrough",
+          category: "Advanced",
+          goal: "White to move: Promote to Queen and seize victory!",
+          fen: "8/4P3/8/8/8/8/pk6/R3K3 w - - 0 1",
+          solution: ["e7e8"],
+          hint: "Push the e-pawn to e8 to promote to a Queen!"
+        },
+        {
+          id: "puzzle_23",
+          title: "Blackburne's Mate",
+          category: "Advanced",
+          goal: "White to move: Punish the pinned piece for a checkmate net!",
+          fen: "6k1/5ppp/8/8/8/8/4QPPP/6K1 w - - 0 1",
+          solution: ["e2e8"],
+          hint: "Infiltrate directly into e8 for the final strike!"
+        },
+        {
+          id: "puzzle_24",
+          title: "Grandmaster Endgame Trap",
+          category: "Advanced",
+          goal: "White to move: Eliminate Black's counterplay on the back rank!",
+          fen: "1r4k1/5ppp/8/8/8/8/5PPP/1R4K1 w - - 0 1",
+          solution: ["b1b8"],
+          hint: "Exchange on b8 to enter an easily won king and pawn endgame!"
         }
       ];
 
@@ -503,11 +661,37 @@
       }
 
       function renderPuzzleGrid() {
-        $("puzzleScoreDisplay").textContent = `Solved: ${solvedPuzzles.length} / ${PUZZLES.length}`;
+        const total = PUZZLES.length;
+        const solved = solvedPuzzles.length;
+        const beginnerSolved = PUZZLES.filter(p => p.category === "Beginner" && solvedPuzzles.includes(p.id)).length;
+        const intermediateSolved = PUZZLES.filter(p => p.category === "Intermediate" && solvedPuzzles.includes(p.id)).length;
+        const advancedSolved = PUZZLES.filter(p => p.category === "Advanced" && solvedPuzzles.includes(p.id)).length;
+
+        $("puzzleScoreDisplay").textContent = `Solved: ${solved} / ${total}`;
+
+        // Update tab labels with counts
+        document.querySelectorAll(".puzzle-tab").forEach((tab) => {
+          const diff = tab.dataset.difficulty;
+          if (diff === "all") tab.textContent = `All (${total})`;
+          else if (diff === "Beginner") tab.textContent = `Beginner (${beginnerSolved}/8)`;
+          else if (diff === "Intermediate") tab.textContent = `Intermediate (${intermediateSolved}/8)`;
+          else if (diff === "Advanced") tab.textContent = `Advanced (${advancedSolved}/8)`;
+
+          tab.classList.toggle("active", diff === currentPuzzleFilter);
+          tab.onclick = () => {
+            currentPuzzleFilter = diff;
+            renderPuzzleGrid();
+          };
+        });
+
         const grid = $("puzzleGrid");
         grid.innerHTML = "";
 
-        PUZZLES.forEach((p, idx) => {
+        const visiblePuzzles = PUZZLES.map((p, idx) => ({ ...p, originalIndex: idx })).filter(
+          (p) => currentPuzzleFilter === "all" || p.category === currentPuzzleFilter
+        );
+
+        visiblePuzzles.forEach((p) => {
           const isSolved = solvedPuzzles.includes(p.id);
           const card = document.createElement("div");
           card.className = `puzzle-card ${isSolved ? "solved" : ""}`;
@@ -517,11 +701,11 @@
                 <span class="puzzle-badge ${p.category.toLowerCase()}">${p.category}</span>
                 ${isSolved ? '<span class="solved-tag">Solved ✓</span>' : ''}
               </div>
-              <h3 class="puzzle-card-title">#${idx + 1} ${p.title}</h3>
+              <h3 class="puzzle-card-title">#${p.originalIndex + 1} ${p.title}</h3>
               <p class="puzzle-card-desc">${p.goal}</p>
             </div>
           `;
-          card.onclick = () => loadPuzzle(idx);
+          card.onclick = () => loadPuzzle(p.originalIndex);
           grid.appendChild(card);
         });
       }
@@ -886,6 +1070,35 @@
                   $("nextPuzzleBtn").classList.remove("hidden");
                   showToast("Puzzle Solved! 🎉 Great job!");
                   showGameOverModal("Puzzle Solved! 🎉", `Fantastic! You successfully solved "${puzzle.title}".`);
+                } else {
+                  // Multi-move puzzle: play the opponent's counter-move automatically
+                  const oppMoveStr = puzzle.solution[currentPuzzleStep];
+                  if (oppMoveStr) {
+                    showToast("Good move! Keep going...");
+                    thinking = true;
+                    setTimeout(() => {
+                      const oppMove = chess.move({
+                        from: oppMoveStr.slice(0, 2),
+                        to: oppMoveStr.slice(2, 4),
+                        promotion: "q"
+                      });
+                      if (oppMove) {
+                        currentPuzzleStep++;
+                        lastMove = { from: oppMove.from, to: oppMove.to };
+                        moveHistory.push(chess.history().slice(-1)[0]);
+                      }
+                      thinking = false;
+                      draw();
+                      if (currentPuzzleStep >= puzzle.solution.length) {
+                        if (!solvedPuzzles.includes(puzzle.id)) {
+                          solvedPuzzles.push(puzzle.id);
+                          localStorage.setItem("chess_solved_puzzles", JSON.stringify(solvedPuzzles));
+                        }
+                        $("nextPuzzleBtn").classList.remove("hidden");
+                        showGameOverModal("Puzzle Solved! 🎉", `Fantastic! You successfully solved "${puzzle.title}".`);
+                      }
+                    }, 500);
+                  }
                 }
               } else {
                 // Incorrect Move in Puzzle

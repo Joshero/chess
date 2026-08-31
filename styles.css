@@ -271,7 +271,7 @@ input:checked + .toggle-slider::before {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   padding: 12px 18px;
   background: var(--panel);
   border: 2px solid var(--line);
@@ -282,6 +282,37 @@ input:checked + .toggle-slider::before {
   font-size: 1.1rem;
   font-weight: bold;
   color: var(--accent-dark);
+}
+
+.puzzle-filter-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.puzzle-tab {
+  background: var(--panel);
+  border: 2px solid var(--line);
+  color: var(--ink);
+  padding: 8px 16px;
+  font-weight: bold;
+  font-size: 0.92rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.puzzle-tab:hover {
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+
+.puzzle-tab.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
 }
 
 .puzzle-grid {
