@@ -1712,9 +1712,6 @@ function leaveBtnClick() {
 
 $("homeLogoBtn").onclick = async () => {
   const wasInGame = !game.classList.contains("hidden");
-  if (wasInGame) {
-    showToast("Taking you straight home.");
-  }
   if (privateRoom) {
     await leavePrivate(wasInGame);
     return;
