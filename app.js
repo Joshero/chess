@@ -925,17 +925,34 @@ function buildBoard() {
   draw();
 }
 
-function getPromotionChoice(from, to) {
+function isPromotionMove(from, to) {
   const piece = chess.get(from);
-  if (!piece || piece.type !== "p") return "q";
-  if ((piece.color === "w" && to[1] !== "8") || (piece.color === "b" && to[1] !== "1")) return "q";
+  if (!piece || piece.type !== "p") return false;
+  if ((piece.color === "w" && to[1] !== "8") || (piece.color === "b" && to[1] !== "1")) return false;
+  return chess.moves({ square: from, verbose: true }).some((move) => move.to === to && (move.promotion || (move.flags && move.flags.includes("p"))));
+}
 
-  const answer = window.prompt("Promote pawn to: Queen, Rook, Bishop, or Knight", "Queen");
-  const normalized = (answer || "Queen").trim().toLowerCase();
-  if (["r", "rook"].includes(normalized)) return "r";
-  if (["b", "bishop"].includes(normalized)) return "b";
-  if (["n", "knight"].includes(normalized)) return "n";
-  return "q";
+function getPromotionChoice(from, to) {
+  if (!isPromotionMove(from, to)) return Promise.resolve("q");
+
+  return new Promise((resolve) => {
+    const modal = $("promotionModal");
+    const options = document.querySelectorAll("#promotionOptions .promotion-option");
+    if (!modal || options.length === 0) {
+      resolve("q");
+      return;
+    }
+
+    const choose = (event) => {
+      const promotion = event.currentTarget.dataset.promotion || "q";
+      options.forEach((button) => button.removeEventListener("click", choose));
+      modal.classList.add("hidden");
+      resolve(promotion);
+    };
+
+    options.forEach((button) => button.addEventListener("click", choose));
+    modal.classList.remove("hidden");
+  });
 }
 
 async function clickSquare(square) {
@@ -959,7 +976,7 @@ async function clickSquare(square) {
       });
     }
 
-    const promotion = getPromotionChoice(selected, square);
+    const promotion = await getPromotionChoice(selected, square);
     const move = chess.move({ from: selected, to: square, promotion });
 
     if (move) {
