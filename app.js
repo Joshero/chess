@@ -236,12 +236,15 @@ const board = $("board"), status = $("status"), error = $("roomError");
 const start = $("startScreen"), playerMode = $("playerModeScreen"), computer = $("computerScreen"), timed = $("timedScreen"), puzzleScreen = $("puzzleScreen"), room = $("roomScreen"), lobby = $("lobbyScreen"), game = $("gameScreen");
 const codeDisplay = $("roomCodeDisplay"), connection = $("connectionStatus"), lobbyError = $("lobbyError"), lobbyPlayers = $("lobbyPlayers"), startPrivate = $("startPrivateBtn"), undo = $("undoBtn");
 const moveHistoryBody = $("moveHistoryBody"), replayBtn = $("replayBtn");
+const reviewPanel = $("reviewPanel"), reviewSummary = $("reviewSummary"), reviewControls = $("reviewControls"), reviewStep = $("reviewStep"), alternativeMoves = $("alternativeMoves");
+const reviewStartBtn = $("reviewStartBtn"), reviewPrevBtn = $("reviewPrevBtn"), reviewNextBtn = $("reviewNextBtn"), reviewEndBtn = $("reviewEndBtn");
 const roomLinkInput = $("roomLinkInput"), copyRoomLinkBtn = $("copyRoomLinkBtn"), copyStatus = $("copyStatus"), shareRoom = $("shareRoom");
 const topClock = $("topClock"), bottomClock = $("bottomClock");
 
 const files = ["a", "b", "c", "d", "e", "f", "g", "h"], ranks = ["8", "7", "6", "5", "4", "3", "2", "1"];
 
 let selected = null, lastMove = null, moveHistory = [], replaying = false, replayBoardFlipped = false;
+let reviewMode = false, reviewMoves = [], reviewPly = 0, reviewLiveFen = null, reviewLiveLastMove = null, reviewSummaryText = "", reviewVariationText = "";
 let channel = null, privateRoom = false, computerMode = false, timedMode = false, puzzleMode = false, thinking = false;
 let difficulty = "medium", selectedTimeControl = "5+0", color = null, host = false, started = false;
 let undoStack = []; // Unlimited undo move stack
@@ -884,6 +887,10 @@ function draw() {
   }, []).join("") : '<tr><td colspan="3">No moves yet</td></tr>';
 
   replayBtn.disabled = replaying || moveHistory.length === 0;
+  if (replayBtn) {
+    replayBtn.disabled = moveHistory.length === 0;
+    replayBtn.textContent = reviewMode ? "Return to final board" : "Review game";
+  }
 
   if (privateRoom) {
     undo.classList.add("hidden");
@@ -894,6 +901,7 @@ function draw() {
 
   renderClocks();
   renderPlayerBars();
+  updateReviewPanel();
   if (!game.classList.contains("hidden")) saveAppState(game.id);
 }
 
@@ -1261,60 +1269,135 @@ function undoTurn() {
   }
 }
 
-function watchReplay() {
-  if (replaying) return;
+function getGameSummaryText() {
+  const moveCount = Math.ceil(moveHistory.length / 2);
+  let result = "Game in progress.";
+  if (clockExpired) {
+    const winner = chess.turn() === "w" ? "Black" : "White";
+    result = `${winner} won on time.`;
+  } else if (chess.in_checkmate()) {
+    const winner = chess.turn() === "w" ? "Black" : "White";
+    result = `${winner} won by checkmate.`;
+  } else if (chess.in_stalemate()) {
+    result = "Draw by stalemate.";
+  } else if (chess.in_threefold_repetition()) {
+    result = "Draw by threefold repetition.";
+  } else if (chess.insufficient_material()) {
+    result = "Draw by insufficient material.";
+  } else if (chess.in_draw()) {
+    result = "Draw by rule.";
+  }
+  return `${result} Total moves: ${moveCount}. Review any position below and compare other legal moves.`;
+}
+
+function applyReviewPosition(targetPly) {
+  const replayChess = new Chess();
+  let applied = 0;
+  let appliedMove = null;
+  for (let i = 0; i < targetPly && i < reviewMoves.length; i++) {
+    const move = replayChess.move(reviewMoves[i]);
+    if (!move) break;
+    appliedMove = move;
+    applied++;
+  }
+
+  reviewPly = applied;
+  reviewVariationText = "";
+  chess.load(replayChess.fen());
+  lastMove = appliedMove ? { from: appliedMove.from, to: appliedMove.to } : null;
+  selected = null;
+  draw();
+}
+
+function enterReviewMode() {
   if (moveHistory.length === 0) {
     connection.textContent = "Play at least one move before starting replay.";
     return;
   }
-  const liveFen = chess.fen();
-  const liveLastMove = lastMove;
-  const replayMoves = [...moveHistory];
-  const replayChess = new Chess();
-  let index = 0;
+
+  reviewLiveFen = chess.fen();
+  reviewLiveLastMove = lastMove ? { ...lastMove } : null;
+  reviewMoves = [...moveHistory];
+  reviewSummaryText = getGameSummaryText();
+  reviewPly = reviewMoves.length;
   replayBoardFlipped = board.classList.contains("flipped");
+  reviewMode = true;
   replaying = true;
   if (timedMode) stopClock();
 
   board.classList.add("replaying");
-  replayBtn.disabled = true;
-  replayBtn.textContent = "Replay in progress...";
-  chess.reset();
-  lastMove = null;
-  draw();
+  applyReviewPosition(reviewPly);
+}
 
-  const timer = window.setInterval(() => {
-    if (index >= replayMoves.length) {
-      window.clearInterval(timer);
-      chess.load(liveFen);
-      lastMove = liveLastMove;
-      replaying = false;
-      board.classList.remove("replaying");
-      replayBtn.disabled = false;
-      replayBtn.textContent = "Watch replay";
-      if (timedMode && !clockExpired && !chess.game_over()) startClock();
-      draw();
-      return;
-    }
-    const move = replayChess.move(replayMoves[index]);
-    if (!move) {
-      window.clearInterval(timer);
-      chess.load(liveFen);
-      lastMove = liveLastMove;
-      replaying = false;
-      board.classList.remove("replaying");
-      replayBtn.disabled = false;
-      replayBtn.textContent = "Watch replay";
-      if (timedMode && !clockExpired && !chess.game_over()) startClock();
-      connection.textContent = "Replay unavailable for this move history.";
-      draw();
-      return;
-    }
-    chess.load(replayChess.fen());
-    lastMove = { from: move.from, to: move.to };
-    index += 1;
-    draw();
-  }, 650);
+function exitReviewMode() {
+  if (reviewLiveFen) chess.load(reviewLiveFen);
+  lastMove = reviewLiveLastMove;
+  reviewMode = false;
+  replaying = false;
+  reviewVariationText = "";
+  board.classList.remove("replaying");
+  if (timedMode && !clockExpired && !chess.game_over()) startClock();
+  draw();
+}
+
+function playReviewAlternative(move) {
+  const applied = chess.move({ from: move.from, to: move.to, promotion: move.promotion || "q" });
+  if (!applied) return;
+  lastMove = { from: applied.from, to: applied.to };
+  reviewVariationText = `Variation after ${reviewPly} ply: ${applied.san}`;
+  selected = null;
+  draw();
+}
+
+function renderAlternativeMoves() {
+  if (!alternativeMoves) return;
+  alternativeMoves.innerHTML = "";
+  if (!reviewMode) {
+    alternativeMoves.textContent = "Start review to inspect legal alternatives.";
+    return;
+  }
+
+  const moves = chess.moves({ verbose: true });
+  if (moves.length === 0) {
+    alternativeMoves.textContent = "No legal moves from this position.";
+    return;
+  }
+
+  moves.slice(0, 16).forEach((move) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = move.san;
+    button.onclick = () => playReviewAlternative(move);
+    alternativeMoves.appendChild(button);
+  });
+}
+
+function updateReviewPanel() {
+  if (!reviewPanel) return;
+  const canReview = !puzzleMode && moveHistory.length > 0 && (reviewMode || chess.game_over() || clockExpired);
+  reviewPanel.classList.toggle("hidden", !canReview);
+  reviewControls?.classList.toggle("hidden", !reviewMode);
+  if (!canReview) return;
+
+  const summary = reviewMode ? reviewSummaryText : getGameSummaryText();
+  if (reviewSummary) reviewSummary.textContent = reviewVariationText || summary;
+  if (reviewStep) reviewStep.textContent = reviewMode ? `Move ${reviewPly} of ${reviewMoves.length}` : `Move ${moveHistory.length} of ${moveHistory.length}`;
+  if (reviewStartBtn) reviewStartBtn.disabled = !reviewMode || reviewPly === 0;
+  if (reviewPrevBtn) reviewPrevBtn.disabled = !reviewMode || reviewPly === 0;
+  if (reviewNextBtn) reviewNextBtn.disabled = !reviewMode || reviewPly >= reviewMoves.length;
+  if (reviewEndBtn) reviewEndBtn.disabled = !reviewMode || reviewPly >= reviewMoves.length;
+  if (reviewMode) {
+    status.textContent = `Reviewing move ${reviewPly} of ${reviewMoves.length}${chess.in_check() ? " (Check!)" : ""}`;
+  }
+  renderAlternativeMoves();
+}
+
+function watchReplay() {
+  if (reviewMode) {
+    exitReviewMode();
+  } else {
+    enterReviewMode();
+  }
 }
 
 function players() {
@@ -1576,6 +1659,10 @@ $("timedVsPrivateBtn").onclick = () => show(room);
 
 $("undoBtn").onclick = undoTurn;
 replayBtn.addEventListener("click", watchReplay);
+if (reviewStartBtn) reviewStartBtn.onclick = () => applyReviewPosition(0);
+if (reviewPrevBtn) reviewPrevBtn.onclick = () => applyReviewPosition(Math.max(0, reviewPly - 1));
+if (reviewNextBtn) reviewNextBtn.onclick = () => applyReviewPosition(Math.min(reviewMoves.length, reviewPly + 1));
+if (reviewEndBtn) reviewEndBtn.onclick = () => applyReviewPosition(reviewMoves.length);
 
 $("hintBtn").onclick = () => {
   const puzzle = currentPuzzleIndex === -1 ? dailyPuzzle : PUZZLES[currentPuzzleIndex];
