@@ -611,6 +611,10 @@ input:checked + .toggle-slider::before {
 .move-sidebar th { color: #c9d3d8; font-size: 0.76rem; font-weight: normal; text-transform: uppercase; }
 .move-sidebar td { color: #fff; font-size: 0.92rem; }
 .move-sidebar tbody tr:last-child td { background: #66552d; border-bottom: 0; color: #fff7d6; font-weight: bold; }
+.move-row { cursor: pointer; transition: background-color 0.2s ease; }
+.move-row:hover td { background-color: #374a56; }
+.move-row .move-cell { padding: 9px 5px; }
+.move-row .move-cell:hover { background-color: #66552d; }
 .hidden { display: none !important; }
 
 @media (max-width: 760px) {

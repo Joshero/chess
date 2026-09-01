@@ -882,9 +882,38 @@ function draw() {
   board.classList.toggle("flipped", shouldFlip);
 
   moveHistoryBody.innerHTML = moveHistory.length ? moveHistory.reduce((rows, move, index) => {
-    if (index % 2 === 0) rows.push(`<tr><td>${Math.floor(index / 2) + 1}</td><td>${move}</td><td>${moveHistory[index + 1] || ""}</td></tr>`);
+    if (index % 2 === 0) {
+      const moveNum = Math.floor(index / 2) + 1;
+      const whiteMove = move;
+      const blackMove = moveHistory[index + 1] || "";
+      rows.push(`<tr data-ply="${index}" class="move-row" style="cursor: pointer;"><td>${moveNum}</td><td class="move-cell">${whiteMove}</td><td class="move-cell">${blackMove}</td></tr>`);
+    }
     return rows;
   }, []).join("") : '<tr><td colspan="3">No moves yet</td></tr>';
+  
+  // Add click handlers to move rows for review navigation
+  document.querySelectorAll(".move-row").forEach((row) => {
+    row.style.transition = "background-color 0.2s";
+    row.onmouseover = () => { if (!reviewMode) return; row.style.backgroundColor = "rgba(200, 200, 200, 0.2)"; };
+    row.onmouseout = () => { row.style.backgroundColor = ""; };
+    row.onclick = () => {
+      if (!reviewMode && moveHistory.length > 0) enterReviewMode();
+      if (reviewMode) {
+        const ply = parseInt(row.dataset.ply);
+        // Get clicked move cell
+        const cells = row.querySelectorAll(".move-cell");
+        if (event.target === cells[0]) {
+          // White move clicked
+          applyReviewPosition(ply + 1);
+        } else if (event.target === cells[1]) {
+          // Black move clicked
+          applyReviewPosition(ply + 2);
+        } else {
+          applyReviewPosition(ply + 1);
+        }
+      }
+    };
+  });
 
   replayBtn.disabled = replaying || moveHistory.length === 0;
   if (replayBtn) {
@@ -964,6 +993,38 @@ function getPromotionChoice(from, to) {
 }
 
 async function clickSquare(square) {
+  // Allow review mode to click and navigate
+  if (reviewMode) {
+    if (selected === square) {
+      selected = null;
+      draw();
+      return;
+    }
+    
+    // In review mode, try to play alternative move
+    if (selected) {
+      const moves = chess.moves({ square: selected, verbose: true });
+      const clickedMove = moves.find(m => m.to === square);
+      if (clickedMove) {
+        playReviewAlternative(clickedMove);
+        selected = null;
+        return;
+      }
+    }
+    
+    // Show legal moves for inspection
+    const piece = chess.get(square);
+    if (piece) {
+      selected = square;
+      draw();
+      $(square).classList.add("selected");
+      chess.moves({ square, verbose: true }).forEach((move) => {
+        $(move.to)?.classList.add("highlighted");
+      });
+    }
+    return;
+  }
+  
   if (!puzzleMode && (chess.game_over() || clockExpired || (computerMode && chess.turn() !== "w"))) return;
   if (thinking || replaying) return;
 
@@ -1287,7 +1348,53 @@ function getGameSummaryText() {
   } else if (chess.in_draw()) {
     result = "Draw by rule.";
   }
-  return `${result} Total moves: ${moveCount}. Review any position below and compare other legal moves.`;
+  return `${result} Total moves: ${moveCount}. Review any move below and compare other legal moves available at that position.`;
+}
+
+function buildGameSummaryHtml() {
+  const moveCount = Math.ceil(moveHistory.length / 2);
+  let result = "Game in progress";
+  let resultClass = "in-progress";
+  let resultIcon = "\u231B";
+  
+  if (clockExpired) {
+    const winner = chess.turn() === "w" ? "Black" : "White";
+    result = `${winner} won on time (timeout)`;
+    resultClass = "won-on-time";
+    resultIcon = "\u23F1\uFE0F";
+  } else if (chess.in_checkmate()) {
+    const winner = chess.turn() === "w" ? "Black" : "White";
+    result = `${winner} won by checkmate`;
+    resultClass = "won-checkmate";
+    resultIcon = "\u265A";
+  } else if (chess.in_stalemate()) {
+    result = "Draw by stalemate";
+    resultClass = "draw";
+    resultIcon = "\uD83E\uDD1F";
+  } else if (chess.in_threefold_repetition()) {
+    result = "Draw by threefold repetition";
+    resultClass = "draw";
+    resultIcon = "\uD83E\uDD1F";
+  } else if (chess.insufficient_material()) {
+    result = "Draw by insufficient material";
+    resultClass = "draw";
+    resultIcon = "\uD83E\uDD1F";
+  } else if (chess.in_draw()) {
+    result = "Draw by rule";
+    resultClass = "draw";
+    resultIcon = "\uD83E\uDD1F";
+  }
+  
+  return `
+    <div style="padding: 12px; background: #f9f9f9; border-radius: 4px; margin-bottom: 12px;">
+      <div style="font-size: 0.9em; color: #666; margin-bottom: 4px;">GAME SUMMARY</div>
+      <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 8px;">${resultIcon} ${result}</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85em;">
+        <div style="color: #666;">Total moves: <strong>${moveCount}</strong></div>
+        <div style="color: #666;">Moves to review: <strong>${moveHistory.length}</strong></div>
+      </div>
+    </div>
+  `;
 }
 
 function applyReviewPosition(targetPly) {
@@ -1344,32 +1451,67 @@ function playReviewAlternative(move) {
   const applied = chess.move({ from: move.from, to: move.to, promotion: move.promotion || "q" });
   if (!applied) return;
   lastMove = { from: applied.from, to: applied.to };
-  reviewVariationText = `Variation after ${reviewPly} ply: ${applied.san}`;
+  const moveNum = Math.ceil(reviewPly / 2);
+  const moveColor = reviewPly % 2 === 0 ? "White" : "Black";
+  reviewVariationText = `Variation on move ${moveNum} (${moveColor}): ${applied.san}`;
   selected = null;
   draw();
+}
+
+function jumpToMove(moveIndex) {
+  // moveIndex is 0-based move number (0 = move 1 white, 1 = move 1 black, 2 = move 2 white, etc.)
+  if (!reviewMode) enterReviewMode();
+  applyReviewPosition(moveIndex + 1);
 }
 
 function renderAlternativeMoves() {
   if (!alternativeMoves) return;
   alternativeMoves.innerHTML = "";
   if (!reviewMode) {
-    alternativeMoves.textContent = "Start review to inspect legal alternatives.";
+    alternativeMoves.innerHTML = `<p style="color: #999; font-size: 0.9em; margin: 0;">Start review to inspect legal alternatives.</p>`;
     return;
   }
 
   const moves = chess.moves({ verbose: true });
   if (moves.length === 0) {
-    alternativeMoves.textContent = "No legal moves from this position.";
+    alternativeMoves.innerHTML = `<p style="color: #999; font-size: 0.9em; margin: 0;">No legal moves from this position.</p>`;
     return;
   }
 
-  moves.slice(0, 16).forEach((move) => {
+  const isPlayedMove = reviewPly > 0 && reviewPly <= reviewMoves.length;
+  const playedMoveText = isPlayedMove ? `(${reviewMoves[reviewPly - 1]})` : "";
+  
+  const header = document.createElement("div");
+  header.style.cssText = "font-size: 0.85em; color: #666; margin-bottom: 6px; font-weight: bold;";
+  header.textContent = `${moves.length} legal move${moves.length !== 1 ? "s" : ""} available`;
+  alternativeMoves.appendChild(header);
+
+  moves.slice(0, 12).forEach((move) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = move.san;
+    button.style.cssText = `
+      margin: 2px; padding: 4px 8px; border: 1px solid #ccc; 
+      border-radius: 3px; background: #f5f5f5; cursor: pointer; font-size: 0.9em;
+    `;
+    const isPlayedMove = reviewPly > 0 && reviewPly <= reviewMoves.length && reviewMoves[reviewPly - 1] === move.san;
+    if (isPlayedMove) {
+      button.style.cssText += `background: #e8f5e9; border-color: #4caf50; font-weight: bold; color: #2e7d32;`;
+      button.textContent = `✓ ${move.san}`;
+    } else {
+      button.textContent = move.san;
+    }
+    button.onmouseover = () => { button.style.backgroundColor = "#e0e0e0"; };
+    button.onmouseout = () => { button.style.backgroundColor = isPlayedMove ? "#e8f5e9" : "#f5f5f5"; };
     button.onclick = () => playReviewAlternative(move);
     alternativeMoves.appendChild(button);
   });
+  
+  if (moves.length > 12) {
+    const more = document.createElement("div");
+    more.style.cssText = "font-size: 0.8em; color: #999; margin-top: 4px;";
+    more.textContent = `+${moves.length - 12} more moves...`;
+    alternativeMoves.appendChild(more);
+  }
 }
 
 function updateReviewPanel() {
@@ -1379,15 +1521,36 @@ function updateReviewPanel() {
   reviewControls?.classList.toggle("hidden", !reviewMode);
   if (!canReview) return;
 
-  const summary = reviewMode ? reviewSummaryText : getGameSummaryText();
-  if (reviewSummary) reviewSummary.textContent = reviewVariationText || summary;
-  if (reviewStep) reviewStep.textContent = reviewMode ? `Move ${reviewPly} of ${reviewMoves.length}` : `Move ${moveHistory.length} of ${moveHistory.length}`;
+  // Show summary or variation
+  const summaryHtml = reviewMode && reviewPly > 0 ? buildGameSummaryHtml() : buildGameSummaryHtml();
+  const variationText = reviewVariationText || getGameSummaryText();
+  if (reviewSummary) {
+    if (reviewMode && reviewPly > 0) {
+      reviewSummary.innerHTML = summaryHtml;
+    } else {
+      reviewSummary.innerHTML = `<div style="padding: 12px; background: #f9f9f9; border-radius: 4px;">${summaryHtml.split('\n').slice(1).join('\n')}`;
+    }
+  }
+  
+  // Update move counter
+  if (reviewStep) {
+    if (reviewMode) {
+      const moveNum = Math.ceil(reviewPly / 2);
+      const moveColor = reviewPly % 2 === 0 ? "White" : "Black";
+      reviewStep.textContent = reviewPly === 0 ? "Starting position" : `Move ${moveNum} (${moveColor}) - Ply ${reviewPly}/${reviewMoves.length}`;
+    } else {
+      reviewStep.textContent = `Final position - ${moveHistory.length} ply played`;
+    }
+  }
+  
+  // Disable/enable buttons
   if (reviewStartBtn) reviewStartBtn.disabled = !reviewMode || reviewPly === 0;
   if (reviewPrevBtn) reviewPrevBtn.disabled = !reviewMode || reviewPly === 0;
   if (reviewNextBtn) reviewNextBtn.disabled = !reviewMode || reviewPly >= reviewMoves.length;
   if (reviewEndBtn) reviewEndBtn.disabled = !reviewMode || reviewPly >= reviewMoves.length;
+  
   if (reviewMode) {
-    status.textContent = `Reviewing move ${reviewPly} of ${reviewMoves.length}${chess.in_check() ? " (Check!)" : ""}`;
+    status.textContent = `Reviewing move ${Math.ceil(reviewPly / 2)} (${reviewPly % 2 === 0 ? "White" : "Black"} to move)${chess.in_check() ? " (Check!)" : ""}`;
   }
   renderAlternativeMoves();
 }
