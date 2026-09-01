@@ -33,9 +33,9 @@ const PUZZLES = [
     title: "Smothered Knight Strike",
     category: "Beginner",
     goal: "White to move: Deliver a smothered checkmate with your Knight!",
-    fen: "6nk/6pp/8/8/5N2/8/5PPP/6K1 w - - 0 1",
-    solution: ["f4g6"],
-    hint: "Black's King on h8 is boxed in by its own pieces. Jump your Knight from f4 to g6!"
+    fen: "6nk/6pp/8/4N3/8/8/5PPP/6K1 w - - 0 1",
+    solution: ["e5f7"],
+    hint: "Black's King on h8 is boxed in by its own pieces. Jump your Knight from e5 to f7!"
   },
   {
     id: "puzzle_4",
