@@ -468,7 +468,7 @@
           title: "Back-Rank Queen Infiltration",
           category: "Beginner",
           goal: "White to move: Deliver back-rank mate with your Queen!",
-          fen: "5rk1/5ppp/8/8/8/8/5PPP/4Q1K1 w - - 0 1",
+          fen: "4r1k1/5ppp/8/8/8/8/5PPP/4Q1K1 w - - 0 1",
           solution: ["e1e8"],
           hint: "Infiltrate Black's 8th rank! Push your Queen from e1 to e8 for checkmate."
         },
@@ -479,9 +479,9 @@
           title: "Royal Knight Fork",
           category: "Intermediate",
           goal: "White to move: Fork Black's King and Queen!",
-          fen: "r3k2r/ppp2ppp/8/3q4/4N3/8/PPPP1PPP/R3K2R w KQkq - 0 1",
+          fen: "r3k2r/ppp2p1p/8/3q4/4N3/8/PPPP1PPP/R3K2R w KQkq - 0 1",
           solution: ["e4f6"],
-          hint: "Jump your Knight to f6 to check the King and attack the d5 Queen at the same time!"
+          hint: "Jump your Knight to f6 to check the King and attack the d5 Queen. The usual g-pawn capture is not available!"
         },
         {
           id: "puzzle_10",
@@ -497,18 +497,18 @@
           title: "Queen Takes Undefended Bishop",
           category: "Intermediate",
           goal: "White to move: Win material by taking the loose piece!",
-          fen: "r4rk1/pp1b1ppp/4pn2/8/8/2N2N2/PPP2PPP/3QR1K1 w - - 0 1",
-          solution: ["d1d7"],
-          hint: "Black left the Bishop on d7 undefended. Snatch it with your Queen!"
+          fen: "r4rk1/pp3ppp/3bpn2/8/8/2N2N2/PPP2PPP/3QR1K1 w - - 0 1",
+          solution: ["d1d6"],
+          hint: "Black left the Bishop on d6 undefended. Snatch it with your Queen!"
         },
         {
           id: "puzzle_12",
-          title: "Queen Infiltration Mate in 2",
+          title: "Queen-Bishop Mate",
           category: "Intermediate",
-          goal: "White to move: Deliver checkmate in 2 moves!",
-          fen: "r1b2rk1/pp3ppp/2n1p3/3p4/8/2N2Q2/PPP2PPP/R3KB1R w KQ - 0 1",
-          solution: ["f3f7", "g8h8", "f7f8"],
-          hint: "Take the f7 pawn with check, then follow through with Qf8# after the King flees!"
+          goal: "White to move: Use the Bishop battery to deliver mate!",
+          fen: "6k1/5ppp/8/7Q/2B5/8/5PPP/6K1 w - - 0 1",
+          solution: ["h5f7"],
+          hint: "Your Bishop on c4 protects f7. Capture on f7 with your Queen for checkmate!"
         },
         {
           id: "puzzle_13",
@@ -521,12 +521,12 @@
         },
         {
           id: "puzzle_14",
-          title: "Bishop Interposition Defense",
+          title: "Knight Fork on c7",
           category: "Intermediate",
-          goal: "White to move: Block the check and save your King!",
-          fen: "4k3/8/8/8/8/8/4B3/4K1q1 w - - 0 1",
-          solution: ["e2f1"],
-          hint: "Block the Black Queen's check by dropping your Bishop back to f1!"
+          goal: "White to move: Fork Black's King and Queen!",
+          fen: "q3k3/2p2ppp/8/1N6/8/8/5PPP/4K3 w - - 0 1",
+          solution: ["b5c7"],
+          hint: "Hop your Knight to c7 with check. It attacks the King on e8 and the Queen on a8."
         },
         {
           id: "puzzle_15",
@@ -550,12 +550,12 @@
         // ==================== ADVANCED (Multi-Move, Master Attacks & Defenses) ====================
         {
           id: "puzzle_17",
-          title: "Bishop Diagonal Strike",
+          title: "Anastasia's Mate",
           category: "Advanced",
-          goal: "White to move: Exploit Black's weak queenside pawns!",
-          fen: "2kr4/ppp2p2/4b3/8/8/8/PPP2B2/2K1RB2 w - - 0 1",
-          solution: ["f2a7"],
-          hint: "Slice through Black's pawn chain by capturing the pawn on a7 with your Bishop!"
+          goal: "White to move: Use the Knight's cover to deliver checkmate!",
+          fen: "6k1/5Np1/8/8/2B5/8/6P1/6KR w - - 0 1",
+          solution: ["h1h8"],
+          hint: "Send the Rook to h8. The Knight on f7 protects the mating square."
         },
         {
           id: "puzzle_18",
@@ -767,6 +767,7 @@
       function showGameOverModal(titleText, messageText) {
         if ($("modalTitle")) $("modalTitle").textContent = titleText;
         if ($("modalMessage")) $("modalMessage").textContent = messageText;
+        if ($("modalNewGameBtn")) $("modalNewGameBtn").textContent = puzzleMode ? "Next Puzzle" : "New Game";
         if ($("gameOverModal")) $("gameOverModal").classList.remove("hidden");
       }
 
@@ -1315,6 +1316,19 @@
         draw();
       }
 
+      function getPromotionChoice(from, to) {
+        const piece = chess.get(from);
+        if (!piece || piece.type !== "p") return "q";
+        if ((piece.color === "w" && to[1] !== "8") || (piece.color === "b" && to[1] !== "1")) return "q";
+
+        const answer = window.prompt("Promote pawn to: Queen, Rook, Bishop, or Knight", "Queen");
+        const normalized = (answer || "Queen").trim().toLowerCase();
+        if (["r", "rook"].includes(normalized)) return "r";
+        if (["b", "bishop"].includes(normalized)) return "b";
+        if (["n", "knight"].includes(normalized)) return "n";
+        return "q";
+      }
+
       async function clickSquare(square) {
         if (!puzzleMode && (chess.game_over() || clockExpired || (computerMode && chess.turn() !== "w"))) return;
         if (thinking || replaying) return;
@@ -1336,7 +1350,8 @@
             });
           }
 
-          const move = chess.move({ from: selected, to: square, promotion: "q" });
+          const promotion = getPromotionChoice(selected, square);
+          const move = chess.move({ from: selected, to: square, promotion });
 
           if (move) {
             if (puzzleMode) {
