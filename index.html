@@ -2551,9 +2551,17 @@
       };
 
       $("backToStartBtn").onclick = () => show(start);
+      $("backToStartBtnTop").onclick = () => show(start);
       $("backFromComputerBtn").onclick = () => show(start);
+      $("backFromComputerBtnTop").onclick = () => show(start);
       $("backFromTimedBtn").onclick = () => show(start);
+      $("backFromTimedBtnTop").onclick = () => show(start);
       $("backFromPuzzleBtn").onclick = () => show(start);
+      $("backFromPuzzleBtnTop").onclick = () => show(start);
+      $("backBtn").onclick = () => show(start);
+      $("backBtnTop").onclick = () => show(start);
+      $("leaveLobbyBtn").onclick = () => leavePrivate();
+      $("leaveLobbyBtnTop").onclick = () => leavePrivate();
 
       $("startComputerBtn").onclick = () =>
         startComputer(difficulty, selectedTimeControl);
