@@ -75,6 +75,25 @@ body {
 .screen h2 { font-size: clamp(1.7rem, 4vw, 2.5rem); margin: 0 0 8px; }
 .screen p { color: var(--muted); margin: 0 0 28px; line-height: 1.5; }
 
+.back-btn-top {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: var(--accent);
+  cursor: pointer;
+  display: inline-block;
+  font: inherit;
+  font-size: 0.95rem;
+  margin: 0 0 16px 0;
+  padding: 6px 10px;
+  transition: color 0.2s, transform 0.2s;
+}
+.back-btn-top:hover, .back-btn-top:focus-visible {
+  color: var(--accent-dark);
+  transform: translateX(-2px);
+  outline: none;
+}
+
 .mode-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .mode-card { background: transparent; border: 2px solid var(--line); color: var(--ink); cursor: pointer; padding: 22px; text-align: left; min-height: 126px; transition: border-color 0.2s, transform 0.2s, background 0.2s; position: relative; }
 .mode-card:hover, .mode-card:focus-visible { border-color: var(--accent); background: #fff7ef; transform: translateY(-2px); outline: none; }

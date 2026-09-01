@@ -1808,9 +1808,13 @@ $("puzzleModeBtn").onclick = () => {
 };
 
 $("backToStartBtn").onclick = () => show(start);
+$("backToStartBtnTop").onclick = () => show(start);
 $("backFromComputerBtn").onclick = () => show(start);
+$("backFromComputerBtnTop").onclick = () => show(start);
 $("backFromTimedBtn").onclick = () => show(start);
+$("backFromTimedBtnTop").onclick = () => show(start);
 $("backFromPuzzleBtn").onclick = () => show(start);
+$("backFromPuzzleBtnTop").onclick = () => show(start);
 
 $("startComputerBtn").onclick = () => startComputer(difficulty, selectedTimeControl);
 $("localModeBtn").onclick = () => startLocal(selectedTimeControl);
@@ -1946,7 +1950,9 @@ $("showJoinBtn").onclick = () => {
 };
 
 $("backBtn").onclick = () => show(start);
+$("backBtnTop").onclick = () => show(start);
 $("leaveLobbyBtn").onclick = () => leavePrivate();
+$("leaveLobbyBtnTop").onclick = () => leavePrivate();
 $("leaveBtn").onclick = () => leaveBtnClick();
 
 function leaveBtnClick() {

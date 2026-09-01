@@ -34,43 +34,76 @@
     </div>
     <main class="app">
       <h1 class="brand">
-        <button type="button" class="brand-home" id="homeLogoBtn" aria-label="Go to home page">Chess<span>.</span></button>
+        <button
+          type="button"
+          class="brand-home"
+          id="homeLogoBtn"
+          aria-label="Go to home page"
+        >
+          Chess<span>.</span>
+        </button>
       </h1>
 
       <section class="screen" id="startScreen">
         <h2>Choose your game</h2>
         <p>
-          Select your preferred game mode. Play against computer AI, practice tactics, or challenge another player.
+          Select your preferred game mode. Play against computer AI, practice
+          tactics, or challenge another player.
         </p>
         <div class="mode-grid">
           <button class="mode-card" id="computerModeBtn">
             <strong>Play computer</strong>
-            <small>Play against the computer with configurable difficulty and clock settings.</small>
+            <small
+              >Play against the computer with configurable difficulty and clock
+              settings.</small
+            >
           </button>
           <button class="mode-card" id="playerModeBtn">
             <strong>Play another player</strong>
-            <small>Choose Pass &amp; Play on one device or create/join a private online room.</small>
+            <small
+              >Choose Pass &amp; Play on one device or create/join a private
+              online room.</small
+            >
           </button>
           <button class="mode-card" id="timedModeBtn">
             <strong>Timed game</strong>
-            <small>Set a chess clock (Bullet, Blitz, Rapid) and pick your opponent.</small>
+            <small
+              >Set a chess clock (Bullet, Blitz, Rapid) and pick your
+              opponent.</small
+            >
           </button>
           <button class="mode-card daily-mode-card" id="dailyChallengeBtn">
             <div class="daily-card-badge">⭐ NEW DAILY</div>
             <strong>Daily Puzzle 🎯</strong>
-            <small>A fresh tactical challenge from the global API every 24 hours!</small>
+            <small
+              >A fresh tactical challenge from the global API every 24
+              hours!</small
+            >
           </button>
           <button class="mode-card" id="puzzleModeBtn">
             <strong>Practice &amp; Puzzles 🧩</strong>
-            <small>Solve 24 tactical puzzles (Beginner, Intermediate, Advanced) to improve!</small>
+            <small
+              >Solve 24 tactical puzzles (Beginner, Intermediate, Advanced) to
+              improve!</small
+            >
           </button>
         </div>
       </section>
 
       <section class="screen hidden" id="puzzleScreen">
+        <button
+          class="back-btn-top"
+          id="backFromPuzzleBtnTop"
+          aria-label="Back to game choices"
+        >
+          ← Back
+        </button>
         <h2>Chess Tactics &amp; Puzzles</h2>
-        <p>Train your tactical vision. Choose a puzzle to solve or work through them in order!</p>
-        
+        <p>
+          Train your tactical vision. Choose a puzzle to solve or work through
+          them in order!
+        </p>
+
         <div class="daily-puzzle-banner" id="dailyPuzzleBanner">
           <div class="daily-badge-row">
             <span class="daily-badge">⭐ Daily Challenge</span>
@@ -78,23 +111,41 @@
           </div>
           <div class="daily-info-row">
             <div>
-              <h3 class="daily-title" id="dailyTitle">Loading today's puzzle...</h3>
-              <p class="daily-desc" id="dailyDesc">A brand new challenge refreshes every 24 hours!</p>
+              <h3 class="daily-title" id="dailyTitle">
+                Loading today's puzzle...
+              </h3>
+              <p class="daily-desc" id="dailyDesc">
+                A brand new challenge refreshes every 24 hours!
+              </p>
             </div>
-            <button class="btn daily-play-btn" id="playDailyBtn">Play Today's Puzzle 🎯</button>
+            <button class="btn daily-play-btn" id="playDailyBtn">
+              Play Today's Puzzle 🎯
+            </button>
           </div>
         </div>
 
         <div class="puzzle-stats-bar">
-          <span class="puzzle-score" id="puzzleScoreDisplay">Solved: 0 / 24</span>
-          <button class="text-btn" id="resetPuzzlesProgressBtn">Reset Progress</button>
+          <span class="puzzle-score" id="puzzleScoreDisplay"
+            >Solved: 0 / 24</span
+          >
+          <button class="text-btn" id="resetPuzzlesProgressBtn">
+            Reset Progress
+          </button>
         </div>
 
         <div class="puzzle-filter-tabs">
-          <button class="puzzle-tab active" data-difficulty="all">All (24)</button>
-          <button class="puzzle-tab" data-difficulty="Beginner">Beginner (8)</button>
-          <button class="puzzle-tab" data-difficulty="Intermediate">Intermediate (8)</button>
-          <button class="puzzle-tab" data-difficulty="Advanced">Advanced (8)</button>
+          <button class="puzzle-tab active" data-difficulty="all">
+            All (24)
+          </button>
+          <button class="puzzle-tab" data-difficulty="Beginner">
+            Beginner (8)
+          </button>
+          <button class="puzzle-tab" data-difficulty="Intermediate">
+            Intermediate (8)
+          </button>
+          <button class="puzzle-tab" data-difficulty="Advanced">
+            Advanced (8)
+          </button>
         </div>
 
         <div class="puzzle-grid" id="puzzleGrid">
@@ -107,9 +158,16 @@
       </section>
 
       <section class="screen hidden" id="timedScreen">
+        <button
+          class="back-btn-top"
+          id="backFromTimedBtnTop"
+          aria-label="Back to game choices"
+        >
+          ← Back
+        </button>
         <h2>Choose time control</h2>
         <p>Select a time limit per player and choose your opponent type.</p>
-        
+
         <div class="setting-group">
           <label class="setting-label">Time Control</label>
           <div class="option-pills" id="timedControlPills">
@@ -152,9 +210,16 @@
       </section>
 
       <section class="screen hidden" id="playerModeScreen">
+        <button
+          class="back-btn-top"
+          id="backToStartBtnTop"
+          aria-label="Back to game choices"
+        >
+          ← Back
+        </button>
         <h2>Choose player mode</h2>
         <p>Select how you want to play against another person.</p>
-        
+
         <div class="setting-group">
           <label class="setting-label">Time Control</label>
           <div class="option-pills" id="playerTimeControlPills">
@@ -169,7 +234,9 @@
         <div class="mode-grid">
           <button class="mode-card" id="localModeBtn">
             <strong>Pass &amp; Play</strong>
-            <small>Two players, one device. Take turns at the same board.</small>
+            <small
+              >Two players, one device. Take turns at the same board.</small
+            >
           </button>
           <button class="mode-card" id="privateModeBtn">
             <strong>Private room</strong>
@@ -182,6 +249,13 @@
       </section>
 
       <section class="screen hidden" id="computerScreen">
+        <button
+          class="back-btn-top"
+          id="backFromComputerBtnTop"
+          aria-label="Back to game choices"
+        >
+          ← Back
+        </button>
         <h2>Play computer</h2>
         <p>Choose difficulty and clock settings before starting.</p>
 
@@ -189,7 +263,8 @@
           <label class="setting-label">Difficulty</label>
           <div class="difficulty-panel">
             <button class="difficulty-option selected" data-difficulty="easy">
-              <strong>Easy</strong><br />A relaxed opponent with random legal moves.
+              <strong>Easy</strong><br />A relaxed opponent with random legal
+              moves.
             </button>
             <button class="difficulty-option" data-difficulty="medium">
               <strong>Medium</strong><br />Looks for captures and useful moves.
@@ -215,13 +290,20 @@
           <div class="setting-toggle-wrap">
             <label class="toggle-label" for="setupMoveHintsToggle">
               <span>Show move guide lines</span>
-              <input type="checkbox" class="move-hints-input" id="setupMoveHintsToggle" checked />
+              <input
+                type="checkbox"
+                class="move-hints-input"
+                id="setupMoveHintsToggle"
+                checked
+              />
               <span class="toggle-slider"></span>
             </label>
           </div>
         </div>
 
-        <button class="btn" id="startComputerBtn" type="button">Start Game</button>
+        <button class="btn" id="startComputerBtn" type="button">
+          Start Game
+        </button>
         <br />
         <button class="text-btn" id="backFromComputerBtn">
           Back to game choices
@@ -229,9 +311,17 @@
       </section>
 
       <section class="screen hidden" id="roomScreen">
+        <button
+          class="back-btn-top"
+          id="backBtnTop"
+          aria-label="Back to game modes"
+        >
+          ← Back
+        </button>
         <h2>Private room</h2>
         <p id="roomDescription">
-          Create a room and share its code with one opponent. Realtime play is enabled through Supabase.
+          Create a room and share its code with one opponent. Realtime play is
+          enabled through Supabase.
         </p>
         <div id="createRoomPanel">
           <button class="btn" id="createRoomBtn">Create room</button>
@@ -251,8 +341,18 @@
       </section>
 
       <section class="screen hidden" id="lobbyScreen">
+        <button
+          class="back-btn-top"
+          id="leaveLobbyBtnTop"
+          aria-label="Leave room"
+        >
+          ← Back
+        </button>
         <h2>Room lobby</h2>
-        <p>Share this code, wait for your opponent, choose side and clock settings.</p>
+        <p>
+          Share this code, wait for your opponent, choose side and clock
+          settings.
+        </p>
         <div class="lobby-code" id="lobbyCodeDisplay"></div>
         <div class="share-room hidden" id="shareRoom">
           <input
@@ -267,12 +367,16 @@
         </div>
         <p class="copy-status" id="copyStatus"></p>
         <p id="lobbyPlayers">Waiting for an opponent...</p>
-        
+
         <div class="setting-group">
           <label class="setting-label">Choose Side</label>
           <div class="side-options">
-            <button class="side-option" type="button" data-color="w">White</button>
-            <button class="side-option" type="button" data-color="b">Black</button>
+            <button class="side-option" type="button" data-color="w">
+              White
+            </button>
+            <button class="side-option" type="button" data-color="b">
+              Black
+            </button>
           </div>
         </div>
 
@@ -306,7 +410,12 @@
             <div class="setting-toggle-wrap">
               <label class="toggle-label" for="moveHintsToggle">
                 <span>Move guide lines</span>
-                <input type="checkbox" class="move-hints-input" id="moveHintsToggle" checked />
+                <input
+                  type="checkbox"
+                  class="move-hints-input"
+                  id="moveHintsToggle"
+                  checked
+                />
                 <span class="toggle-slider"></span>
               </label>
             </div>
@@ -319,8 +428,12 @@
             <div id="puzzleControls" class="puzzle-controls hidden">
               <button class="btn" id="hintBtn">Get Hint 💡</button>
               <button class="btn" id="retryPuzzleBtn">Retry Puzzle 🔄</button>
-              <button class="btn hidden" id="nextPuzzleBtn">Next Puzzle ➡️</button>
-              <button class="text-btn" id="puzzleListBtn">Puzzle List 📋</button>
+              <button class="btn hidden" id="nextPuzzleBtn">
+                Next Puzzle ➡️
+              </button>
+              <button class="text-btn" id="puzzleListBtn">
+                Puzzle List 📋
+              </button>
             </div>
 
             <br />
@@ -390,26 +503,50 @@
       </section>
 
       <!-- Game Over / Puzzle Solved Modal Popup -->
-      <div class="modal-overlay hidden" id="gameOverModal" aria-modal="true" role="dialog">
+      <div
+        class="modal-overlay hidden"
+        id="gameOverModal"
+        aria-modal="true"
+        role="dialog"
+      >
         <div class="modal-card">
           <h2 class="modal-title" id="modalTitle">Game Over</h2>
-          <p class="modal-message" id="modalMessage">White ran out of time! Black wins.</p>
+          <p class="modal-message" id="modalMessage">
+            White ran out of time! Black wins.
+          </p>
           <div class="modal-actions">
-            <button class="btn" id="modalNewGameBtn" type="button">New Game</button>
-            <button class="text-btn" id="modalCloseBtn" type="button">Review Board</button>
+            <button class="btn" id="modalNewGameBtn" type="button">
+              New Game
+            </button>
+            <button class="text-btn" id="modalCloseBtn" type="button">
+              Review Board
+            </button>
           </div>
         </div>
       </div>
 
-      <div class="modal-overlay hidden" id="promotionModal" aria-modal="true" role="dialog">
+      <div
+        class="modal-overlay hidden"
+        id="promotionModal"
+        aria-modal="true"
+        role="dialog"
+      >
         <div class="modal-card promotion-card">
           <h2 class="modal-title">Promote Pawn</h2>
           <p class="modal-message">Choose the piece for your pawn.</p>
           <div class="promotion-options" id="promotionOptions">
-            <button class="promotion-option" type="button" data-promotion="q">Queen</button>
-            <button class="promotion-option" type="button" data-promotion="r">Rook</button>
-            <button class="promotion-option" type="button" data-promotion="b">Bishop</button>
-            <button class="promotion-option" type="button" data-promotion="n">Knight</button>
+            <button class="promotion-option" type="button" data-promotion="q">
+              Queen
+            </button>
+            <button class="promotion-option" type="button" data-promotion="r">
+              Rook
+            </button>
+            <button class="promotion-option" type="button" data-promotion="b">
+              Bishop
+            </button>
+            <button class="promotion-option" type="button" data-promotion="n">
+              Knight
+            </button>
           </div>
         </div>
       </div>
@@ -418,9 +555,25 @@
     <script>
       const SUPABASE_URL = "https://yaauwnvcjjetdybeixfr.supabase.co";
       const SUPABASE_KEY = "sb_publishable_POH2JdWG0JMCzEkt9lhrPg_SmLG0Y1I";
-      const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      const supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY,
+      );
 
-      const symbols = { p: "♟", r: "♜", n: "♞", b: "♝", q: "♛", k: "♚", P: "♙", R: "♖", N: "♘", B: "♗", Q: "♕", K: "♔" };
+      const symbols = {
+        p: "♟",
+        r: "♜",
+        n: "♞",
+        b: "♝",
+        q: "♛",
+        k: "♚",
+        P: "♙",
+        R: "♖",
+        N: "♘",
+        B: "♗",
+        Q: "♕",
+        K: "♔",
+      };
       const chess = new Chess();
       const $ = (id) => document.getElementById(id);
 
@@ -435,7 +588,7 @@
           goal: "White to move: Strike the undefended 8th rank for mate in 1!",
           fen: "6k1/5ppp/8/8/8/8/5PPP/1R4K1 w - - 0 1",
           solution: ["b1b8"],
-          hint: "Black's King is trapped behind its pawns. Move your Rook from b1 to b8!"
+          hint: "Black's King is trapped behind its pawns. Move your Rook from b1 to b8!",
         },
         {
           id: "puzzle_2",
@@ -444,7 +597,7 @@
           goal: "White to move: Deliver checkmate on f7!",
           fen: "r1bqkb1r/pppp1ppp/2n5/4p3/2B1P3/5Q2/PPPP1PPP/RNB1K1NR w KQkq - 0 1",
           solution: ["f3f7"],
-          hint: "The f7 pawn is defended only by the King. Capture f7 with your Queen!"
+          hint: "The f7 pawn is defended only by the King. Capture f7 with your Queen!",
         },
         {
           id: "puzzle_3",
@@ -453,7 +606,7 @@
           goal: "White to move: Deliver a smothered checkmate with your Knight!",
           fen: "6nk/6pp/8/4N3/8/8/5PPP/6K1 w - - 0 1",
           solution: ["e5f7"],
-          hint: "Black's King on h8 is boxed in by its own pieces. Jump your Knight from e5 to f7!"
+          hint: "Black's King on h8 is boxed in by its own pieces. Jump your Knight from e5 to f7!",
         },
         {
           id: "puzzle_4",
@@ -462,7 +615,7 @@
           goal: "White to move: Force checkmate on the back rank!",
           fen: "3r2k1/1p3ppp/8/8/8/8/1Q3PPP/3R2K1 w - - 0 1",
           solution: ["d1d8"],
-          hint: "Capture Black's Rook on d8 with your Rook on d1 for checkmate!"
+          hint: "Capture Black's Rook on d8 with your Rook on d1 for checkmate!",
         },
         {
           id: "puzzle_5",
@@ -471,7 +624,7 @@
           goal: "White to move: Strike on c8 for checkmate!",
           fen: "2r3k1/5ppp/8/8/8/8/5PPP/2R3K1 w - - 0 1",
           solution: ["c1c8"],
-          hint: "Capture the Rook on c8 with your Rook for back-rank checkmate!"
+          hint: "Capture the Rook on c8 with your Rook for back-rank checkmate!",
         },
         {
           id: "puzzle_6",
@@ -480,7 +633,7 @@
           goal: "White to move: Deliver back-rank mate on f8!",
           fen: "7k/5Rpp/8/8/8/8/6PP/6K1 w - - 0 1",
           solution: ["f7f8"],
-          hint: "Slide your Rook from f7 to f8 — Black's King is trapped behind its pawns!"
+          hint: "Slide your Rook from f7 to f8 — Black's King is trapped behind its pawns!",
         },
         {
           id: "puzzle_7",
@@ -489,7 +642,7 @@
           goal: "White to move: Bring the Queen into the attack!",
           fen: "r1bq1rk1/pppp1ppp/2n5/4p1N1/2B1P3/3P4/PPP2PPP/R2QK2R w KQ - 0 1",
           solution: ["d1h5"],
-          hint: "Move your Queen to h5 to create overwhelming threats against h7 and f7!"
+          hint: "Move your Queen to h5 to create overwhelming threats against h7 and f7!",
         },
         {
           id: "puzzle_8",
@@ -498,7 +651,7 @@
           goal: "White to move: Deliver back-rank mate with your Queen!",
           fen: "4r1k1/5ppp/8/8/8/8/5PPP/4Q1K1 w - - 0 1",
           solution: ["e1e8"],
-          hint: "Infiltrate Black's 8th rank! Push your Queen from e1 to e8 for checkmate."
+          hint: "Infiltrate Black's 8th rank! Push your Queen from e1 to e8 for checkmate.",
         },
 
         // ==================== INTERMEDIATE (Tactical Forks, Pins, Discoveries) ====================
@@ -509,7 +662,7 @@
           goal: "White to move: Fork Black's King and Queen!",
           fen: "r3k2r/ppp2p1p/8/3q4/4N3/8/PPPP1PPP/R3K2R w KQkq - 0 1",
           solution: ["e4f6"],
-          hint: "Jump your Knight to f6 to check the King and attack the d5 Queen. The usual g-pawn capture is not available!"
+          hint: "Jump your Knight to f6 to check the King and attack the d5 Queen. The usual g-pawn capture is not available!",
         },
         {
           id: "puzzle_10",
@@ -518,7 +671,7 @@
           goal: "White to move: Capture Black's undefended Queen!",
           fen: "r1b1k2r/pppp1ppp/8/4n3/4Pq2/2P5/PPP2PPP/R1BQK2R w KQkq - 0 1",
           solution: ["c1f4"],
-          hint: "Use your dark-squared Bishop on c1 to capture the exposed Black Queen on f4!"
+          hint: "Use your dark-squared Bishop on c1 to capture the exposed Black Queen on f4!",
         },
         {
           id: "puzzle_11",
@@ -527,7 +680,7 @@
           goal: "White to move: Win material by taking the loose piece!",
           fen: "r4rk1/pp3ppp/3bpn2/8/8/2N2N2/PPP2PPP/3QR1K1 w - - 0 1",
           solution: ["d1d6"],
-          hint: "Black left the Bishop on d6 undefended. Snatch it with your Queen!"
+          hint: "Black left the Bishop on d6 undefended. Snatch it with your Queen!",
         },
         {
           id: "puzzle_12",
@@ -536,7 +689,7 @@
           goal: "White to move: Use the Bishop battery to deliver mate!",
           fen: "6k1/5ppp/8/7Q/2B5/8/5PPP/6K1 w - - 0 1",
           solution: ["h5f7"],
-          hint: "Your Bishop on c4 protects f7. Capture on f7 with your Queen for checkmate!"
+          hint: "Your Bishop on c4 protects f7. Capture on f7 with your Queen for checkmate!",
         },
         {
           id: "puzzle_13",
@@ -545,7 +698,7 @@
           goal: "White to move: Win Black's hanging Rook!",
           fen: "8/8/8/8/8/r5k1/8/R6K w - - 0 1",
           solution: ["a1a3"],
-          hint: "Capture Black's undefended Rook on a3 with your Rook on a1!"
+          hint: "Capture Black's undefended Rook on a3 with your Rook on a1!",
         },
         {
           id: "puzzle_14",
@@ -554,7 +707,7 @@
           goal: "White to move: Fork Black's King and Queen!",
           fen: "q3k3/2p2ppp/8/1N6/8/8/5PPP/4K3 w - - 0 1",
           solution: ["b5c7"],
-          hint: "Hop your Knight to c7 with check. It attacks the King on e8 and the Queen on a8."
+          hint: "Hop your Knight to c7 with check. It attacks the King on e8 and the Queen on a8.",
         },
         {
           id: "puzzle_15",
@@ -563,7 +716,7 @@
           goal: "White to move: Win the Black Queen on d4!",
           fen: "r1b1k2r/pppp1ppp/8/8/1b1q4/2N5/PPP2PPP/R1BQR1K1 w kq - 0 1",
           solution: ["d1d4"],
-          hint: "Capture Black's undefended Queen on d4 directly with your Queen!"
+          hint: "Capture Black's undefended Queen on d4 directly with your Queen!",
         },
         {
           id: "puzzle_16",
@@ -572,7 +725,7 @@
           goal: "White to move: Centralize your Queen with dual threats!",
           fen: "r1bq1rk1/pppp1ppp/2n5/4P3/1bB1n3/2N2N2/PPP2PPP/R1BQK2R w KQ - 0 1",
           solution: ["d1d5"],
-          hint: "Centralize your Queen to d5 to attack the knight on e4 and threaten f7!"
+          hint: "Centralize your Queen to d5 to attack the knight on e4 and threaten f7!",
         },
 
         // ==================== ADVANCED (Multi-Move, Master Attacks & Defenses) ====================
@@ -583,7 +736,7 @@
           goal: "White to move: Use the Knight's cover to deliver checkmate!",
           fen: "6k1/5Np1/8/8/2B5/8/6P1/6KR w - - 0 1",
           solution: ["h1h8"],
-          hint: "Send the Rook to h8. The Knight on f7 protects the mating square."
+          hint: "Send the Rook to h8. The Knight on f7 protects the mating square.",
         },
         {
           id: "puzzle_18",
@@ -592,7 +745,7 @@
           goal: "White to move: Deliver checkmate on the back rank!",
           fen: "4r1k1/5ppp/8/8/8/8/5PPP/4R1K1 w - - 0 1",
           solution: ["e1e8"],
-          hint: "Take Black's Rook on e8 with checkmate!"
+          hint: "Take Black's Rook on e8 with checkmate!",
         },
         {
           id: "puzzle_19",
@@ -601,7 +754,7 @@
           goal: "White to move: Secure your King and prepare to pin Black's Queen!",
           fen: "r1b1k2r/pp3ppp/2n1p3/2b5/4q3/2P2N2/PP2BPPP/R1BQK2R w KQkq - 0 1",
           solution: ["e1g1"],
-          hint: "Castle your King to safety on g1, opening up the e-file for Re1!"
+          hint: "Castle your King to safety on g1, opening up the e-file for Re1!",
         },
         {
           id: "puzzle_20",
@@ -610,7 +763,7 @@
           goal: "White to move: Develop your Bishop to control key diagonal squares!",
           fen: "4kb1r/p2n1ppp/4p3/8/3P4/8/PPP2PPP/R1B1K1NR w KQk - 0 1",
           solution: ["c1f4"],
-          hint: "Bring your dark-squared Bishop to f4 to restrict Black's movement!"
+          hint: "Bring your dark-squared Bishop to f4 to restrict Black's movement!",
         },
         {
           id: "puzzle_21",
@@ -619,7 +772,7 @@
           goal: "White to move: Capture Black's Rook on d8 for checkmate!",
           fen: "3r2k1/5ppp/8/8/8/8/1Q3PPP/3R2K1 w - - 0 1",
           solution: ["d1d8"],
-          hint: "Your Rook on d1 can capture Black's Rook on d8 directly for back-rank checkmate!"
+          hint: "Your Rook on d1 can capture Black's Rook on d8 directly for back-rank checkmate!",
         },
         {
           id: "puzzle_22",
@@ -628,7 +781,7 @@
           goal: "White to move: Promote your passed pawn to a Queen!",
           fen: "8/4P3/8/8/8/8/pk6/R3K3 w - - 0 1",
           solution: ["e7e8"],
-          hint: "Push your e7 pawn to e8 to promote to a Queen and win!"
+          hint: "Push your e7 pawn to e8 to promote to a Queen and win!",
         },
         {
           id: "puzzle_23",
@@ -637,7 +790,7 @@
           goal: "White to move: Infiltrate e8 with your Queen for checkmate!",
           fen: "6k1/5ppp/8/8/8/8/4QPPP/6K1 w - - 0 1",
           solution: ["e2e8"],
-          hint: "Fly your Queen from e2 to e8 to deliver checkmate!"
+          hint: "Fly your Queen from e2 to e8 to deliver checkmate!",
         },
         {
           id: "puzzle_24",
@@ -646,39 +799,102 @@
           goal: "White to move: Capture on b8 for back-rank checkmate!",
           fen: "1r4k1/5ppp/8/8/8/8/5PPP/1R4K1 w - - 0 1",
           solution: ["b1b8"],
-          hint: "Capture Black's Rook on b8 with your Rook on b1 to finish the game with checkmate!"
-        }
+          hint: "Capture Black's Rook on b8 with your Rook on b1 to finish the game with checkmate!",
+        },
       ];
 
-      const board = $("board"), status = $("status"), error = $("roomError");
-      const start = $("startScreen"), playerMode = $("playerModeScreen"), computer = $("computerScreen"), timed = $("timedScreen"), puzzleScreen = $("puzzleScreen"), room = $("roomScreen"), lobby = $("lobbyScreen"), game = $("gameScreen");
-      const codeDisplay = $("roomCodeDisplay"), connection = $("connectionStatus"), lobbyError = $("lobbyError"), lobbyPlayers = $("lobbyPlayers"), startPrivate = $("startPrivateBtn"), undo = $("undoBtn");
-      const moveHistoryBody = $("moveHistoryBody"), replayBtn = $("replayBtn");
-      const reviewPanel = $("reviewPanel"), reviewSummary = $("reviewSummary"), reviewControls = $("reviewControls"), reviewStep = $("reviewStep"), alternativeMoves = $("alternativeMoves");
-      const reviewStartBtn = $("reviewStartBtn"), reviewPrevBtn = $("reviewPrevBtn"), reviewNextBtn = $("reviewNextBtn"), reviewEndBtn = $("reviewEndBtn");
-      const roomLinkInput = $("roomLinkInput"), copyRoomLinkBtn = $("copyRoomLinkBtn"), copyStatus = $("copyStatus"), shareRoom = $("shareRoom");
-      const topClock = $("topClock"), bottomClock = $("bottomClock");
+      const board = $("board"),
+        status = $("status"),
+        error = $("roomError");
+      const start = $("startScreen"),
+        playerMode = $("playerModeScreen"),
+        computer = $("computerScreen"),
+        timed = $("timedScreen"),
+        puzzleScreen = $("puzzleScreen"),
+        room = $("roomScreen"),
+        lobby = $("lobbyScreen"),
+        game = $("gameScreen");
+      const codeDisplay = $("roomCodeDisplay"),
+        connection = $("connectionStatus"),
+        lobbyError = $("lobbyError"),
+        lobbyPlayers = $("lobbyPlayers"),
+        startPrivate = $("startPrivateBtn"),
+        undo = $("undoBtn");
+      const moveHistoryBody = $("moveHistoryBody"),
+        replayBtn = $("replayBtn");
+      const reviewPanel = $("reviewPanel"),
+        reviewSummary = $("reviewSummary"),
+        reviewControls = $("reviewControls"),
+        reviewStep = $("reviewStep"),
+        alternativeMoves = $("alternativeMoves");
+      const reviewStartBtn = $("reviewStartBtn"),
+        reviewPrevBtn = $("reviewPrevBtn"),
+        reviewNextBtn = $("reviewNextBtn"),
+        reviewEndBtn = $("reviewEndBtn");
+      const roomLinkInput = $("roomLinkInput"),
+        copyRoomLinkBtn = $("copyRoomLinkBtn"),
+        copyStatus = $("copyStatus"),
+        shareRoom = $("shareRoom");
+      const topClock = $("topClock"),
+        bottomClock = $("bottomClock");
 
-      const files = ["a", "b", "c", "d", "e", "f", "g", "h"], ranks = ["8", "7", "6", "5", "4", "3", "2", "1"];
+      const files = ["a", "b", "c", "d", "e", "f", "g", "h"],
+        ranks = ["8", "7", "6", "5", "4", "3", "2", "1"];
 
-      let selected = null, lastMove = null, moveHistory = [], replaying = false, replayBoardFlipped = false;
-      let reviewMode = false, reviewMoves = [], reviewPly = 0, reviewLiveFen = null, reviewLiveLastMove = null, reviewSummaryText = "", reviewVariationText = "";
-      let channel = null, privateRoom = false, computerMode = false, timedMode = false, puzzleMode = false, thinking = false;
-      let difficulty = "medium", selectedTimeControl = "5+0", color = null, host = false, started = false;
+      let selected = null,
+        lastMove = null,
+        moveHistory = [],
+        replaying = false,
+        replayBoardFlipped = false;
+      let reviewMode = false,
+        reviewMoves = [],
+        reviewPly = 0,
+        reviewLiveFen = null,
+        reviewLiveLastMove = null,
+        reviewSummaryText = "",
+        reviewVariationText = "";
+      let channel = null,
+        privateRoom = false,
+        computerMode = false,
+        timedMode = false,
+        puzzleMode = false,
+        thinking = false;
+      let difficulty = "medium",
+        selectedTimeControl = "5+0",
+        color = null,
+        host = false,
+        started = false;
       let undoStack = []; // Unlimited undo move stack
       let modalShownForGame = false;
-      let showMoveHints = localStorage.getItem("chess_show_move_hints") !== "false";
+      let showMoveHints =
+        localStorage.getItem("chess_show_move_hints") !== "false";
 
-      let currentPuzzleIndex = 0, currentPuzzleStep = 0;
-      let solvedPuzzles = JSON.parse(localStorage.getItem("chess_solved_puzzles") || "[]");
+      let currentPuzzleIndex = 0,
+        currentPuzzleStep = 0;
+      let solvedPuzzles = JSON.parse(
+        localStorage.getItem("chess_solved_puzzles") || "[]",
+      );
 
-      let clockIncrement = 0, clockMs = { w: 300000, b: 300000 }, clockTimer = null, clockLastTick = 0, clockExpired = false;
+      let clockIncrement = 0,
+        clockMs = { w: 300000, b: 300000 },
+        clockTimer = null,
+        clockLastTick = 0,
+        clockExpired = false;
       const id = crypto.randomUUID();
       const ACTIVE_SCREEN_KEY = "chess_active_screen";
       const GAME_STATE_KEY = "chess_game_state";
 
       function show(screen) {
-        [start, playerMode, computer, timed, puzzleScreen, room, lobby, game].forEach((item) => item.classList.add("hidden"));
+        [
+          start,
+          playerMode,
+          computer,
+          timed,
+          puzzleScreen,
+          room,
+          lobby,
+          game,
+        ].forEach((item) => item.classList.add("hidden"));
         screen.classList.remove("hidden");
         saveAppState(screen.id);
       }
@@ -698,23 +914,26 @@
         localStorage.setItem(ACTIVE_SCREEN_KEY, screenId);
         if (screenId !== game.id || privateRoom || replaying) return;
 
-        localStorage.setItem(GAME_STATE_KEY, JSON.stringify({
-          fen: chess.fen(),
-          lastMove,
-          moveHistory,
-          undoStack,
-          computerMode,
-          timedMode,
-          puzzleMode,
-          difficulty,
-          selectedTimeControl,
-          color,
-          clockMs,
-          clockExpired,
-          currentPuzzleIndex,
-          currentPuzzleStep,
-          dailyPuzzle
-        }));
+        localStorage.setItem(
+          GAME_STATE_KEY,
+          JSON.stringify({
+            fen: chess.fen(),
+            lastMove,
+            moveHistory,
+            undoStack,
+            computerMode,
+            timedMode,
+            puzzleMode,
+            difficulty,
+            selectedTimeControl,
+            color,
+            clockMs,
+            clockExpired,
+            currentPuzzleIndex,
+            currentPuzzleStep,
+            dailyPuzzle,
+          }),
+        );
       }
 
       function restoreAppState() {
@@ -730,7 +949,9 @@
           updateDailyTimer();
         }
 
-        const savedScreen = $(savedScreenId === lobby.id ? room.id : savedScreenId);
+        const savedScreen = $(
+          savedScreenId === lobby.id ? room.id : savedScreenId,
+        );
         if (savedScreen && savedScreen.classList.contains("screen")) {
           show(savedScreen);
         }
@@ -753,15 +974,22 @@
           puzzleMode = Boolean(saved.puzzleMode);
           thinking = false;
           difficulty = saved.difficulty || difficulty;
-          selectedTimeControl = saved.selectedTimeControl || selectedTimeControl;
+          selectedTimeControl =
+            saved.selectedTimeControl || selectedTimeControl;
           color = saved.color || null;
           clockMs = saved.clockMs || clockMs;
           clockExpired = Boolean(saved.clockExpired);
           lastMove = saved.lastMove || null;
-          moveHistory = Array.isArray(saved.moveHistory) ? saved.moveHistory : [];
+          moveHistory = Array.isArray(saved.moveHistory)
+            ? saved.moveHistory
+            : [];
           undoStack = Array.isArray(saved.undoStack) ? saved.undoStack : [];
-          currentPuzzleIndex = Number.isInteger(saved.currentPuzzleIndex) ? saved.currentPuzzleIndex : currentPuzzleIndex;
-          currentPuzzleStep = Number.isInteger(saved.currentPuzzleStep) ? saved.currentPuzzleStep : currentPuzzleStep;
+          currentPuzzleIndex = Number.isInteger(saved.currentPuzzleIndex)
+            ? saved.currentPuzzleIndex
+            : currentPuzzleIndex;
+          currentPuzzleStep = Number.isInteger(saved.currentPuzzleStep)
+            ? saved.currentPuzzleStep
+            : currentPuzzleStep;
           dailyPuzzle = saved.dailyPuzzle || dailyPuzzle;
           selected = null;
           replaying = false;
@@ -773,21 +1001,39 @@
           $("nextPuzzleBtn").classList.add("hidden");
 
           if (puzzleMode) {
-            const puzzle = currentPuzzleIndex === -1 ? dailyPuzzle : PUZZLES[currentPuzzleIndex];
-            codeDisplay.textContent = currentPuzzleIndex === -1 ? "DAILY PUZZLE" : `PUZZLE #${currentPuzzleIndex + 1}`;
-            connection.textContent = puzzle ? `${currentPuzzleIndex === -1 ? "Daily Challenge" : `Puzzle #${currentPuzzleIndex + 1}`}: ${puzzle.title}` : "Puzzle";
+            const puzzle =
+              currentPuzzleIndex === -1
+                ? dailyPuzzle
+                : PUZZLES[currentPuzzleIndex];
+            codeDisplay.textContent =
+              currentPuzzleIndex === -1
+                ? "DAILY PUZZLE"
+                : `PUZZLE #${currentPuzzleIndex + 1}`;
+            connection.textContent = puzzle
+              ? `${currentPuzzleIndex === -1 ? "Daily Challenge" : `Puzzle #${currentPuzzleIndex + 1}`}: ${puzzle.title}`
+              : "Puzzle";
           } else if (computerMode) {
             codeDisplay.textContent = "COMPUTER";
-            connection.textContent = timedMode ? `Computer: ${difficulty} (${selectedTimeControl})` : `Computer: ${difficulty}`;
+            connection.textContent = timedMode
+              ? `Computer: ${difficulty} (${selectedTimeControl})`
+              : `Computer: ${difficulty}`;
           } else {
             codeDisplay.textContent = "LOCAL";
-            connection.textContent = timedMode ? `Pass & Play (${selectedTimeControl})` : "Pass & Play";
+            connection.textContent = timedMode
+              ? `Pass & Play (${selectedTimeControl})`
+              : "Pass & Play";
           }
 
           draw();
           show(game);
           if (timedMode && !clockExpired && !chess.game_over()) startClock();
-          if (computerMode && chess.turn() === "b" && !chess.game_over() && !clockExpired) computerMove();
+          if (
+            computerMode &&
+            chess.turn() === "b" &&
+            !chess.game_over() &&
+            !clockExpired
+          )
+            computerMove();
           return true;
         } catch (e) {
           localStorage.removeItem(GAME_STATE_KEY);
@@ -798,7 +1044,10 @@
       function showGameOverModal(titleText, messageText) {
         if ($("modalTitle")) $("modalTitle").textContent = titleText;
         if ($("modalMessage")) $("modalMessage").textContent = messageText;
-        if ($("modalNewGameBtn")) $("modalNewGameBtn").textContent = puzzleMode ? "Next Puzzle" : "New Game";
+        if ($("modalNewGameBtn"))
+          $("modalNewGameBtn").textContent = puzzleMode
+            ? "Next Puzzle"
+            : "New Game";
         if ($("gameOverModal")) $("gameOverModal").classList.remove("hidden");
       }
 
@@ -812,7 +1061,9 @@
           input.onchange = (e) => {
             showMoveHints = e.target.checked;
             localStorage.setItem("chess_show_move_hints", showMoveHints);
-            document.querySelectorAll(".move-hints-input").forEach((i) => (i.checked = showMoveHints));
+            document
+              .querySelectorAll(".move-hints-input")
+              .forEach((i) => (i.checked = showMoveHints));
             draw();
           };
         });
@@ -829,7 +1080,11 @@
           hash |= 0;
         }
         const dailyIndex = Math.abs(hash) % PUZZLES.length;
-        const localDaily = { ...PUZZLES[dailyIndex], isDaily: true, date: todayKey };
+        const localDaily = {
+          ...PUZZLES[dailyIndex],
+          isDaily: true,
+          date: todayKey,
+        };
 
         if (!dailyPuzzle || dailyPuzzle.date !== todayKey) {
           dailyPuzzle = localDaily;
@@ -843,11 +1098,17 @@
           const res = await fetch("https://lichess.org/api/puzzle/daily");
           if (!res.ok) return;
           const data = await res.json();
-          if (data && data.puzzle && data.puzzle.solution && data.game && data.game.fen) {
+          if (
+            data &&
+            data.puzzle &&
+            data.puzzle.solution &&
+            data.game &&
+            data.game.fen
+          ) {
             const p = data.puzzle;
             const initialFen = data.game.fen;
             const fullSolution = p.solution;
-            
+
             // Lichess puzzle API solution format:
             // Solution[0] is the OPPONENT's last move that sets up the puzzle position.
             // We apply solution[0] to initialFen so the board is in the position for the player's turn!
@@ -863,7 +1124,7 @@
                 setupMove = tempChess.move({
                   from: setupMoveStr.slice(0, 2),
                   to: setupMoveStr.slice(2, 4),
-                  promotion: setupMoveStr[4] || "q"
+                  promotion: setupMoveStr[4] || "q",
                 });
               }
               if (!setupMove) {
@@ -875,18 +1136,19 @@
               }
             }
 
-            const cleanFen = playerFen.split(" ").slice(0, 4).join(" ") + " 0 1";
-            
+            const cleanFen =
+              playerFen.split(" ").slice(0, 4).join(" ") + " 0 1";
+
             dailyPuzzle = {
               id: `daily_${todayKey}`,
-              title: `Daily: ${p.themes && p.themes[0] ? p.themes[0].replace(/([A-Z])/g, ' $1') : 'Tactical Shot'}`,
+              title: `Daily: ${p.themes && p.themes[0] ? p.themes[0].replace(/([A-Z])/g, " $1") : "Tactical Shot"}`,
               category: "Advanced",
               goal: `${cleanFen.split(" ")[1] === "w" ? "White" : "Black"} to move: Find the best tactical move!`,
               fen: cleanFen,
               solution: playerSolution,
               hint: `Daily puzzle rating: ${p.rating || 1500}. Focus on the strongest tactical forcing move!`,
               isDaily: true,
-              date: todayKey
+              date: todayKey,
             };
             renderDailyPuzzleBanner();
           }
@@ -897,7 +1159,13 @@
 
       function updateDailyTimer() {
         const now = new Date();
-        const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+        const tomorrow = new Date(
+          Date.UTC(
+            now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate() + 1,
+          ),
+        );
         const diff = tomorrow - now;
 
         // If the day has rolled over, clear cached daily puzzle to fetch the new 24h puzzle
@@ -907,9 +1175,14 @@
           renderDailyPuzzleBanner();
         }
 
-        const hours = String(Math.floor((diff / (1000 * 60 * 60)) % 24)).padStart(2, '0');
-        const mins = String(Math.floor((diff / (1000 * 60)) % 60)).padStart(2, '0');
-        const secs = String(Math.floor((diff / 1000) % 60)).padStart(2, '0');
+        const hours = String(
+          Math.floor((diff / (1000 * 60 * 60)) % 24),
+        ).padStart(2, "0");
+        const mins = String(Math.floor((diff / (1000 * 60)) % 60)).padStart(
+          2,
+          "0",
+        );
+        const secs = String(Math.floor((diff / 1000) % 60)).padStart(2, "0");
         const timerEl = $("dailyTimer");
         if (timerEl) {
           timerEl.textContent = `Next in: ${hours}:${mins}:${secs}`;
@@ -920,13 +1193,17 @@
         const p = getDailyPuzzle();
         if (!p) return;
         const todayKey = new Date().toISOString().slice(0, 10);
-        const isSolved = solvedPuzzles.includes(p.id) || solvedPuzzles.includes(`daily_${todayKey}`);
-        
+        const isSolved =
+          solvedPuzzles.includes(p.id) ||
+          solvedPuzzles.includes(`daily_${todayKey}`);
+
         $("dailyTitle").textContent = p.title;
         $("dailyDesc").textContent = `${p.goal} (${p.category} tier)`;
         const playBtn = $("playDailyBtn");
         if (playBtn) {
-          playBtn.textContent = isSolved ? "Solved! Replay 🎯" : "Play Today's Puzzle 🎯";
+          playBtn.textContent = isSolved
+            ? "Solved! Replay 🎯"
+            : "Play Today's Puzzle 🎯";
           playBtn.onclick = () => loadCustomPuzzle(p);
         }
       }
@@ -973,9 +1250,15 @@
       function renderPuzzleGrid() {
         const total = PUZZLES.length;
         const solved = solvedPuzzles.length;
-        const beginnerSolved = PUZZLES.filter(p => p.category === "Beginner" && solvedPuzzles.includes(p.id)).length;
-        const intermediateSolved = PUZZLES.filter(p => p.category === "Intermediate" && solvedPuzzles.includes(p.id)).length;
-        const advancedSolved = PUZZLES.filter(p => p.category === "Advanced" && solvedPuzzles.includes(p.id)).length;
+        const beginnerSolved = PUZZLES.filter(
+          (p) => p.category === "Beginner" && solvedPuzzles.includes(p.id),
+        ).length;
+        const intermediateSolved = PUZZLES.filter(
+          (p) => p.category === "Intermediate" && solvedPuzzles.includes(p.id),
+        ).length;
+        const advancedSolved = PUZZLES.filter(
+          (p) => p.category === "Advanced" && solvedPuzzles.includes(p.id),
+        ).length;
 
         $("puzzleScoreDisplay").textContent = `Solved: ${solved} / ${total}`;
 
@@ -983,9 +1266,12 @@
         document.querySelectorAll(".puzzle-tab").forEach((tab) => {
           const diff = tab.dataset.difficulty;
           if (diff === "all") tab.textContent = `All (${total})`;
-          else if (diff === "Beginner") tab.textContent = `Beginner (${beginnerSolved}/8)`;
-          else if (diff === "Intermediate") tab.textContent = `Intermediate (${intermediateSolved}/8)`;
-          else if (diff === "Advanced") tab.textContent = `Advanced (${advancedSolved}/8)`;
+          else if (diff === "Beginner")
+            tab.textContent = `Beginner (${beginnerSolved}/8)`;
+          else if (diff === "Intermediate")
+            tab.textContent = `Intermediate (${intermediateSolved}/8)`;
+          else if (diff === "Advanced")
+            tab.textContent = `Advanced (${advancedSolved}/8)`;
 
           tab.classList.toggle("active", diff === currentPuzzleFilter);
           tab.onclick = () => {
@@ -997,8 +1283,12 @@
         const grid = $("puzzleGrid");
         grid.innerHTML = "";
 
-        const visiblePuzzles = PUZZLES.map((p, idx) => ({ ...p, originalIndex: idx })).filter(
-          (p) => currentPuzzleFilter === "all" || p.category === currentPuzzleFilter
+        const visiblePuzzles = PUZZLES.map((p, idx) => ({
+          ...p,
+          originalIndex: idx,
+        })).filter(
+          (p) =>
+            currentPuzzleFilter === "all" || p.category === currentPuzzleFilter,
         );
 
         visiblePuzzles.forEach((p) => {
@@ -1009,7 +1299,7 @@
             <div>
               <div class="puzzle-card-header">
                 <span class="puzzle-badge ${p.category.toLowerCase()}">${p.category}</span>
-                ${isSolved ? '<span class="solved-tag">Solved ✓</span>' : ''}
+                ${isSolved ? '<span class="solved-tag">Solved ✓</span>' : ""}
               </div>
               <h3 class="puzzle-card-title">#${p.originalIndex + 1} ${p.title}</h3>
               <p class="puzzle-card-desc">${p.goal}</p>
@@ -1047,7 +1337,8 @@
         const loaded = chess.load(puzzle.fen);
         if (!loaded) {
           console.error("Puzzle FEN failed to load:", puzzle.fen);
-          status.textContent = "Error: puzzle could not be loaded. Please try another.";
+          status.textContent =
+            "Error: puzzle could not be loaded. Please try another.";
         }
 
         lastMove = null;
@@ -1088,7 +1379,8 @@
 
       function startClock() {
         stopClock();
-        if (!timedMode || clockExpired || chess.game_over() || replaying) return;
+        if (!timedMode || clockExpired || chess.game_over() || replaying)
+          return;
 
         clockLastTick = Date.now();
         clockTimer = setInterval(() => {
@@ -1111,7 +1403,11 @@
             status.textContent = msg;
 
             if (privateRoom && channel) {
-              channel.send({ type: "broadcast", event: "timeout", payload: { loser, winner } });
+              channel.send({
+                type: "broadcast",
+                event: "timeout",
+                payload: { loser, winner },
+              });
             }
             draw();
             if (!modalShownForGame) {
@@ -1159,11 +1455,25 @@
         const activeTurn = chess.turn();
         const isActive = !clockExpired && !replaying && !chess.game_over();
 
-        topClock.classList.toggle("active", isActive && activeTurn === topColor);
-        bottomClock.classList.toggle("active", isActive && activeTurn === bottomColor);
+        topClock.classList.toggle(
+          "active",
+          isActive && activeTurn === topColor,
+        );
+        bottomClock.classList.toggle(
+          "active",
+          isActive && activeTurn === bottomColor,
+        );
 
-        topClock.classList.toggle("low-time", isActive && activeTurn === topColor && clockMs[topColor] < 10000);
-        bottomClock.classList.toggle("low-time", isActive && activeTurn === bottomColor && clockMs[bottomColor] < 10000);
+        topClock.classList.toggle(
+          "low-time",
+          isActive && activeTurn === topColor && clockMs[topColor] < 10000,
+        );
+        bottomClock.classList.toggle(
+          "low-time",
+          isActive &&
+            activeTurn === bottomColor &&
+            clockMs[bottomColor] < 10000,
+        );
       }
 
       function renderPlayerBars() {
@@ -1196,7 +1506,10 @@
 
       function renderCapturedPieces(topColor, bottomColor) {
         const initial = { p: 8, n: 2, b: 2, r: 2, q: 1 };
-        const current = { w: { p: 0, n: 0, b: 0, r: 0, q: 0 }, b: { p: 0, n: 0, b: 0, r: 0, q: 0 } };
+        const current = {
+          w: { p: 0, n: 0, b: 0, r: 0, q: 0 },
+          b: { p: 0, n: 0, b: 0, r: 0, q: 0 },
+        };
 
         chess.board().forEach((row) => {
           row.forEach((sq) => {
@@ -1234,8 +1547,14 @@
           return str;
         };
 
-        $("topCaptured").innerHTML = formatCapturedHtml(topColor === "w" ? capturedByWhite : capturedByBlack, topColor === "w" ? diffW : diffB);
-        $("bottomCaptured").innerHTML = formatCapturedHtml(bottomColor === "w" ? capturedByWhite : capturedByBlack, bottomColor === "w" ? diffW : diffB);
+        $("topCaptured").innerHTML = formatCapturedHtml(
+          topColor === "w" ? capturedByWhite : capturedByBlack,
+          topColor === "w" ? diffW : diffB,
+        );
+        $("bottomCaptured").innerHTML = formatCapturedHtml(
+          bottomColor === "w" ? capturedByWhite : capturedByBlack,
+          bottomColor === "w" ? diffW : diffB,
+        );
       }
 
       function draw() {
@@ -1244,14 +1563,19 @@
           square.classList.remove("selected", "highlighted", "last-move");
         });
 
-        chess.board().forEach((row, r) => row.forEach((piece, f) => {
-          if (!piece) return;
-          const el = $(files[f] + ranks[r]);
-          const span = document.createElement("span");
-          span.className = `piece ${piece.color}`;
-          span.textContent = symbols[piece.color === "w" ? piece.type.toUpperCase() : piece.type];
-          el.appendChild(span);
-        }));
+        chess.board().forEach((row, r) =>
+          row.forEach((piece, f) => {
+            if (!piece) return;
+            const el = $(files[f] + ranks[r]);
+            const span = document.createElement("span");
+            span.className = `piece ${piece.color}`;
+            span.textContent =
+              symbols[
+                piece.color === "w" ? piece.type.toUpperCase() : piece.type
+              ];
+            el.appendChild(span);
+          }),
+        );
 
         if (lastMove) {
           $(lastMove.from)?.classList.add("last-move");
@@ -1273,18 +1597,25 @@
               status.textContent = `Checkmate! ${winner} wins.`;
               if (!modalShownForGame) {
                 modalShownForGame = true;
-                showGameOverModal("Checkmate!", `Game over! ${winner} wins by checkmate.`);
+                showGameOverModal(
+                  "Checkmate!",
+                  `Game over! ${winner} wins by checkmate.`,
+                );
               }
             } else if (chess.in_draw()) {
               let drawReason = "The game ended in a draw.";
               if (chess.in_threefold_repetition()) {
-                drawReason = "Draw by Threefold Repetition! The exact same position / moves occurred 3 times.";
+                drawReason =
+                  "Draw by Threefold Repetition! The exact same position / moves occurred 3 times.";
               } else if (chess.in_stalemate()) {
-                drawReason = "Draw by Stalemate! The player has no legal moves and is not in check.";
+                drawReason =
+                  "Draw by Stalemate! The player has no legal moves and is not in check.";
               } else if (chess.insufficient_material()) {
-                drawReason = "Draw by Insufficient Material! Neither player has enough pieces to deliver checkmate.";
+                drawReason =
+                  "Draw by Insufficient Material! Neither player has enough pieces to deliver checkmate.";
               } else {
-                drawReason = "Draw by 50-Move Rule! 50 moves played without a pawn move or capture.";
+                drawReason =
+                  "Draw by 50-Move Rule! 50 moves played without a pawn move or capture.";
               }
               status.textContent = `Game Over: ${drawReason}`;
               if (!modalShownForGame) {
@@ -1297,18 +1628,33 @@
           }
         }
 
-        const shouldFlip = replaying ? replayBoardFlipped : puzzleMode ? color === "b" : privateRoom ? color === "b" : !computerMode && chess.turn() === "b";
+        const shouldFlip = replaying
+          ? replayBoardFlipped
+          : puzzleMode
+            ? color === "b"
+            : privateRoom
+              ? color === "b"
+              : !computerMode && chess.turn() === "b";
         board.classList.toggle("flipped", shouldFlip);
 
-        moveHistoryBody.innerHTML = moveHistory.length ? moveHistory.reduce((rows, move, index) => {
-          if (index % 2 === 0) rows.push(`<tr><td>${Math.floor(index / 2) + 1}</td><td>${move}</td><td>${moveHistory[index + 1] || ""}</td></tr>`);
-          return rows;
-        }, []).join("") : '<tr><td colspan="3">No moves yet</td></tr>';
+        moveHistoryBody.innerHTML = moveHistory.length
+          ? moveHistory
+              .reduce((rows, move, index) => {
+                if (index % 2 === 0)
+                  rows.push(
+                    `<tr><td>${Math.floor(index / 2) + 1}</td><td>${move}</td><td>${moveHistory[index + 1] || ""}</td></tr>`,
+                  );
+                return rows;
+              }, [])
+              .join("")
+          : '<tr><td colspan="3">No moves yet</td></tr>';
 
         replayBtn.disabled = replaying || moveHistory.length === 0;
         if (replayBtn) {
           replayBtn.disabled = moveHistory.length === 0;
-          replayBtn.textContent = reviewMode ? "Return to final board" : "Review game";
+          replayBtn.textContent = reviewMode
+            ? "Return to final board"
+            : "Review game";
         }
 
         if (privateRoom) {
@@ -1355,8 +1701,18 @@
       function isPromotionMove(from, to) {
         const piece = chess.get(from);
         if (!piece || piece.type !== "p") return false;
-        if ((piece.color === "w" && to[1] !== "8") || (piece.color === "b" && to[1] !== "1")) return false;
-        return chess.moves({ square: from, verbose: true }).some((move) => move.to === to && (move.promotion || (move.flags && move.flags.includes("p"))));
+        if (
+          (piece.color === "w" && to[1] !== "8") ||
+          (piece.color === "b" && to[1] !== "1")
+        )
+          return false;
+        return chess
+          .moves({ square: from, verbose: true })
+          .some(
+            (move) =>
+              move.to === to &&
+              (move.promotion || (move.flags && move.flags.includes("p"))),
+          );
       }
 
       function getPromotionChoice(from, to) {
@@ -1364,7 +1720,9 @@
 
         return new Promise((resolve) => {
           const modal = $("promotionModal");
-          const options = document.querySelectorAll("#promotionOptions .promotion-option");
+          const options = document.querySelectorAll(
+            "#promotionOptions .promotion-option",
+          );
           if (!modal || options.length === 0) {
             resolve("q");
             return;
@@ -1372,7 +1730,9 @@
 
           const choose = (event) => {
             const promotion = event.currentTarget.dataset.promotion || "q";
-            options.forEach((button) => button.removeEventListener("click", choose));
+            options.forEach((button) =>
+              button.removeEventListener("click", choose),
+            );
             modal.classList.add("hidden");
             resolve(promotion);
           };
@@ -1383,7 +1743,13 @@
       }
 
       async function clickSquare(square) {
-        if (!puzzleMode && (chess.game_over() || clockExpired || (computerMode && chess.turn() !== "w"))) return;
+        if (
+          !puzzleMode &&
+          (chess.game_over() ||
+            clockExpired ||
+            (computerMode && chess.turn() !== "w"))
+        )
+          return;
         if (thinking || replaying) return;
 
         if (selected) {
@@ -1392,14 +1758,14 @@
             draw();
             return;
           }
-          
+
           if (!puzzleMode) {
             // Save snapshot for unlimited undo BEFORE move
             undoStack.push({
               fen: chess.fen(),
               lastMove: lastMove ? { ...lastMove } : null,
               clockMs: { ...clockMs },
-              moveHistory: [...moveHistory]
+              moveHistory: [...moveHistory],
             });
           }
 
@@ -1408,13 +1774,32 @@
 
           if (move) {
             if (puzzleMode) {
-              const puzzle = currentPuzzleIndex === -1 ? dailyPuzzle : PUZZLES[currentPuzzleIndex];
-              const targetSolution = puzzle && puzzle.solution ? puzzle.solution[currentPuzzleStep] : null;
-              const expected = targetSolution ? targetSolution.toLowerCase().replace(/[\+#x=\s]/g, "") : "";
-              const uci = (move.from + move.to + (move.promotion || "")).toLowerCase();
+              const puzzle =
+                currentPuzzleIndex === -1
+                  ? dailyPuzzle
+                  : PUZZLES[currentPuzzleIndex];
+              const targetSolution =
+                puzzle && puzzle.solution
+                  ? puzzle.solution[currentPuzzleStep]
+                  : null;
+              const expected = targetSolution
+                ? targetSolution.toLowerCase().replace(/[\+#x=\s]/g, "")
+                : "";
+              const uci = (
+                move.from +
+                move.to +
+                (move.promotion || "")
+              ).toLowerCase();
               const uciNoProm = (move.from + move.to).toLowerCase();
-              const sanClean = (move.san || "").toLowerCase().replace(/[\+#x=\s]/g, "");
-              const isMatch = expected ? ((uci === expected) || (uciNoProm === expected) || (sanClean === expected) || (expected.length >= 4 && expected.startsWith(uciNoProm))) : chess.in_checkmate();
+              const sanClean = (move.san || "")
+                .toLowerCase()
+                .replace(/[\+#x=\s]/g, "");
+              const isMatch = expected
+                ? uci === expected ||
+                  uciNoProm === expected ||
+                  sanClean === expected ||
+                  (expected.length >= 4 && expected.startsWith(uciNoProm))
+                : chess.in_checkmate();
 
               if (isMatch) {
                 currentPuzzleStep++;
@@ -1423,15 +1808,24 @@
                 moveHistory.push(chess.history().slice(-1)[0]);
                 draw();
 
-                if (currentPuzzleStep >= puzzle.solution.length || chess.in_checkmate()) {
+                if (
+                  currentPuzzleStep >= puzzle.solution.length ||
+                  chess.in_checkmate()
+                ) {
                   // Puzzle Solved!
                   if (!solvedPuzzles.includes(puzzle.id)) {
                     solvedPuzzles.push(puzzle.id);
-                    localStorage.setItem("chess_solved_puzzles", JSON.stringify(solvedPuzzles));
+                    localStorage.setItem(
+                      "chess_solved_puzzles",
+                      JSON.stringify(solvedPuzzles),
+                    );
                   }
                   $("nextPuzzleBtn").classList.remove("hidden");
                   showToast("Puzzle Solved! 🎉 Great job!");
-                  showGameOverModal("Puzzle Solved! 🎉", `Fantastic! You successfully solved "${puzzle.title}".`);
+                  showGameOverModal(
+                    "Puzzle Solved! 🎉",
+                    `Fantastic! You successfully solved "${puzzle.title}".`,
+                  );
                 } else {
                   // Multi-move puzzle: play the opponent's counter-move automatically
                   const oppMoveStr = puzzle.solution[currentPuzzleStep];
@@ -1441,11 +1835,15 @@
                     setTimeout(() => {
                       let oppMove = null;
                       const cleanOpp = oppMoveStr.trim();
-                      if (cleanOpp.length >= 4 && cleanOpp[0] >= 'a' && cleanOpp[0] <= 'h') {
+                      if (
+                        cleanOpp.length >= 4 &&
+                        cleanOpp[0] >= "a" &&
+                        cleanOpp[0] <= "h"
+                      ) {
                         oppMove = chess.move({
                           from: cleanOpp.slice(0, 2),
                           to: cleanOpp.slice(2, 4),
-                          promotion: cleanOpp[4] || "q"
+                          promotion: cleanOpp[4] || "q",
                         });
                       }
                       if (!oppMove) {
@@ -1458,13 +1856,22 @@
                       }
                       thinking = false;
                       draw();
-                      if (currentPuzzleStep >= puzzle.solution.length || chess.in_checkmate()) {
+                      if (
+                        currentPuzzleStep >= puzzle.solution.length ||
+                        chess.in_checkmate()
+                      ) {
                         if (!solvedPuzzles.includes(puzzle.id)) {
                           solvedPuzzles.push(puzzle.id);
-                          localStorage.setItem("chess_solved_puzzles", JSON.stringify(solvedPuzzles));
+                          localStorage.setItem(
+                            "chess_solved_puzzles",
+                            JSON.stringify(solvedPuzzles),
+                          );
                         }
                         $("nextPuzzleBtn").classList.remove("hidden");
-                        showGameOverModal("Puzzle Solved! 🎉", `Fantastic! You successfully solved "${puzzle.title}".`);
+                        showGameOverModal(
+                          "Puzzle Solved! 🎉",
+                          `Fantastic! You successfully solved "${puzzle.title}".`,
+                        );
                       }
                     }, 500);
                   }
@@ -1488,7 +1895,13 @@
               await channel.send({
                 type: "broadcast",
                 event: "move",
-                payload: { fen: chess.fen(), from: move.from, to: move.to, history: moveHistory, clockMs }
+                payload: {
+                  fen: chess.fen(),
+                  from: move.from,
+                  to: move.to,
+                  history: moveHistory,
+                  clockMs,
+                },
               });
             }
 
@@ -1499,7 +1912,12 @@
           } else {
             // Invalid move: if clicking another of your own pieces, switch selection directly
             const clickedPiece = chess.get(square);
-            const canSwitch = clickedPiece && (puzzleMode ? clickedPiece.color === chess.turn() : clickedPiece.color === chess.turn() && (!privateRoom || clickedPiece.color === color));
+            const canSwitch =
+              clickedPiece &&
+              (puzzleMode
+                ? clickedPiece.color === chess.turn()
+                : clickedPiece.color === chess.turn() &&
+                  (!privateRoom || clickedPiece.color === color));
             if (canSwitch) {
               if (!puzzleMode) undoStack.pop();
               selected = square;
@@ -1517,7 +1935,12 @@
         }
 
         const piece = chess.get(square);
-        const canSelect = piece && (puzzleMode ? piece.color === chess.turn() : piece.color === chess.turn() && (!privateRoom || piece.color === color));
+        const canSelect =
+          piece &&
+          (puzzleMode
+            ? piece.color === chess.turn()
+            : piece.color === chess.turn() &&
+              (!privateRoom || piece.color === color));
         if (canSelect) {
           selected = square;
           draw();
@@ -1548,7 +1971,9 @@
         $("puzzleControls").classList.add("hidden");
 
         setClock(tc);
-        connection.textContent = timedMode ? `Pass & Play (${selectedTimeControl})` : "Pass & Play";
+        connection.textContent = timedMode
+          ? `Pass & Play (${selectedTimeControl})`
+          : "Pass & Play";
 
         chess.reset();
         lastMove = null;
@@ -1576,7 +2001,9 @@
         $("puzzleControls").classList.add("hidden");
 
         setClock(tc);
-        connection.textContent = timedMode ? `Computer: ${level} (${selectedTimeControl})` : `Computer: ${level}`;
+        connection.textContent = timedMode
+          ? `Computer: ${level} (${selectedTimeControl})`
+          : `Computer: ${level}`;
 
         chess.reset();
         lastMove = null;
@@ -1590,7 +2017,14 @@
 
       function evaluate(position) {
         const values = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
-        return position.board().flat().reduce((score, p) => p ? score + values[p.type] * (p.color === "b" ? 1 : -1) : score, 0);
+        return position
+          .board()
+          .flat()
+          .reduce(
+            (score, p) =>
+              p ? score + values[p.type] * (p.color === "b" ? 1 : -1) : score,
+            0,
+          );
       }
 
       function chooseComputerMove() {
@@ -1624,7 +2058,9 @@
           next.move({ from: move.from, to: move.to, promotion: "q" });
           return minimax(next, depth - 1);
         });
-        return position.turn() === "b" ? Math.max(...scores) : Math.min(...scores);
+        return position.turn() === "b"
+          ? Math.max(...scores)
+          : Math.min(...scores);
       }
 
       function computerMove() {
@@ -1638,7 +2074,7 @@
             fen: chess.fen(),
             lastMove: lastMove ? { ...lastMove } : null,
             clockMs: { ...clockMs },
-            moveHistory: [...moveHistory]
+            moveHistory: [...moveHistory],
           });
 
           const move = chooseComputerMove();
@@ -1651,14 +2087,17 @@
           lastMove = { from: move.from, to: move.to };
           moveHistory.push(chess.history().slice(-1)[0]);
           thinking = false;
-          connection.textContent = timedMode ? `Computer: ${difficulty} (${selectedTimeControl})` : `Computer: ${difficulty}`;
+          connection.textContent = timedMode
+            ? `Computer: ${difficulty} (${selectedTimeControl})`
+            : `Computer: ${difficulty}`;
           draw();
           if (timedMode) startClock();
         }, 300);
       }
 
       function undoTurn() {
-        if (thinking || undoStack.length === 0 || replaying || puzzleMode) return;
+        if (thinking || undoStack.length === 0 || replaying || puzzleMode)
+          return;
 
         let targetState = null;
         if (computerMode) {
@@ -1723,14 +2162,17 @@
         reviewPly = applied;
         reviewVariationText = "";
         chess.load(replayChess.fen());
-        lastMove = appliedMove ? { from: appliedMove.from, to: appliedMove.to } : null;
+        lastMove = appliedMove
+          ? { from: appliedMove.from, to: appliedMove.to }
+          : null;
         selected = null;
         draw();
       }
 
       function enterReviewMode() {
         if (moveHistory.length === 0) {
-          connection.textContent = "Play at least one move before starting replay.";
+          connection.textContent =
+            "Play at least one move before starting replay.";
           return;
         }
 
@@ -1760,7 +2202,11 @@
       }
 
       function playReviewAlternative(move) {
-        const applied = chess.move({ from: move.from, to: move.to, promotion: move.promotion || "q" });
+        const applied = chess.move({
+          from: move.from,
+          to: move.to,
+          promotion: move.promotion || "q",
+        });
         if (!applied) return;
         lastMove = { from: applied.from, to: applied.to };
         reviewVariationText = `Variation after ${reviewPly} ply: ${applied.san}`;
@@ -1772,7 +2218,8 @@
         if (!alternativeMoves) return;
         alternativeMoves.innerHTML = "";
         if (!reviewMode) {
-          alternativeMoves.textContent = "Start review to inspect legal alternatives.";
+          alternativeMoves.textContent =
+            "Start review to inspect legal alternatives.";
           return;
         }
 
@@ -1793,18 +2240,31 @@
 
       function updateReviewPanel() {
         if (!reviewPanel) return;
-        const canReview = !puzzleMode && moveHistory.length > 0 && (reviewMode || chess.game_over() || clockExpired);
+        const canReview =
+          !puzzleMode &&
+          moveHistory.length > 0 &&
+          (reviewMode || chess.game_over() || clockExpired);
         reviewPanel.classList.toggle("hidden", !canReview);
         reviewControls?.classList.toggle("hidden", !reviewMode);
         if (!canReview) return;
 
         const summary = reviewMode ? reviewSummaryText : getGameSummaryText();
-        if (reviewSummary) reviewSummary.textContent = reviewVariationText || summary;
-        if (reviewStep) reviewStep.textContent = reviewMode ? `Move ${reviewPly} of ${reviewMoves.length}` : `Move ${moveHistory.length} of ${moveHistory.length}`;
-        if (reviewStartBtn) reviewStartBtn.disabled = !reviewMode || reviewPly === 0;
-        if (reviewPrevBtn) reviewPrevBtn.disabled = !reviewMode || reviewPly === 0;
-        if (reviewNextBtn) reviewNextBtn.disabled = !reviewMode || reviewPly >= reviewMoves.length;
-        if (reviewEndBtn) reviewEndBtn.disabled = !reviewMode || reviewPly >= reviewMoves.length;
+        if (reviewSummary)
+          reviewSummary.textContent = reviewVariationText || summary;
+        if (reviewStep)
+          reviewStep.textContent = reviewMode
+            ? `Move ${reviewPly} of ${reviewMoves.length}`
+            : `Move ${moveHistory.length} of ${moveHistory.length}`;
+        if (reviewStartBtn)
+          reviewStartBtn.disabled = !reviewMode || reviewPly === 0;
+        if (reviewPrevBtn)
+          reviewPrevBtn.disabled = !reviewMode || reviewPly === 0;
+        if (reviewNextBtn)
+          reviewNextBtn.disabled =
+            !reviewMode || reviewPly >= reviewMoves.length;
+        if (reviewEndBtn)
+          reviewEndBtn.disabled =
+            !reviewMode || reviewPly >= reviewMoves.length;
         if (reviewMode) {
           status.textContent = `Reviewing move ${reviewPly} of ${reviewMoves.length}${chess.in_check() ? " (Check!)" : ""}`;
         }
@@ -1827,7 +2287,8 @@
         const list = players();
         const connectedCount = list.length;
         if (connectedCount >= 2) {
-          lobbyPlayers.textContent = "Both players connected! Select sides or click Start Game.";
+          lobbyPlayers.textContent =
+            "Both players connected! Select sides or click Start Game.";
           startPrivate.classList.toggle("hidden", !host);
           startPrivate.disabled = false;
         } else {
@@ -1838,14 +2299,18 @@
         document.querySelectorAll(".side-option").forEach((button) => {
           button.disabled = false;
           button.classList.toggle("selected", color === button.dataset.color);
-          button.setAttribute("aria-pressed", color === button.dataset.color ? "true" : "false");
+          button.setAttribute(
+            "aria-pressed",
+            color === button.dataset.color ? "true" : "false",
+          );
         });
       }
 
       async function selectSide(next) {
         const opponent = players().find((p) => p.playerId !== id);
         if (opponent?.color === next) {
-          lobbyError.textContent = "Your opponent has already chosen that side.";
+          lobbyError.textContent =
+            "Your opponent has already chosen that side.";
           return;
         }
         color = next;
@@ -1854,10 +2319,12 @@
         try {
           const result = await channel.track({ playerId: id, color });
           if (result?.error) {
-            lobbyError.textContent = "Could not save your side. Please try again.";
+            lobbyError.textContent =
+              "Could not save your side. Please try again.";
           }
         } catch (trackError) {
-          lobbyError.textContent = "Connection delayed. Your side will retry automatically.";
+          lobbyError.textContent =
+            "Connection delayed. Your side will retry automatically.";
         }
       }
 
@@ -1869,7 +2336,9 @@
         $("standardControls").classList.remove("hidden");
         $("puzzleControls").classList.add("hidden");
         setClock(tc);
-        connection.textContent = timedMode ? `Connected as ${color === "w" ? "White" : "Black"} (${tc})` : `Connected as ${color === "w" ? "White" : "Black"}`;
+        connection.textContent = timedMode
+          ? `Connected as ${color === "w" ? "White" : "Black"} (${tc})`
+          : `Connected as ${color === "w" ? "White" : "Black"}`;
         chess.reset();
         lastMove = null;
         moveHistory = [];
@@ -1887,7 +2356,8 @@
         timedMode = false;
         puzzleMode = false;
         if (channel) {
-          if (notify) await channel.send({ type: "broadcast", event: "player-left" });
+          if (notify)
+            await channel.send({ type: "broadcast", event: "player-left" });
           await channel.unsubscribe();
           channel = null;
         }
@@ -1951,15 +2421,19 @@
             }
           })
           .on("broadcast", { event: "start" }, function (message) {
-            const assignedColor = message.payload.colors[id] || (host ? "w" : "b");
+            const assignedColor =
+              message.payload.colors[id] || (host ? "w" : "b");
             color = assignedColor;
             enterGame(message.payload.timeControl || selectedTimeControl);
           })
           .on("broadcast", { event: "move" }, function (message) {
             chess.load(message.payload.fen);
-            lastMove = message.payload.from ? { from: message.payload.from, to: message.payload.to } : null;
+            lastMove = message.payload.from
+              ? { from: message.payload.from, to: message.payload.to }
+              : null;
             moveHistory = message.payload.history || [];
-            if (message.payload.clockMs) clockMs = { ...message.payload.clockMs };
+            if (message.payload.clockMs)
+              clockMs = { ...message.payload.clockMs };
             draw();
             if (timedMode) startClock();
           })
@@ -2008,7 +2482,8 @@
           .eq("code", code.toUpperCase())
           .maybeSingle();
         if (result.error || !result.data) {
-          error.textContent = "That room link is invalid or the room has closed.";
+          error.textContent =
+            "That room link is invalid or the room has closed.";
           show(room);
           clearRoomLink();
           return;
@@ -2027,14 +2502,24 @@
         });
       }
 
-      setupPills("timedControlPills", (tc) => { selectedTimeControl = tc; });
-      setupPills("playerTimeControlPills", (tc) => { selectedTimeControl = tc; });
-      setupPills("computerTimeControlPills", (tc) => { selectedTimeControl = tc; });
-      setupPills("lobbyTimeControlPills", (tc) => { selectedTimeControl = tc; });
+      setupPills("timedControlPills", (tc) => {
+        selectedTimeControl = tc;
+      });
+      setupPills("playerTimeControlPills", (tc) => {
+        selectedTimeControl = tc;
+      });
+      setupPills("computerTimeControlPills", (tc) => {
+        selectedTimeControl = tc;
+      });
+      setupPills("lobbyTimeControlPills", (tc) => {
+        selectedTimeControl = tc;
+      });
 
       document.querySelectorAll(".difficulty-option").forEach((button) => {
         button.onclick = () => {
-          document.querySelectorAll(".difficulty-option").forEach((b) => b.classList.remove("selected"));
+          document
+            .querySelectorAll(".difficulty-option")
+            .forEach((b) => b.classList.remove("selected"));
           button.classList.add("selected");
           difficulty = button.dataset.difficulty;
         };
@@ -2045,7 +2530,9 @@
       $("timedModeBtn").onclick = () => {
         selectedTimeControl = "3+2";
         const pills = document.querySelectorAll("#timedControlPills .pill-btn");
-        pills.forEach((p) => p.classList.toggle("selected", p.dataset.time === "3+2"));
+        pills.forEach((p) =>
+          p.classList.toggle("selected", p.dataset.time === "3+2"),
+        );
         show(timed);
       };
       $("dailyChallengeBtn").onclick = () => {
@@ -2068,23 +2555,31 @@
       $("backFromTimedBtn").onclick = () => show(start);
       $("backFromPuzzleBtn").onclick = () => show(start);
 
-      $("startComputerBtn").onclick = () => startComputer(difficulty, selectedTimeControl);
+      $("startComputerBtn").onclick = () =>
+        startComputer(difficulty, selectedTimeControl);
       $("localModeBtn").onclick = () => startLocal(selectedTimeControl);
       $("privateModeBtn").onclick = () => show(room);
 
-      $("timedVsComputerBtn").onclick = () => startComputer(difficulty, selectedTimeControl);
+      $("timedVsComputerBtn").onclick = () =>
+        startComputer(difficulty, selectedTimeControl);
       $("timedVsLocalBtn").onclick = () => startLocal(selectedTimeControl);
       $("timedVsPrivateBtn").onclick = () => show(room);
 
       $("undoBtn").onclick = undoTurn;
       replayBtn.addEventListener("click", watchReplay);
       if (reviewStartBtn) reviewStartBtn.onclick = () => applyReviewPosition(0);
-      if (reviewPrevBtn) reviewPrevBtn.onclick = () => applyReviewPosition(Math.max(0, reviewPly - 1));
-      if (reviewNextBtn) reviewNextBtn.onclick = () => applyReviewPosition(Math.min(reviewMoves.length, reviewPly + 1));
-      if (reviewEndBtn) reviewEndBtn.onclick = () => applyReviewPosition(reviewMoves.length);
+      if (reviewPrevBtn)
+        reviewPrevBtn.onclick = () =>
+          applyReviewPosition(Math.max(0, reviewPly - 1));
+      if (reviewNextBtn)
+        reviewNextBtn.onclick = () =>
+          applyReviewPosition(Math.min(reviewMoves.length, reviewPly + 1));
+      if (reviewEndBtn)
+        reviewEndBtn.onclick = () => applyReviewPosition(reviewMoves.length);
 
       $("hintBtn").onclick = () => {
-        const puzzle = currentPuzzleIndex === -1 ? dailyPuzzle : PUZZLES[currentPuzzleIndex];
+        const puzzle =
+          currentPuzzleIndex === -1 ? dailyPuzzle : PUZZLES[currentPuzzleIndex];
         if (puzzle) showToast(`💡 Hint: ${puzzle.hint}`);
       };
 
@@ -2097,7 +2592,10 @@
       };
 
       $("nextPuzzleBtn").onclick = () => {
-        const nextIdx = currentPuzzleIndex === -1 ? 0 : (currentPuzzleIndex + 1) % PUZZLES.length;
+        const nextIdx =
+          currentPuzzleIndex === -1
+            ? 0
+            : (currentPuzzleIndex + 1) % PUZZLES.length;
         loadPuzzle(nextIdx);
       };
 
@@ -2128,7 +2626,11 @@
         hideGameOverModal();
       };
 
-      document.querySelectorAll(".side-option").forEach((button) => button.onclick = () => selectSide(button.dataset.color));
+      document
+        .querySelectorAll(".side-option")
+        .forEach(
+          (button) => (button.onclick = () => selectSide(button.dataset.color)),
+        );
 
       $("createRoomBtn").onclick = async () => {
         error.textContent = "";
@@ -2161,22 +2663,30 @@
       startPrivate.onclick = async () => {
         const list = players();
         if (list.length < 2) {
-          lobbyError.textContent = "Cannot start game: Waiting for an opponent to join!";
+          lobbyError.textContent =
+            "Cannot start game: Waiting for an opponent to join!";
           return;
         }
         lobbyError.textContent = "";
 
-        const hostPlayer = list.find((p) => p.playerId === id) || { playerId: id, color: color };
+        const hostPlayer = list.find((p) => p.playerId === id) || {
+          playerId: id,
+          color: color,
+        };
         const guestPlayer = list.find((p) => p.playerId !== id);
 
         let hostColor = hostPlayer.color || color || "w";
-        let guestColor = guestPlayer ? guestPlayer.color : (hostColor === "w" ? "b" : "w");
+        let guestColor = guestPlayer
+          ? guestPlayer.color
+          : hostColor === "w"
+            ? "b"
+            : "w";
         if (hostColor === guestColor) {
           guestColor = hostColor === "w" ? "b" : "w";
         }
 
         const colors = {
-          [id]: hostColor
+          [id]: hostColor,
         };
         if (guestPlayer) {
           colors[guestPlayer.playerId] = guestColor;
@@ -2187,7 +2697,7 @@
             await channel.send({
               type: "broadcast",
               event: "start",
-              payload: { colors, timeControl: selectedTimeControl }
+              payload: { colors, timeControl: selectedTimeControl },
             });
           } catch (e) {
             console.log("Broadcast error:", e);
@@ -2253,7 +2763,10 @@
         if (timedMode) startClock();
       };
 
-      window.addEventListener("pagehide", () => channel && supabaseClient.removeChannel(channel));
+      window.addEventListener(
+        "pagehide",
+        () => channel && supabaseClient.removeChannel(channel),
+      );
 
       syncMoveHintsToggles();
       buildBoard();
