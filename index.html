@@ -1104,31 +1104,126 @@
 
       let dailyPuzzle = null;
       let dailyTimerInterval = null;
+      const DAILY_PUZZLE_CACHE_KEY = "chess_daily_api_puzzle";
+      const DAILY_PUZZLE_API = "https://lichess.org/api/puzzle/daily";
+      const DAILY_FALLBACKS = [
+        {
+          id: "generated_daily_rank_pin",
+          title: "Daily: Rank Pin",
+          category: "Intermediate",
+          goal: "White to move: Use the pinned back rank for mate.",
+          fen: "6k1/5ppp/8/8/8/8/6PP/4R1K1 w - - 0 1",
+          solution: ["e1e8"],
+          hint: "The rook can invade the eighth rank."
+        },
+        {
+          id: "generated_daily_corner_net",
+          title: "Daily: Corner Net",
+          category: "Intermediate",
+          goal: "Black to move: Finish the cornered king.",
+          fen: "7k/6pp/8/8/8/8/5qPP/6K1 b - - 0 1",
+          solution: ["f2e1"],
+          hint: "Bring the queen to the first rank."
+        },
+        {
+          id: "generated_daily_queen_lift",
+          title: "Daily: Queen Lift",
+          category: "Advanced",
+          goal: "White to move: Land the queen where the king has no escape.",
+          fen: "6k1/6pp/8/8/8/8/5PPP/3Q2K1 w - - 0 1",
+          solution: ["d1d8"],
+          hint: "The open file points straight at the back rank."
+        }
+      ];
 
       function getDailyPuzzle() {
         const todayKey = new Date().toISOString().slice(0, 10);
-        let hash = 0;
-        for (let i = 0; i < todayKey.length; i++) {
-          hash = (hash << 5) - hash + todayKey.charCodeAt(i);
-          hash |= 0;
-        }
-        const dailyIndex = Math.abs(hash) % PUZZLES.length;
-        const localDaily = {
-          ...PUZZLES[dailyIndex],
-          isDaily: true,
-          date: todayKey,
-        };
-
         if (!dailyPuzzle || dailyPuzzle.date !== todayKey) {
-          dailyPuzzle = localDaily;
+          dailyPuzzle = getCachedDailyPuzzle(todayKey) || buildDailyFallback(todayKey);
           fetchOnlineDailyPuzzle(todayKey);
         }
         return dailyPuzzle;
       }
 
+      function nextUtcMidnightMs() {
+        const now = new Date();
+        return Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate() + 1,
+        );
+      }
+
+      function dailyHash(value) {
+        let hash = 0;
+        for (let i = 0; i < value.length; i++) {
+          hash = (hash << 5) - hash + value.charCodeAt(i);
+          hash |= 0;
+        }
+        return Math.abs(hash);
+      }
+
+      function normalizeFenForCompare(fen) {
+        return (fen || "").split(" ").slice(0, 4).join(" ");
+      }
+
+      function isExistingPuzzleDuplicate(puzzle) {
+        if (!puzzle) return true;
+        const fenKey = normalizeFenForCompare(puzzle.fen);
+        return PUZZLES.some(
+          (existing) =>
+            existing.id === puzzle.sourcePuzzleId ||
+            normalizeFenForCompare(existing.fen) === fenKey,
+        );
+      }
+
+      function getCachedDailyPuzzle(todayKey) {
+        try {
+          const cached = JSON.parse(
+            localStorage.getItem(DAILY_PUZZLE_CACHE_KEY) || "null",
+          );
+          if (
+            cached &&
+            cached.date === todayKey &&
+            cached.expiresAt > Date.now() &&
+            !isExistingPuzzleDuplicate(cached.puzzle)
+          ) {
+            return cached.puzzle;
+          }
+        } catch (e) {
+          console.log("Daily puzzle cache ignored:", e);
+        }
+        return null;
+      }
+
+      function cacheDailyPuzzle(puzzle, todayKey) {
+        localStorage.setItem(
+          DAILY_PUZZLE_CACHE_KEY,
+          JSON.stringify({
+            date: todayKey,
+            expiresAt: nextUtcMidnightMs(),
+            puzzle,
+          }),
+        );
+      }
+
+      function buildDailyFallback(todayKey) {
+        const fallback =
+          DAILY_FALLBACKS[dailyHash(todayKey) % DAILY_FALLBACKS.length];
+        return {
+          ...fallback,
+          id: `fallback_${todayKey}_${fallback.id}`,
+          isDaily: true,
+          source: "local-fallback",
+          date: todayKey,
+        };
+      }
+
       async function fetchOnlineDailyPuzzle(todayKey) {
         try {
-          const res = await fetch("https://lichess.org/api/puzzle/daily");
+          const res = await fetch(DAILY_PUZZLE_API, {
+            headers: { Accept: "application/json" },
+          });
           if (!res.ok) return;
           const data = await res.json();
           if (
@@ -1172,8 +1267,9 @@
             const cleanFen =
               playerFen.split(" ").slice(0, 4).join(" ") + " 0 1";
 
-            dailyPuzzle = {
-              id: `daily_${todayKey}`,
+            const apiPuzzle = {
+              id: `lichess_daily_${todayKey}_${p.id || "api"}`,
+              sourcePuzzleId: p.id,
               title: `Daily: ${p.themes && p.themes[0] ? p.themes[0].replace(/([A-Z])/g, " $1") : "Tactical Shot"}`,
               category: "Advanced",
               goal: `${cleanFen.split(" ")[1] === "w" ? "White" : "Black"} to move: Find the best tactical move!`,
@@ -1181,8 +1277,17 @@
               solution: playerSolution,
               hint: `Daily puzzle rating: ${p.rating || 1500}. Focus on the strongest tactical forcing move!`,
               isDaily: true,
+              source: "lichess-api",
               date: todayKey,
             };
+
+            if (isExistingPuzzleDuplicate(apiPuzzle)) {
+              console.log("Daily API puzzle matched a built-in puzzle; keeping independent fallback.");
+              return;
+            }
+
+            dailyPuzzle = apiPuzzle;
+            cacheDailyPuzzle(apiPuzzle, todayKey);
             renderDailyPuzzleBanner();
           }
         } catch (e) {
