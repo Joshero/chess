@@ -242,6 +242,17 @@
           </div>
         </div>
 
+        <div class="setting-group">
+          <label class="setting-label" for="playerVariantSelect"
+            >Variant</label
+          >
+          <select class="variant-select setup-select" id="playerVariantSelect">
+            <option value="standard">Standard</option>
+            <option value="chess960">Chess960</option>
+            <option value="kinghill">King of the Hill</option>
+          </select>
+        </div>
+
         <div class="mode-grid">
           <button class="mode-card" id="localModeBtn">
             <strong>Pass &amp; Play</strong>
@@ -3001,7 +3012,7 @@
         }
 
         function updateToolVisibility() {
-          const showPostGameTools = computerMode && !puzzleMode && !privateRoom && (chess.game_over() || clockExpired);
+          const showPostGameTools = !puzzleMode && (chess.game_over() || clockExpired);
           $("analysisTools")?.classList.toggle("hidden", !showPostGameTools);
           $("importTools")?.classList.toggle("hidden", !showPostGameTools);
         }
