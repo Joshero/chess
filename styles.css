@@ -140,6 +140,8 @@ body {
 .difficulty-option { background: transparent; border: 2px solid var(--line); color: var(--ink); cursor: pointer; font: inherit; padding: 16px 18px; text-align: left; transition: all 0.2s; }
 .difficulty-option:hover, .difficulty-option:focus-visible { background: #fff7ef; border-color: var(--accent); outline: none; }
 .difficulty-option.selected { background: #fff7ef; border-color: var(--accent); font-weight: bold; box-shadow: 0 0 0 1px var(--accent); }
+.setup-select { background: #fffdf9; border: 2px solid var(--line); color: var(--ink); font: inherit; font-size: 1rem; min-height: 44px; padding: 9px 12px; width: min(100%, 320px); }
+.setup-select:focus-visible { border-color: var(--accent); outline: none; box-shadow: 0 0 0 1px var(--accent); }
 
 /* Board Container & Player Bars */
 .board-container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 760px; justify-self: center; }
