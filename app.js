@@ -233,7 +233,7 @@ const PUZZLES = [
 ];
 
 const board = $("board"), status = $("status"), error = $("roomError");
-const start = $("startScreen"), playerMode = $("playerModeScreen"), computer = $("computerScreen"), timed = $("timedScreen"), puzzleScreen = $("puzzleScreen"), room = $("roomScreen"), lobby = $("lobbyScreen"), game = $("gameScreen");
+const start = $("startScreen"), playerMode = $("playerModeScreen"), computer = $("computerScreen"), timed = $("timedScreen"), dailyPuzzleScreen = $("dailyPuzzleScreen"), puzzleScreen = $("puzzleScreen"), room = $("roomScreen"), lobby = $("lobbyScreen"), game = $("gameScreen");
 const codeDisplay = $("roomCodeDisplay"), connection = $("connectionStatus"), lobbyError = $("lobbyError"), lobbyPlayers = $("lobbyPlayers"), startPrivate = $("startPrivateBtn"), undo = $("undoBtn");
 const moveHistoryBody = $("moveHistoryBody"), replayBtn = $("replayBtn");
 const reviewPanel = $("reviewPanel"), reviewSummary = $("reviewSummary"), reviewControls = $("reviewControls"), reviewStep = $("reviewStep"), alternativeMoves = $("alternativeMoves");
@@ -252,6 +252,7 @@ let modalShownForGame = false;
 let showMoveHints = localStorage.getItem("chess_show_move_hints") !== "false";
 
 let currentPuzzleIndex = 0, currentPuzzleStep = 0;
+let currentPuzzlePage = "practice";
 let solvedPuzzles = JSON.parse(localStorage.getItem("chess_solved_puzzles") || "[]");
 
 let clockIncrement = 0, clockMs = { w: 300000, b: 300000 }, clockTimer = null, clockLastTick = 0, clockExpired = false;
@@ -260,7 +261,7 @@ const ACTIVE_SCREEN_KEY = "chess_active_screen";
 const GAME_STATE_KEY = "chess_game_state";
 
 function show(screen) {
-  [start, playerMode, computer, timed, puzzleScreen, room, lobby, game].forEach((item) => item.classList.add("hidden"));
+  [start, playerMode, computer, timed, dailyPuzzleScreen, puzzleScreen, room, lobby, game].forEach((item) => item.classList.add("hidden"));
   screen.classList.remove("hidden");
   saveAppState(screen.id);
 }
@@ -295,6 +296,7 @@ function saveAppState(screenId) {
     clockExpired,
     currentPuzzleIndex,
     currentPuzzleStep,
+    currentPuzzlePage,
     dailyPuzzle
   }));
 }
@@ -306,10 +308,12 @@ function restoreAppState() {
   if (!savedScreenId || savedScreenId === start.id) return;
 
   if (savedScreenId === game.id && restoreGameState()) return;
-  if (savedScreenId === puzzleScreen.id) {
-    renderPuzzleGrid();
+  if (savedScreenId === dailyPuzzleScreen.id) {
     renderDailyPuzzleBanner();
     updateDailyTimer();
+  }
+  if (savedScreenId === puzzleScreen.id) {
+    renderPuzzleGrid();
   }
 
   const savedScreen = $(savedScreenId === lobby.id ? room.id : savedScreenId);
@@ -344,6 +348,7 @@ function restoreGameState() {
     undoStack = Array.isArray(saved.undoStack) ? saved.undoStack : [];
     currentPuzzleIndex = Number.isInteger(saved.currentPuzzleIndex) ? saved.currentPuzzleIndex : currentPuzzleIndex;
     currentPuzzleStep = Number.isInteger(saved.currentPuzzleStep) ? saved.currentPuzzleStep : currentPuzzleStep;
+    currentPuzzlePage = saved.currentPuzzlePage === "daily" ? "daily" : "practice";
     dailyPuzzle = saved.dailyPuzzle || dailyPuzzle;
     selected = null;
     replaying = false;
@@ -392,7 +397,7 @@ function syncMoveHintsToggles() {
 function showGameOverModal(titleText, messageText) {
   if ($("modalTitle")) $("modalTitle").textContent = titleText;
   if ($("modalMessage")) $("modalMessage").textContent = messageText;
-  if ($("modalNewGameBtn")) $("modalNewGameBtn").textContent = puzzleMode ? "Next Puzzle" : "New Game";
+  if ($("modalNewGameBtn")) $("modalNewGameBtn").textContent = puzzleMode ? (currentPuzzleIndex === -1 ? "Replay Daily" : "Next Puzzle") : "New Game";
   if ($("gameOverModal")) $("gameOverModal").classList.remove("hidden");
 }
 
@@ -402,32 +407,80 @@ function hideGameOverModal() {
 
 let dailyPuzzle = null;
 let dailyTimerInterval = null;
+const DAILY_PUZZLE_CACHE_KEY = "chess_daily_api_puzzle";
+const DAILY_PUZZLE_API = "https://lichess.org/api/puzzle/daily";
 
 function getDailyPuzzle() {
   const todayKey = new Date().toISOString().slice(0, 10);
-  let hash = 0;
-  for (let i = 0; i < todayKey.length; i++) {
-    hash = (hash << 5) - hash + todayKey.charCodeAt(i);
-    hash |= 0;
-  }
-  const dailyIndex = Math.abs(hash) % PUZZLES.length;
-  const localDaily = { ...PUZZLES[dailyIndex], isDaily: true, date: todayKey };
-
   if (!dailyPuzzle || dailyPuzzle.date !== todayKey) {
+    const cached = getCachedDailyPuzzle(todayKey);
+    if (cached) {
+      dailyPuzzle = cached;
+      return dailyPuzzle;
+    }
+    let hash = 0;
+    for (let i = 0; i < todayKey.length; i++) {
+      hash = (hash << 5) - hash + todayKey.charCodeAt(i);
+      hash |= 0;
+    }
+    const dailyIndex = Math.abs(hash) % PUZZLES.length;
+    const localDaily = { ...PUZZLES[dailyIndex], id: `fallback_${todayKey}_${PUZZLES[dailyIndex].id}`, isDaily: true, source: "local-fallback", date: todayKey };
     dailyPuzzle = localDaily;
     fetchOnlineDailyPuzzle(todayKey);
   }
   return dailyPuzzle;
 }
 
+function nextUtcMidnightMs() {
+  const now = new Date();
+  return Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+}
+
+function getCachedDailyPuzzle(todayKey) {
+  try {
+    const cached = JSON.parse(localStorage.getItem(DAILY_PUZZLE_CACHE_KEY) || "null");
+    if (cached && cached.date === todayKey && cached.expiresAt > Date.now() && cached.puzzle) {
+      return cached.puzzle;
+    }
+  } catch (e) {
+    console.log("Daily puzzle cache ignored:", e);
+  }
+  return null;
+}
+
+function cacheDailyPuzzle(puzzle, todayKey) {
+  localStorage.setItem(DAILY_PUZZLE_CACHE_KEY, JSON.stringify({
+    date: todayKey,
+    expiresAt: nextUtcMidnightMs(),
+    puzzle
+  }));
+}
+
+function getDailyInitialFen(data) {
+  if (data?.game?.fen) return data.game.fen;
+  if (data?.puzzle?.fen) return data.puzzle.fen;
+  if (!data?.game?.pgn) return null;
+
+  try {
+    const tempChess = new Chess();
+    const loaded = tempChess.load_pgn(data.game.pgn, { sloppy: true });
+    return loaded ? tempChess.fen() : null;
+  } catch (e) {
+    console.log("Daily puzzle PGN could not be converted to FEN:", e);
+    return null;
+  }
+}
+
 async function fetchOnlineDailyPuzzle(todayKey) {
   try {
-    const res = await fetch("https://lichess.org/api/puzzle/daily");
+    if (getCachedDailyPuzzle(todayKey)) return;
+    const res = await fetch(DAILY_PUZZLE_API);
     if (!res.ok) return;
     const data = await res.json();
-    if (data && data.puzzle && data.puzzle.solution && data.game && data.game.fen) {
+    if (data && data.puzzle && data.puzzle.solution && data.game) {
       const p = data.puzzle;
-      const initialFen = data.game.fen;
+      const initialFen = getDailyInitialFen(data);
+      if (!initialFen) return;
       const fullSolution = p.solution;
       
       let tempChess = new Chess();
@@ -457,7 +510,8 @@ async function fetchOnlineDailyPuzzle(todayKey) {
       const cleanFen = playerFen.split(" ").slice(0, 4).join(" ") + " 0 1";
       
       dailyPuzzle = {
-        id: `daily_${todayKey}`,
+        id: `lichess_daily_${todayKey}_${p.id || "api"}`,
+        sourcePuzzleId: p.id,
         title: `Daily: ${p.themes && p.themes[0] ? p.themes[0].replace(/([A-Z])/g, ' $1') : 'Tactical Shot'}`,
         category: "Advanced",
         goal: `${cleanFen.split(" ")[1] === "w" ? "White" : "Black"} to move: Find the best tactical move!`,
@@ -465,8 +519,10 @@ async function fetchOnlineDailyPuzzle(todayKey) {
         solution: playerSolution,
         hint: `Daily puzzle rating: ${p.rating || 1500}. Focus on the strongest tactical forcing move!`,
         isDaily: true,
+        source: "lichess-api",
         date: todayKey
       };
+      cacheDailyPuzzle(dailyPuzzle, todayKey);
       renderDailyPuzzleBanner();
     }
   } catch (e) {
@@ -513,6 +569,7 @@ function renderDailyPuzzleBanner() {
 function loadCustomPuzzle(puzzle) {
   currentPuzzleIndex = -1;
   currentPuzzleStep = 0;
+  currentPuzzlePage = "daily";
 
   stopClock();
   hideGameOverModal();
@@ -528,6 +585,7 @@ function loadCustomPuzzle(puzzle) {
   $("standardControls").classList.add("hidden");
   $("puzzleControls").classList.remove("hidden");
   $("nextPuzzleBtn").classList.add("hidden");
+  $("puzzleListBtn").textContent = "Daily Puzzle";
 
   codeDisplay.textContent = `⭐ DAILY PUZZLE`;
   connection.textContent = `Daily Challenge: ${puzzle.title}`;
@@ -551,7 +609,7 @@ function loadCustomPuzzle(puzzle) {
 
 function renderPuzzleGrid() {
   const total = PUZZLES.length;
-  const solved = solvedPuzzles.length;
+  const solved = PUZZLES.filter((p) => solvedPuzzles.includes(p.id)).length;
   const beginnerSolved = PUZZLES.filter(p => p.category === "Beginner" && solvedPuzzles.includes(p.id)).length;
   const intermediateSolved = PUZZLES.filter(p => p.category === "Intermediate" && solvedPuzzles.includes(p.id)).length;
   const advancedSolved = PUZZLES.filter(p => p.category === "Advanced" && solvedPuzzles.includes(p.id)).length;
@@ -602,6 +660,7 @@ function renderPuzzleGrid() {
 function loadPuzzle(idx) {
   currentPuzzleIndex = idx;
   currentPuzzleStep = 0;
+  currentPuzzlePage = "practice";
   const puzzle = PUZZLES[idx];
 
   stopClock();
@@ -618,6 +677,7 @@ function loadPuzzle(idx) {
   $("standardControls").classList.add("hidden");
   $("puzzleControls").classList.remove("hidden");
   $("nextPuzzleBtn").classList.add("hidden");
+  $("puzzleListBtn").textContent = "Practice Puzzles";
 
   codeDisplay.textContent = `PUZZLE #${idx + 1}`;
   connection.textContent = `Puzzle #${idx + 1}: ${puzzle.title}`;
@@ -1071,7 +1131,7 @@ async function clickSquare(square) {
               solvedPuzzles.push(puzzle.id);
               localStorage.setItem("chess_solved_puzzles", JSON.stringify(solvedPuzzles));
             }
-            $("nextPuzzleBtn").classList.remove("hidden");
+            $("nextPuzzleBtn").classList.toggle("hidden", currentPuzzleIndex === -1);
             showToast("Puzzle Solved! 🎉 Great job!");
             showGameOverModal("Puzzle Solved! 🎉", `Fantastic! You successfully solved "${puzzle.title}".`);
           } else {
@@ -1105,7 +1165,7 @@ async function clickSquare(square) {
                     solvedPuzzles.push(puzzle.id);
                     localStorage.setItem("chess_solved_puzzles", JSON.stringify(solvedPuzzles));
                   }
-                  $("nextPuzzleBtn").classList.remove("hidden");
+                  $("nextPuzzleBtn").classList.toggle("hidden", currentPuzzleIndex === -1);
                   showGameOverModal("Puzzle Solved! 🎉", `Fantastic! You successfully solved "${puzzle.title}".`);
                 }
               }, 500);
@@ -1793,17 +1853,16 @@ $("timedModeBtn").onclick = () => {
   show(timed);
 };
 $("dailyChallengeBtn").onclick = () => {
-  const p = getDailyPuzzle();
-  loadCustomPuzzle(p);
-};
-
-$("puzzleModeBtn").onclick = () => {
-  renderPuzzleGrid();
   renderDailyPuzzleBanner();
   updateDailyTimer();
   if (!dailyTimerInterval) {
     dailyTimerInterval = setInterval(updateDailyTimer, 1000);
   }
+  show(dailyPuzzleScreen);
+};
+
+$("puzzleModeBtn").onclick = () => {
+  renderPuzzleGrid();
   show(puzzleScreen);
 };
 
@@ -1813,6 +1872,8 @@ $("backFromComputerBtn").onclick = () => show(start);
 $("backFromComputerBtnTop").onclick = () => show(start);
 $("backFromTimedBtn").onclick = () => show(start);
 $("backFromTimedBtnTop").onclick = () => show(start);
+$("backFromDailyPuzzleBtn").onclick = () => show(start);
+$("backFromDailyPuzzleBtnTop").onclick = () => show(start);
 $("backFromPuzzleBtn").onclick = () => show(start);
 $("backFromPuzzleBtnTop").onclick = () => show(start);
 
@@ -1850,14 +1911,20 @@ $("nextPuzzleBtn").onclick = () => {
 };
 
 $("puzzleListBtn").onclick = () => {
-  renderPuzzleGrid();
-  show(puzzleScreen);
+  if (currentPuzzlePage === "daily" || currentPuzzleIndex === -1) {
+    renderDailyPuzzleBanner();
+    show(dailyPuzzleScreen);
+  } else {
+    renderPuzzleGrid();
+    show(puzzleScreen);
+  }
 };
 
 $("resetPuzzlesProgressBtn").onclick = () => {
   if (confirm("Are you sure you want to reset your puzzle progress?")) {
-    solvedPuzzles = [];
-    localStorage.removeItem("chess_solved_puzzles");
+    const practiceIds = new Set(PUZZLES.map((p) => p.id));
+    solvedPuzzles = solvedPuzzles.filter((id) => !practiceIds.has(id));
+    localStorage.setItem("chess_solved_puzzles", JSON.stringify(solvedPuzzles));
     renderPuzzleGrid();
   }
 };
@@ -1865,8 +1932,12 @@ $("resetPuzzlesProgressBtn").onclick = () => {
 $("modalNewGameBtn").onclick = () => {
   hideGameOverModal();
   if (puzzleMode) {
-    const nextIdx = (currentPuzzleIndex + 1) % PUZZLES.length;
-    loadPuzzle(nextIdx);
+    if (currentPuzzleIndex === -1 && dailyPuzzle) {
+      loadCustomPuzzle(dailyPuzzle);
+    } else {
+      const nextIdx = (currentPuzzleIndex + 1) % PUZZLES.length;
+      loadPuzzle(nextIdx);
+    }
   } else {
     $("resetBtn").click();
   }
@@ -1957,8 +2028,13 @@ $("leaveBtn").onclick = () => leaveBtnClick();
 
 function leaveBtnClick() {
   if (puzzleMode) {
-    renderPuzzleGrid();
-    show(puzzleScreen);
+    if (currentPuzzlePage === "daily" || currentPuzzleIndex === -1) {
+      renderDailyPuzzleBanner();
+      show(dailyPuzzleScreen);
+    } else {
+      renderPuzzleGrid();
+      show(puzzleScreen);
+    }
   } else if (privateRoom) {
     leavePrivate(true);
   } else {

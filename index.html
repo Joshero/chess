@@ -76,8 +76,7 @@
             <div class="daily-card-badge">⭐ NEW DAILY</div>
             <strong>Daily Puzzle 🎯</strong>
             <small
-              >A fresh tactical challenge from the global API every 24
-              hours!</small
+              >One Lichess tactical challenge, locked in for 24 hours.</small
             >
           </button>
           <button class="mode-card" id="puzzleModeBtn">
@@ -90,18 +89,17 @@
         </div>
       </section>
 
-      <section class="screen hidden" id="puzzleScreen">
+      <section class="screen hidden" id="dailyPuzzleScreen">
         <button
           class="back-btn-top"
-          id="backFromPuzzleBtnTop"
+          id="backFromDailyPuzzleBtnTop"
           aria-label="Back to game choices"
         >
           ← Back
         </button>
-        <h2>Chess Tactics &amp; Puzzles</h2>
+        <h2>Daily Puzzle</h2>
         <p>
-          Train your tactical vision. Choose a puzzle to solve or work through
-          them in order!
+          Today's Lichess challenge stays fixed until the next daily refresh.
         </p>
 
         <div class="daily-puzzle-banner" id="dailyPuzzleBanner">
@@ -122,12 +120,28 @@
             <button class="btn daily-play-btn" id="playDailyBtn">
               Play Today's Puzzle 🎯
             </button>
-              <button class="text-btn daily-preview-btn" id="changeDailyBtn">
-                Change preview
-              </button>
             </div>
           </div>
         </div>
+
+        <button class="text-btn" id="backFromDailyPuzzleBtn">
+          Back to game choices
+        </button>
+      </section>
+
+      <section class="screen hidden" id="puzzleScreen">
+        <button
+          class="back-btn-top"
+          id="backFromPuzzleBtnTop"
+          aria-label="Back to game choices"
+        >
+          &larr; Back
+        </button>
+        <h2>Practice Puzzles</h2>
+        <p>
+          Train your tactical vision with 24 practice puzzles across Beginner,
+          Intermediate, and Advanced themes.
+        </p>
 
         <div class="puzzle-stats-bar">
           <span class="puzzle-score" id="puzzleScoreDisplay"
@@ -848,6 +862,7 @@
         playerMode = $("playerModeScreen"),
         computer = $("computerScreen"),
         timed = $("timedScreen"),
+        dailyPuzzleScreen = $("dailyPuzzleScreen"),
         puzzleScreen = $("puzzleScreen"),
         room = $("roomScreen"),
         lobby = $("lobbyScreen"),
@@ -909,6 +924,7 @@
 
       let currentPuzzleIndex = 0,
         currentPuzzleStep = 0;
+      let currentPuzzlePage = "practice";
       let solvedPuzzles = JSON.parse(
         localStorage.getItem("chess_solved_puzzles") || "[]",
       );
@@ -928,6 +944,7 @@
           playerMode,
           computer,
           timed,
+          dailyPuzzleScreen,
           puzzleScreen,
           room,
           lobby,
@@ -969,6 +986,7 @@
             clockExpired,
             currentPuzzleIndex,
             currentPuzzleStep,
+            currentPuzzlePage,
             dailyPuzzle,
           }),
         );
@@ -981,10 +999,12 @@
         if (!savedScreenId || savedScreenId === start.id) return;
 
         if (savedScreenId === game.id && restoreGameState()) return;
-        if (savedScreenId === puzzleScreen.id) {
-          renderPuzzleGrid();
+        if (savedScreenId === dailyPuzzleScreen.id) {
           renderDailyPuzzleBanner();
           updateDailyTimer();
+        }
+        if (savedScreenId === puzzleScreen.id) {
+          renderPuzzleGrid();
         }
 
         const savedScreen = $(
@@ -1028,6 +1048,8 @@
           currentPuzzleStep = Number.isInteger(saved.currentPuzzleStep)
             ? saved.currentPuzzleStep
             : currentPuzzleStep;
+          currentPuzzlePage =
+            saved.currentPuzzlePage === "daily" ? "daily" : "practice";
           dailyPuzzle = saved.dailyPuzzle || dailyPuzzle;
           selected = null;
           replaying = false;
@@ -1084,7 +1106,9 @@
         if ($("modalMessage")) $("modalMessage").textContent = messageText;
         if ($("modalNewGameBtn"))
           $("modalNewGameBtn").textContent = puzzleMode
-            ? "Next Puzzle"
+            ? currentPuzzleIndex === -1
+              ? "Replay Daily"
+              : "Next Puzzle"
             : "New Game";
         if ($("gameOverModal")) $("gameOverModal").classList.remove("hidden");
       }
@@ -1226,24 +1250,19 @@
         };
       }
 
-      function changeDailyPreview() {
-        const todayKey = new Date().toISOString().slice(0, 10);
-        const currentIndex = DAILY_FALLBACKS.findIndex((fallback) =>
-          dailyPuzzle?.id?.includes(fallback.id),
-        );
-        const baseIndex = dailyHash(todayKey) % DAILY_FALLBACKS.length;
-        const nextIndex =
-          currentIndex >= 0
-            ? (currentIndex + 1) % DAILY_FALLBACKS.length
-            : (baseIndex + 1) % DAILY_FALLBACKS.length;
-        const nextOffset =
-          (nextIndex - baseIndex + DAILY_FALLBACKS.length) %
-          DAILY_FALLBACKS.length;
-        dailyPuzzle = buildDailyFallback(todayKey, nextOffset);
-        dailyPuzzle.preview = true;
-        cacheDailyPuzzle(dailyPuzzle, todayKey);
-        renderDailyPuzzleBanner();
-        showToast("Daily preview changed.");
+      function getDailyInitialFen(data) {
+        if (data?.game?.fen) return data.game.fen;
+        if (data?.puzzle?.fen) return data.puzzle.fen;
+        if (!data?.game?.pgn) return null;
+
+        try {
+          const tempChess = new Chess();
+          const loaded = tempChess.load_pgn(data.game.pgn, { sloppy: true });
+          return loaded ? tempChess.fen() : null;
+        } catch (e) {
+          console.log("Daily puzzle PGN could not be converted to FEN:", e);
+          return null;
+        }
       }
 
       async function fetchOnlineDailyPuzzle(todayKey) {
@@ -1252,18 +1271,16 @@
             headers: { Accept: "application/json" },
           });
           if (!res.ok) return;
-          const cached = getCachedDailyPuzzle(todayKey);
-          if (cached?.preview) return;
           const data = await res.json();
           if (
             data &&
             data.puzzle &&
             data.puzzle.solution &&
-            data.game &&
-            data.game.fen
+            data.game
           ) {
             const p = data.puzzle;
-            const initialFen = data.game.fen;
+            const initialFen = getDailyInitialFen(data);
+            if (!initialFen) return;
             const fullSolution = p.solution;
 
             // Lichess puzzle API solution format:
@@ -1373,13 +1390,12 @@
             : "Play Today's Puzzle 🎯";
           playBtn.onclick = () => loadCustomPuzzle(p);
         }
-        const changeBtn = $("changeDailyBtn");
-        if (changeBtn) changeBtn.onclick = changeDailyPreview;
       }
 
       function loadCustomPuzzle(puzzle) {
         currentPuzzleIndex = -1;
         currentPuzzleStep = 0;
+        currentPuzzlePage = "daily";
 
         stopClock();
         hideGameOverModal();
@@ -1395,6 +1411,7 @@
         $("standardControls").classList.add("hidden");
         $("puzzleControls").classList.remove("hidden");
         $("nextPuzzleBtn").classList.add("hidden");
+        $("puzzleListBtn").textContent = "Daily Puzzle";
 
         codeDisplay.textContent = `⭐ DAILY PUZZLE`;
         connection.textContent = `Daily Challenge: ${puzzle.title}`;
@@ -1418,7 +1435,8 @@
 
       function renderPuzzleGrid() {
         const total = PUZZLES.length;
-        const solved = solvedPuzzles.length;
+        const solved = PUZZLES.filter((p) => solvedPuzzles.includes(p.id))
+          .length;
         const beginnerSolved = PUZZLES.filter(
           (p) => p.category === "Beginner" && solvedPuzzles.includes(p.id),
         ).length;
@@ -1482,6 +1500,7 @@
       function loadPuzzle(idx) {
         currentPuzzleIndex = idx;
         currentPuzzleStep = 0;
+        currentPuzzlePage = "practice";
         const puzzle = PUZZLES[idx];
 
         stopClock();
@@ -1498,6 +1517,7 @@
         $("standardControls").classList.add("hidden");
         $("puzzleControls").classList.remove("hidden");
         $("nextPuzzleBtn").classList.add("hidden");
+        $("puzzleListBtn").textContent = "Practice Puzzles";
 
         codeDisplay.textContent = `PUZZLE #${idx + 1}`;
         connection.textContent = `Puzzle #${idx + 1}: ${puzzle.title}`;
@@ -1989,7 +2009,10 @@
                       JSON.stringify(solvedPuzzles),
                     );
                   }
-                  $("nextPuzzleBtn").classList.remove("hidden");
+                  $("nextPuzzleBtn").classList.toggle(
+                    "hidden",
+                    currentPuzzleIndex === -1,
+                  );
                   showToast("Puzzle Solved! 🎉 Great job!");
                   showGameOverModal(
                     "Puzzle Solved! 🎉",
@@ -2036,7 +2059,10 @@
                             JSON.stringify(solvedPuzzles),
                           );
                         }
-                        $("nextPuzzleBtn").classList.remove("hidden");
+                        $("nextPuzzleBtn").classList.toggle(
+                          "hidden",
+                          currentPuzzleIndex === -1,
+                        );
                         showGameOverModal(
                           "Puzzle Solved! 🎉",
                           `Fantastic! You successfully solved "${puzzle.title}".`,
@@ -2705,17 +2731,16 @@
         show(timed);
       };
       $("dailyChallengeBtn").onclick = () => {
-        const p = getDailyPuzzle();
-        loadCustomPuzzle(p);
-      };
-
-      $("puzzleModeBtn").onclick = () => {
-        renderPuzzleGrid();
         renderDailyPuzzleBanner();
         updateDailyTimer();
         if (!dailyTimerInterval) {
           dailyTimerInterval = setInterval(updateDailyTimer, 1000);
         }
+        show(dailyPuzzleScreen);
+      };
+
+      $("puzzleModeBtn").onclick = () => {
+        renderPuzzleGrid();
         show(puzzleScreen);
       };
 
@@ -2725,6 +2750,8 @@
       $("backFromComputerBtnTop").onclick = () => show(start);
       $("backFromTimedBtn").onclick = () => show(start);
       $("backFromTimedBtnTop").onclick = () => show(start);
+      $("backFromDailyPuzzleBtn").onclick = () => show(start);
+      $("backFromDailyPuzzleBtnTop").onclick = () => show(start);
       $("backFromPuzzleBtn").onclick = () => show(start);
       $("backFromPuzzleBtnTop").onclick = () => show(start);
       $("backBtn").onclick = () => show(start);
@@ -2777,14 +2804,23 @@
       };
 
       $("puzzleListBtn").onclick = () => {
-        renderPuzzleGrid();
-        show(puzzleScreen);
+        if (currentPuzzlePage === "daily" || currentPuzzleIndex === -1) {
+          renderDailyPuzzleBanner();
+          show(dailyPuzzleScreen);
+        } else {
+          renderPuzzleGrid();
+          show(puzzleScreen);
+        }
       };
 
       $("resetPuzzlesProgressBtn").onclick = () => {
         if (confirm("Are you sure you want to reset your puzzle progress?")) {
-          solvedPuzzles = [];
-          localStorage.removeItem("chess_solved_puzzles");
+          const practiceIds = new Set(PUZZLES.map((p) => p.id));
+          solvedPuzzles = solvedPuzzles.filter((id) => !practiceIds.has(id));
+          localStorage.setItem(
+            "chess_solved_puzzles",
+            JSON.stringify(solvedPuzzles),
+          );
           renderPuzzleGrid();
         }
       };
@@ -2792,8 +2828,12 @@
       $("modalNewGameBtn").onclick = () => {
         hideGameOverModal();
         if (puzzleMode) {
-          const nextIdx = (currentPuzzleIndex + 1) % PUZZLES.length;
-          loadPuzzle(nextIdx);
+          if (currentPuzzleIndex === -1 && dailyPuzzle) {
+            loadCustomPuzzle(dailyPuzzle);
+          } else {
+            const nextIdx = (currentPuzzleIndex + 1) % PUZZLES.length;
+            loadPuzzle(nextIdx);
+          }
         } else {
           $("resetBtn").click();
         }
@@ -2894,8 +2934,13 @@
 
       function leaveBtnClick() {
         if (puzzleMode) {
-          renderPuzzleGrid();
-          show(puzzleScreen);
+          if (currentPuzzlePage === "daily" || currentPuzzleIndex === -1) {
+            renderDailyPuzzleBanner();
+            show(dailyPuzzleScreen);
+          } else {
+            renderPuzzleGrid();
+            show(puzzleScreen);
+          }
         } else if (privateRoom) {
           leavePrivate(true);
         } else {
