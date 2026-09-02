@@ -118,9 +118,14 @@
                 A brand new challenge refreshes every 24 hours!
               </p>
             </div>
+            <div class="daily-actions">
             <button class="btn daily-play-btn" id="playDailyBtn">
               Play Today's Puzzle 🎯
             </button>
+              <button class="text-btn daily-preview-btn" id="changeDailyBtn">
+                Change preview
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1207,9 +1212,11 @@
         );
       }
 
-      function buildDailyFallback(todayKey) {
+      function buildDailyFallback(todayKey, offset = 0) {
         const fallback =
-          DAILY_FALLBACKS[dailyHash(todayKey) % DAILY_FALLBACKS.length];
+          DAILY_FALLBACKS[
+            (dailyHash(todayKey) + offset) % DAILY_FALLBACKS.length
+          ];
         return {
           ...fallback,
           id: `fallback_${todayKey}_${fallback.id}`,
@@ -1219,12 +1226,34 @@
         };
       }
 
+      function changeDailyPreview() {
+        const todayKey = new Date().toISOString().slice(0, 10);
+        const currentIndex = DAILY_FALLBACKS.findIndex((fallback) =>
+          dailyPuzzle?.id?.includes(fallback.id),
+        );
+        const baseIndex = dailyHash(todayKey) % DAILY_FALLBACKS.length;
+        const nextIndex =
+          currentIndex >= 0
+            ? (currentIndex + 1) % DAILY_FALLBACKS.length
+            : (baseIndex + 1) % DAILY_FALLBACKS.length;
+        const nextOffset =
+          (nextIndex - baseIndex + DAILY_FALLBACKS.length) %
+          DAILY_FALLBACKS.length;
+        dailyPuzzle = buildDailyFallback(todayKey, nextOffset);
+        dailyPuzzle.preview = true;
+        cacheDailyPuzzle(dailyPuzzle, todayKey);
+        renderDailyPuzzleBanner();
+        showToast("Daily preview changed.");
+      }
+
       async function fetchOnlineDailyPuzzle(todayKey) {
         try {
           const res = await fetch(DAILY_PUZZLE_API, {
             headers: { Accept: "application/json" },
           });
           if (!res.ok) return;
+          const cached = getCachedDailyPuzzle(todayKey);
+          if (cached?.preview) return;
           const data = await res.json();
           if (
             data &&
@@ -1344,6 +1373,8 @@
             : "Play Today's Puzzle 🎯";
           playBtn.onclick = () => loadCustomPuzzle(p);
         }
+        const changeBtn = $("changeDailyBtn");
+        if (changeBtn) changeBtn.onclick = changeDailyPreview;
       }
 
       function loadCustomPuzzle(puzzle) {
