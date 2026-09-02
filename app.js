@@ -407,8 +407,11 @@ function hideGameOverModal() {
 
 let dailyPuzzle = null;
 let dailyTimerInterval = null;
+let archivedDailyPuzzles = [];
+let dailyArchiveLoaded = false;
 const DAILY_PUZZLE_CACHE_KEY = "chess_daily_api_puzzle";
 const DAILY_PUZZLE_API = "https://lichess.org/api/puzzle/daily";
+const DAILY_PUZZLE_TABLE = "daily_puzzles";
 
 function getDailyPuzzle() {
   const todayKey = new Date().toISOString().slice(0, 10);
@@ -416,6 +419,9 @@ function getDailyPuzzle() {
     const cached = getCachedDailyPuzzle(todayKey);
     if (cached) {
       dailyPuzzle = cached;
+      if (dailyPuzzle.source === "lichess-api") {
+        saveDailyPuzzleToSupabase(dailyPuzzle);
+      }
       return dailyPuzzle;
     }
     let hash = 0;
@@ -454,6 +460,109 @@ function cacheDailyPuzzle(puzzle, todayKey) {
     expiresAt: nextUtcMidnightMs(),
     puzzle
   }));
+}
+
+function rowToDailyPuzzle(row) {
+  return {
+    id: row.puzzle_id || `daily_${row.date}`,
+    sourcePuzzleId: row.source_puzzle_id,
+    title: row.title,
+    category: row.category || "Advanced",
+    goal: row.goal,
+    fen: row.fen,
+    solution: Array.isArray(row.solution) ? row.solution : [],
+    hint: row.hint || "Find the forcing tactical move.",
+    rating: row.rating,
+    themes: row.themes || [],
+    isDaily: true,
+    source: row.source || "supabase",
+    date: row.date
+  };
+}
+
+async function saveDailyPuzzleToSupabase(puzzle) {
+  if (!puzzle || puzzle.source !== "lichess-api") return;
+  try {
+    const { data, error } = await supabaseClient.functions.invoke(
+      "save-daily-puzzle",
+      { body: {} }
+    );
+    if (error) throw error;
+    if (data?.puzzle) {
+      const savedPuzzle = rowToDailyPuzzle(data.puzzle);
+      if (savedPuzzle.date === puzzle.date) {
+        dailyPuzzle = savedPuzzle;
+        cacheDailyPuzzle(savedPuzzle, savedPuzzle.date);
+        renderDailyPuzzleBanner();
+      }
+    }
+    dailyArchiveLoaded = false;
+    loadArchivedDailyPuzzles();
+  } catch (e) {
+    console.log("Daily puzzle Supabase save failed:", e);
+  }
+}
+
+async function loadArchivedDailyPuzzles(force = false) {
+  const archiveGrid = $("dailyArchiveGrid");
+  if (!archiveGrid) return;
+  if (dailyArchiveLoaded && !force) {
+    renderDailyArchive();
+    return;
+  }
+
+  archiveGrid.innerHTML = '<p class="daily-archive-empty">Loading saved daily puzzles...</p>';
+
+  try {
+    const { data, error } = await supabaseClient
+      .from(DAILY_PUZZLE_TABLE)
+      .select("date,puzzle_id,source_puzzle_id,title,category,goal,fen,solution,hint,rating,themes,source")
+      .order("date", { ascending: false })
+      .limit(60);
+    if (error) throw error;
+    archivedDailyPuzzles = (data || []).map(rowToDailyPuzzle);
+    dailyArchiveLoaded = true;
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const savedToday = archivedDailyPuzzles.find((p) => p.date === todayKey);
+    if (savedToday && dailyPuzzle?.source !== "lichess-api") {
+      dailyPuzzle = savedToday;
+      cacheDailyPuzzle(savedToday, todayKey);
+      renderDailyPuzzleBanner();
+    }
+    renderDailyArchive();
+  } catch (e) {
+    archiveGrid.innerHTML = '<p class="daily-archive-empty">Daily archive table is not ready yet.</p>';
+    console.log("Daily puzzle archive load failed:", e);
+  }
+}
+
+function renderDailyArchive() {
+  const archiveGrid = $("dailyArchiveGrid");
+  if (!archiveGrid) return;
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const puzzles = archivedDailyPuzzles.filter((p) => p.date && p.date !== todayKey);
+
+  if (!puzzles.length) {
+    archiveGrid.innerHTML = '<p class="daily-archive-empty">No previous daily puzzles saved yet.</p>';
+    return;
+  }
+
+  archiveGrid.innerHTML = "";
+  puzzles.forEach((p) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "daily-archive-card";
+    const date = document.createElement("span");
+    date.className = "daily-archive-date";
+    date.textContent = p.date;
+    const title = document.createElement("strong");
+    title.textContent = p.title;
+    const goal = document.createElement("small");
+    goal.textContent = p.goal;
+    card.append(date, title, goal);
+    card.onclick = () => loadCustomPuzzle(p);
+    archiveGrid.appendChild(card);
+  });
 }
 
 function getDailyInitialFen(data) {
@@ -518,11 +627,14 @@ async function fetchOnlineDailyPuzzle(todayKey) {
         fen: cleanFen,
         solution: playerSolution,
         hint: `Daily puzzle rating: ${p.rating || 1500}. Focus on the strongest tactical forcing move!`,
+        rating: p.rating || null,
+        themes: p.themes || [],
         isDaily: true,
         source: "lichess-api",
         date: todayKey
       };
       cacheDailyPuzzle(dailyPuzzle, todayKey);
+      saveDailyPuzzleToSupabase(dailyPuzzle);
       renderDailyPuzzleBanner();
     }
   } catch (e) {
@@ -564,6 +676,7 @@ function renderDailyPuzzleBanner() {
     playBtn.textContent = isSolved ? "Solved! Replay 🎯" : "Play Today's Puzzle 🎯";
     playBtn.onclick = () => loadCustomPuzzle(p);
   }
+  loadArchivedDailyPuzzles();
 }
 
 function loadCustomPuzzle(puzzle) {
@@ -1860,6 +1973,7 @@ $("dailyChallengeBtn").onclick = () => {
   }
   show(dailyPuzzleScreen);
 };
+$("refreshDailyArchiveBtn").onclick = () => loadArchivedDailyPuzzles(true);
 
 $("puzzleModeBtn").onclick = () => {
   renderPuzzleGrid();
