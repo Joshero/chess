@@ -6,12 +6,13 @@ const LICHESS_DAILY_API = "https://lichess.org/api/puzzle/daily";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, accept, origin, x-requested-with, *",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS, PUT, DELETE",
 };
 
 type LichessDaily = {
   game?: {
+    id?: string;
     fen?: string;
     pgn?: string;
   };
@@ -20,17 +21,19 @@ type LichessDaily = {
     rating?: number;
     solution?: string[];
     themes?: string[];
+    fen?: string;
   };
 };
 
 function getInitialFen(data: LichessDaily) {
+  // Lichess Daily API directly provides puzzle.fen as the initial board state
+  if (data.puzzle?.fen) return data.puzzle.fen;
   if (data.game?.fen) return data.game.fen;
   if (!data.game?.pgn) return null;
 
   try {
     const chess = new Chess();
-    // In chess.js 1.0.0, use loadPgn with sloppy mode fallback
-    chess.loadPgn(data.game.pgn, { strict: false });
+    chess.loadPgn(data.game.pgn);
     return chess.fen();
   } catch (_e) {
     return null;
@@ -44,17 +47,30 @@ function buildPlayerPosition(initialFen: string, solution: string[]) {
   let playerFen = initialFen;
   let playerSolution = solution;
 
+  // In Lichess puzzle solutions, solution[0] is opponent's last move that sets up the puzzle
   if (solution.length > 1) {
     const setupMove = solution[0];
-    const move = chess.move({
-      from: setupMove.slice(0, 2),
-      to: setupMove.slice(2, 4),
-      promotion: setupMove[4] || "q",
-    });
+    try {
+      const move = chess.move({
+        from: setupMove.slice(0, 2),
+        to: setupMove.slice(2, 4),
+        promotion: setupMove[4] || "q",
+      });
 
-    if (move) {
-      playerFen = chess.fen();
-      playerSolution = solution.slice(1);
+      if (move) {
+        playerFen = chess.fen();
+        playerSolution = solution.slice(1);
+      }
+    } catch (_e) {
+      try {
+        const move = chess.move(setupMove);
+        if (move) {
+          playerFen = chess.fen();
+          playerSolution = solution.slice(1);
+        }
+      } catch (_e2) {
+        // Fallback: keep initial FEN
+      }
     }
   }
 
@@ -64,110 +80,158 @@ function buildPlayerPosition(initialFen: string, solution: string[]) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders, status: 200 });
   }
 
-  if (req.method !== "POST") {
+  try {
+    if (req.method !== "POST" && req.method !== "GET") {
+      return Response.json(
+        { error: "Method not allowed" },
+        { status: 405, headers: corsHeaders },
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey =
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ||
+      Deno.env.get("SUPABASE_ANON_KEY");
+
+    if (!supabaseUrl || !supabaseKey) {
+      return Response.json(
+        { error: "Missing Supabase service configuration" },
+        { status: 500, headers: corsHeaders },
+      );
+    }
+
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // If request contains already-fetched puzzle payload from the client
+    let incomingPuzzle: any = null;
+    if (req.method === "POST") {
+      try {
+        const body = await req.json();
+        if (body?.puzzle && body.puzzle.source === "lichess-api") {
+          incomingPuzzle = body.puzzle;
+        }
+      } catch (_e) {
+        // Ignore empty body
+      }
+    }
+
+    let row: any = null;
+
+    if (incomingPuzzle) {
+      row = {
+        date: incomingPuzzle.date || todayKey,
+        puzzle_id:
+          incomingPuzzle.id || `lichess_daily_${incomingPuzzle.date || todayKey}`,
+        source_puzzle_id:
+          incomingPuzzle.sourcePuzzleId || incomingPuzzle.id || null,
+        title: incomingPuzzle.title || "Daily Tactical Shot",
+        category: incomingPuzzle.category || "Advanced",
+        goal: incomingPuzzle.goal || "Find the best move!",
+        fen: incomingPuzzle.fen,
+        solution: incomingPuzzle.solution || [],
+        hint: incomingPuzzle.hint || null,
+        rating: incomingPuzzle.rating || null,
+        themes: incomingPuzzle.themes || [],
+        source: "lichess-api",
+      };
+    } else {
+      // Check if daily puzzle already exists in DB before fetching
+      const existing = await supabase
+        .from("daily_puzzles")
+        .select(
+          "date,puzzle_id,source_puzzle_id,title,category,goal,fen,solution,hint,rating,themes,source",
+        )
+        .eq("date", todayKey)
+        .eq("source", "lichess-api")
+        .maybeSingle();
+
+      if (existing.data) {
+        return Response.json(
+          { puzzle: existing.data, saved: false },
+          { headers: corsHeaders },
+        );
+      }
+
+      // Fetch fresh from Lichess API
+      const lichessRes = await fetch(LICHESS_DAILY_API, {
+        headers: { Accept: "application/json" },
+      });
+
+      if (!lichessRes.ok) {
+        return Response.json(
+          { error: "Could not fetch Lichess daily puzzle" },
+          { status: 502, headers: corsHeaders },
+        );
+      }
+
+      const data = (await lichessRes.json()) as LichessDaily;
+      const initialFen = getInitialFen(data);
+      const solution = data.puzzle?.solution || [];
+
+      if (!initialFen || !solution.length) {
+        return Response.json(
+          { error: "Lichess daily puzzle payload was incomplete" },
+          { status: 502, headers: corsHeaders },
+        );
+      }
+
+      const { cleanFen, playerSolution } = buildPlayerPosition(
+        initialFen,
+        solution,
+      );
+      const firstTheme = data.puzzle?.themes?.[0];
+
+      row = {
+        date: todayKey,
+        puzzle_id: `lichess_daily_${todayKey}_${data.puzzle?.id || "api"}`,
+        source_puzzle_id: data.puzzle?.id || null,
+        title: `Daily: ${
+          firstTheme ? firstTheme.replace(/([A-Z])/g, " $1") : "Tactical Shot"
+        }`,
+        category: "Advanced",
+        goal: `${
+          cleanFen.split(" ")[1] === "w" ? "White" : "Black"
+        } to move: Find the best tactical move!`,
+        fen: cleanFen,
+        solution: playerSolution,
+        hint: `Daily puzzle rating: ${
+          data.puzzle?.rating || 1500
+        }. Focus on the strongest tactical forcing move!`,
+        rating: data.puzzle?.rating || null,
+        themes: data.puzzle?.themes || [],
+        source: "lichess-api",
+        raw_payload: data,
+      };
+    }
+
+    // Save/upsert to Supabase daily_puzzles table
+    const { data: saved, error } = await supabase
+      .from("daily_puzzles")
+      .upsert([row], { onConflict: "date" })
+      .select(
+        "date,puzzle_id,source_puzzle_id,title,category,goal,fen,solution,hint,rating,themes,source",
+      )
+      .maybeSingle();
+
+    if (error) {
+      return Response.json(
+        { error: error.message },
+        { status: 500, headers: corsHeaders },
+      );
+    }
+
     return Response.json(
-      { error: "Method not allowed" },
-      { status: 405, headers: corsHeaders },
-    );
-  }
-
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    return Response.json(
-      { error: "Missing Supabase service configuration" },
-      { status: 500, headers: corsHeaders },
-    );
-  }
-
-  const todayKey = new Date().toISOString().slice(0, 10);
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-  // Check if daily puzzle already exists in DB
-  const existing = await supabase
-    .from("daily_puzzles")
-    .select(
-      "date,puzzle_id,source_puzzle_id,title,category,goal,fen,solution,hint,rating,themes,source",
-    )
-    .eq("date", todayKey)
-    .maybeSingle();
-
-  if (existing.data) {
-    return Response.json(
-      { puzzle: existing.data, saved: false },
+      { puzzle: saved || row, saved: true },
       { headers: corsHeaders },
     );
-  }
-
-  // Fetch from Lichess API
-  const lichessRes = await fetch(LICHESS_DAILY_API, {
-    headers: { Accept: "application/json" },
-  });
-
-  if (!lichessRes.ok) {
+  } catch (err: any) {
     return Response.json(
-      { error: "Could not fetch Lichess daily puzzle" },
-      { status: 502, headers: corsHeaders },
-    );
-  }
-
-  const data = (await lichessRes.json()) as LichessDaily;
-  const initialFen = getInitialFen(data);
-  const solution = data.puzzle?.solution || [];
-
-  if (!initialFen || !solution.length) {
-    return Response.json(
-      { error: "Lichess daily puzzle payload was incomplete" },
-      { status: 502, headers: corsHeaders },
-    );
-  }
-
-  const { cleanFen, playerSolution } = buildPlayerPosition(
-    initialFen,
-    solution,
-  );
-  const firstTheme = data.puzzle?.themes?.[0];
-
-  const row = {
-    date: todayKey,
-    puzzle_id: `lichess_daily_${todayKey}_${data.puzzle?.id || "api"}`,
-    source_puzzle_id: data.puzzle?.id || null,
-    title: `Daily: ${firstTheme ? firstTheme.replace(/([A-Z])/g, " $1") : "Tactical Shot"
-      }`,
-    category: "Advanced",
-    goal: `${cleanFen.split(" ")[1] === "w" ? "White" : "Black"
-      } to move: Find the best tactical move!`,
-    fen: cleanFen,
-    solution: playerSolution,
-    hint: `Daily puzzle rating: ${data.puzzle?.rating || 1500
-      }. Focus on the strongest tactical forcing move!`,
-    rating: data.puzzle?.rating || null,
-    themes: data.puzzle?.themes || [],
-    source: "lichess-api",
-    raw_payload: data,
-  };
-
-  const { data: saved, error } = await supabase
-    .from("daily_puzzles")
-    .insert(row)
-    .select(
-      "date,puzzle_id,source_puzzle_id,title,category,goal,fen,solution,hint,rating,themes,source",
-    )
-    .single();
-
-  if (error) {
-    return Response.json(
-      { error: error.message },
+      { error: err?.message || String(err) },
       { status: 500, headers: corsHeaders },
     );
   }
-
-  return Response.json(
-    { puzzle: saved, saved: true },
-    { headers: corsHeaders },
-  );
 });

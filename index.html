@@ -1154,7 +1154,8 @@
           cached &&
           cached.date === todayKey &&
           cached.expiresAt > Date.now() &&
-          !isExistingPuzzleDuplicate(cached.puzzle)
+          cached.puzzle &&
+          cached.puzzle.source === "lichess-api"
         ) {
           return cached.puzzle;
         }
@@ -1195,24 +1196,49 @@
 
     async function saveDailyPuzzleToSupabase(puzzle) {
       if (!puzzle || puzzle.source !== "lichess-api") return;
+
       try {
-        const { data, error } = await supabaseClient.functions.invoke(
-          "daily-puzzle",
-          { body: {} },
-        );
-        if (error) throw error;
-        if (data?.puzzle) {
-          const savedPuzzle = rowToDailyPuzzle(data.puzzle);
+        const row = {
+          date: puzzle.date,
+          puzzle_id: puzzle.id || `lichess_daily_${puzzle.date}`,
+          source_puzzle_id: puzzle.sourcePuzzleId || null,
+          title: puzzle.title || "Daily Tactical Shot",
+          category: puzzle.category || "Advanced",
+          goal: puzzle.goal || "Find the best move!",
+          fen: puzzle.fen,
+          solution: puzzle.solution || [],
+          hint: puzzle.hint || null,
+          rating: puzzle.rating || null,
+          themes: puzzle.themes || [],
+          source: "lichess-api",
+        };
+
+        const { data, error } = await supabaseClient
+          .from("daily_puzzles")
+          .upsert([row], { onConflict: "date" })
+          .select()
+          .maybeSingle();
+
+        if (error) {
+          if (error.code === "23505" || error.status === 409 || String(error.message || "").includes("duplicate")) {
+            return;
+          }
+          console.log("Daily puzzle save error:", error.message);
+          return;
+        }
+
+        if (data) {
+          const savedPuzzle = rowToDailyPuzzle(data);
           if (savedPuzzle.date === puzzle.date) {
             dailyPuzzle = savedPuzzle;
             cacheDailyPuzzle(savedPuzzle, savedPuzzle.date);
             renderDailyPuzzleBanner();
           }
+          dailyArchiveLoaded = false;
+          loadArchivedDailyPuzzles();
         }
-        dailyArchiveLoaded = false;
-        loadArchivedDailyPuzzles();
       } catch (e) {
-        console.log("Daily puzzle Supabase save failed:", e);
+        console.log("Daily puzzle save failed:", e);
       }
     }
 
@@ -1228,14 +1254,26 @@
         '<p class="daily-archive-empty">Loading saved daily puzzles...</p>';
 
       try {
-        const { data, error } = await supabaseClient
+        // Purge any previously seeded practice puzzles from daily_puzzles table if permitted
+        try {
+          await supabaseClient
+            .from(DAILY_PUZZLE_TABLE)
+            .delete()
+            .neq("source", "lichess-api");
+        } catch (_cleanupErr) {
+          // Silently ignore if client delete policy is not yet executed
+        }
+
+        let { data, error } = await supabaseClient
           .from(DAILY_PUZZLE_TABLE)
           .select(
             "date,puzzle_id,source_puzzle_id,title,category,goal,fen,solution,hint,rating,themes,source",
           )
+          .eq("source", "lichess-api")
           .order("date", { ascending: false })
           .limit(60);
         if (error) throw error;
+
         archivedDailyPuzzles = (data || []).map(rowToDailyPuzzle);
         dailyArchiveLoaded = true;
         const todayKey = new Date().toISOString().slice(0, 10);
@@ -1258,14 +1296,11 @@
     function renderDailyArchive() {
       const archiveGrid = $("dailyArchiveGrid");
       if (!archiveGrid) return;
-      const todayKey = new Date().toISOString().slice(0, 10);
-      const puzzles = archivedDailyPuzzles.filter(
-        (p) => p.date && p.date !== todayKey,
-      );
+      const puzzles = archivedDailyPuzzles;
 
       if (!puzzles.length) {
         archiveGrid.innerHTML =
-          '<p class="daily-archive-empty">No previous daily puzzles saved yet.</p>';
+          '<p class="daily-archive-empty">No daily puzzles saved yet.</p>';
         return;
       }
 
@@ -1379,11 +1414,6 @@
             source: "lichess-api",
             date: todayKey,
           };
-
-          if (isExistingPuzzleDuplicate(apiPuzzle)) {
-            console.log("Daily API puzzle matched a built-in puzzle; keeping independent fallback.");
-            return;
-          }
 
           dailyPuzzle = apiPuzzle;
           cacheDailyPuzzle(apiPuzzle, todayKey);

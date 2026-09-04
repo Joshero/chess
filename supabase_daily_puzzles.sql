@@ -41,5 +41,22 @@ for select
 using (true);
 
 drop policy if exists "Daily puzzles can be inserted by app clients" on public.daily_puzzles;
+create policy "Daily puzzles can be inserted by app clients"
+on public.daily_puzzles
+for insert
+with check (true);
 
 drop policy if exists "Daily puzzles can be updated by app clients" on public.daily_puzzles;
+create policy "Daily puzzles can be updated by app clients"
+on public.daily_puzzles
+for update
+using (true);
+
+drop policy if exists "Daily puzzles can be deleted by app clients" on public.daily_puzzles;
+create policy "Daily puzzles can be deleted by app clients"
+on public.daily_puzzles
+for delete
+using (true);
+
+-- One-time cleanup query: purge any seeded practice puzzles from the daily table
+delete from public.daily_puzzles where source != 'lichess-api';

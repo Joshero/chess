@@ -479,26 +479,59 @@ let dailyArchiveLoaded = false;
 const DAILY_PUZZLE_CACHE_KEY = "chess_daily_api_puzzle";
 const DAILY_PUZZLE_API = "https://lichess.org/api/puzzle/daily";
 const DAILY_PUZZLE_TABLE = "daily_puzzles";
+const DAILY_FALLBACKS = [
+  {
+    id: "generated_daily_rank_pin",
+    title: "Daily: Rank Pin",
+    category: "Intermediate",
+    goal: "White to move: Use the pinned back rank for mate.",
+    fen: "6k1/5ppp/8/8/8/8/6PP/4R1K1 w - - 0 1",
+    solution: ["e1e8"],
+    hint: "The rook can invade the eighth rank."
+  },
+  {
+    id: "generated_daily_corner_net",
+    title: "Daily: Corner Net",
+    category: "Intermediate",
+    goal: "Black to move: Finish the cornered king.",
+    fen: "7k/6pp/8/8/8/8/5qPP/6K1 b - - 0 1",
+    solution: ["f2e1"],
+    hint: "Bring the queen to the first rank."
+  },
+  {
+    id: "generated_daily_queen_lift",
+    title: "Daily: Queen Lift",
+    category: "Advanced",
+    goal: "White to move: Land the queen where the king has no escape.",
+    fen: "6k1/6pp/8/8/8/8/5PPP/3Q2K1 w - - 0 1",
+    solution: ["d1d8"],
+    hint: "The open file points straight at the back rank."
+  }
+];
+
+function buildDailyFallback(todayKey, offset = 0) {
+  let hash = 0;
+  for (let i = 0; i < todayKey.length; i++) {
+    hash = (hash << 5) - hash + todayKey.charCodeAt(i);
+    hash |= 0;
+  }
+  const fallback = DAILY_FALLBACKS[(Math.abs(hash) + offset) % DAILY_FALLBACKS.length];
+  return {
+    ...fallback,
+    id: `fallback_${todayKey}_${fallback.id}`,
+    isDaily: true,
+    source: "local-fallback",
+    date: todayKey
+  };
+}
 
 function getDailyPuzzle() {
   const todayKey = new Date().toISOString().slice(0, 10);
   if (!dailyPuzzle || dailyPuzzle.date !== todayKey) {
-    const cached = getCachedDailyPuzzle(todayKey);
-    if (cached) {
-      dailyPuzzle = cached;
-      if (dailyPuzzle.source === "lichess-api") {
-        saveDailyPuzzleToSupabase(dailyPuzzle);
-      }
-      return dailyPuzzle;
+    dailyPuzzle = getCachedDailyPuzzle(todayKey) || buildDailyFallback(todayKey);
+    if (dailyPuzzle.source === "lichess-api") {
+      saveDailyPuzzleToSupabase(dailyPuzzle);
     }
-    let hash = 0;
-    for (let i = 0; i < todayKey.length; i++) {
-      hash = (hash << 5) - hash + todayKey.charCodeAt(i);
-      hash |= 0;
-    }
-    const dailyIndex = Math.abs(hash) % PUZZLES.length;
-    const localDaily = { ...PUZZLES[dailyIndex], id: `fallback_${todayKey}_${PUZZLES[dailyIndex].id}`, isDaily: true, source: "local-fallback", date: todayKey };
-    dailyPuzzle = localDaily;
     fetchOnlineDailyPuzzle(todayKey);
   }
   return dailyPuzzle;
@@ -512,7 +545,13 @@ function nextUtcMidnightMs() {
 function getCachedDailyPuzzle(todayKey) {
   try {
     const cached = JSON.parse(localStorage.getItem(DAILY_PUZZLE_CACHE_KEY) || "null");
-    if (cached && cached.date === todayKey && cached.expiresAt > Date.now() && cached.puzzle) {
+    if (
+      cached &&
+      cached.date === todayKey &&
+      cached.expiresAt > Date.now() &&
+      cached.puzzle &&
+      cached.puzzle.source === "lichess-api"
+    ) {
       return cached.puzzle;
     }
   } catch (e) {
@@ -549,24 +588,49 @@ function rowToDailyPuzzle(row) {
 
 async function saveDailyPuzzleToSupabase(puzzle) {
   if (!puzzle || puzzle.source !== "lichess-api") return;
+
   try {
-    const { data, error } = await supabaseClient.functions.invoke(
-      "daily-puzzle",
-      { body: {} }
-    );
-    if (error) throw error;
-    if (data?.puzzle) {
-      const savedPuzzle = rowToDailyPuzzle(data.puzzle);
+    const row = {
+      date: puzzle.date,
+      puzzle_id: puzzle.id || `lichess_daily_${puzzle.date}`,
+      source_puzzle_id: puzzle.sourcePuzzleId || null,
+      title: puzzle.title || "Daily Tactical Shot",
+      category: puzzle.category || "Advanced",
+      goal: puzzle.goal || "Find the best move!",
+      fen: puzzle.fen,
+      solution: puzzle.solution || [],
+      hint: puzzle.hint || null,
+      rating: puzzle.rating || null,
+      themes: puzzle.themes || [],
+      source: "lichess-api",
+    };
+
+    const { data, error } = await supabaseClient
+      .from("daily_puzzles")
+      .upsert([row], { onConflict: "date" })
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      if (error.code === "23505" || error.status === 409 || String(error.message || "").includes("duplicate")) {
+        return;
+      }
+      console.log("Daily puzzle save error:", error.message);
+      return;
+    }
+
+    if (data) {
+      const savedPuzzle = rowToDailyPuzzle(data);
       if (savedPuzzle.date === puzzle.date) {
         dailyPuzzle = savedPuzzle;
         cacheDailyPuzzle(savedPuzzle, savedPuzzle.date);
         renderDailyPuzzleBanner();
       }
+      dailyArchiveLoaded = false;
+      loadArchivedDailyPuzzles();
     }
-    dailyArchiveLoaded = false;
-    loadArchivedDailyPuzzles();
   } catch (e) {
-    console.log("Daily puzzle Supabase save failed:", e);
+    console.log("Daily puzzle save failed:", e);
   }
 }
 
@@ -581,12 +645,24 @@ async function loadArchivedDailyPuzzles(force = false) {
   archiveGrid.innerHTML = '<p class="daily-archive-empty">Loading saved daily puzzles...</p>';
 
   try {
-    const { data, error } = await supabaseClient
+    // Purge any previously seeded practice puzzles from daily_puzzles table if permitted
+    try {
+      await supabaseClient
+        .from(DAILY_PUZZLE_TABLE)
+        .delete()
+        .neq("source", "lichess-api");
+    } catch (_cleanupErr) {
+      // Silently ignore if client delete policy is not yet executed
+    }
+
+    let { data, error } = await supabaseClient
       .from(DAILY_PUZZLE_TABLE)
       .select("date,puzzle_id,source_puzzle_id,title,category,goal,fen,solution,hint,rating,themes,source")
+      .eq("source", "lichess-api")
       .order("date", { ascending: false })
       .limit(60);
     if (error) throw error;
+
     archivedDailyPuzzles = (data || []).map(rowToDailyPuzzle);
     dailyArchiveLoaded = true;
     const todayKey = new Date().toISOString().slice(0, 10);
@@ -606,11 +682,10 @@ async function loadArchivedDailyPuzzles(force = false) {
 function renderDailyArchive() {
   const archiveGrid = $("dailyArchiveGrid");
   if (!archiveGrid) return;
-  const todayKey = new Date().toISOString().slice(0, 10);
-  const puzzles = archivedDailyPuzzles.filter((p) => p.date && p.date !== todayKey);
+  const puzzles = archivedDailyPuzzles;
 
   if (!puzzles.length) {
-    archiveGrid.innerHTML = '<p class="daily-archive-empty">No previous daily puzzles saved yet.</p>';
+    archiveGrid.innerHTML = '<p class="daily-archive-empty">No daily puzzles saved yet.</p>';
     return;
   }
 
@@ -633,8 +708,8 @@ function renderDailyArchive() {
 }
 
 function getDailyInitialFen(data) {
-  if (data?.game?.fen) return data.game.fen;
   if (data?.puzzle?.fen) return data.puzzle.fen;
+  if (data?.game?.fen) return data.game.fen;
   if (!data?.game?.pgn) return null;
 
   try {
@@ -649,7 +724,6 @@ function getDailyInitialFen(data) {
 
 async function fetchOnlineDailyPuzzle(todayKey) {
   try {
-    if (getCachedDailyPuzzle(todayKey)) return;
     const res = await fetch(DAILY_PUZZLE_API);
     if (!res.ok) return;
     const data = await res.json();
