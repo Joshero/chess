@@ -551,7 +551,7 @@ async function saveDailyPuzzleToSupabase(puzzle) {
   if (!puzzle || puzzle.source !== "lichess-api") return;
   try {
     const { data, error } = await supabaseClient.functions.invoke(
-      "save-daily-puzzle",
+      "daily-puzzle",
       { body: {} }
     );
     if (error) throw error;
