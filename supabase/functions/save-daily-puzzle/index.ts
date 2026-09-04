@@ -1,8 +1,8 @@
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { Chess } from "npm:chess.js@1.0.0";
 
 const LICHESS_DAILY_API = "https://lichess.org/api/puzzle/daily";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -27,13 +27,20 @@ function getInitialFen(data: LichessDaily) {
   if (data.game?.fen) return data.game.fen;
   if (!data.game?.pgn) return null;
 
-  const chess = new Chess();
-  chess.loadPgn(data.game.pgn, { strict: false });
-  return chess.fen();
+  try {
+    const chess = new Chess();
+    // In chess.js 1.0.0, use loadPgn with sloppy mode fallback
+    chess.loadPgn(data.game.pgn, { strict: false });
+    return chess.fen();
+  } catch (_e) {
+    return null;
+  }
 }
 
 function buildPlayerPosition(initialFen: string, solution: string[]) {
-  const chess = new Chess(initialFen);
+  const chess = new Chess();
+  chess.load(initialFen);
+
   let playerFen = initialFen;
   let playerSolution = solution;
 
@@ -55,7 +62,7 @@ function buildPlayerPosition(initialFen: string, solution: string[]) {
   return { cleanFen, playerSolution };
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -80,6 +87,7 @@ serve(async (req) => {
   const todayKey = new Date().toISOString().slice(0, 10);
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+  // Check if daily puzzle already exists in DB
   const existing = await supabase
     .from("daily_puzzles")
     .select(
@@ -95,6 +103,7 @@ serve(async (req) => {
     );
   }
 
+  // Fetch from Lichess API
   const lichessRes = await fetch(LICHESS_DAILY_API, {
     headers: { Accept: "application/json" },
   });
@@ -122,22 +131,20 @@ serve(async (req) => {
     solution,
   );
   const firstTheme = data.puzzle?.themes?.[0];
+
   const row = {
     date: todayKey,
     puzzle_id: `lichess_daily_${todayKey}_${data.puzzle?.id || "api"}`,
     source_puzzle_id: data.puzzle?.id || null,
-    title: `Daily: ${
-      firstTheme ? firstTheme.replace(/([A-Z])/g, " $1") : "Tactical Shot"
-    }`,
+    title: `Daily: ${firstTheme ? firstTheme.replace(/([A-Z])/g, " $1") : "Tactical Shot"
+      }`,
     category: "Advanced",
-    goal: `${
-      cleanFen.split(" ")[1] === "w" ? "White" : "Black"
-    } to move: Find the best tactical move!`,
+    goal: `${cleanFen.split(" ")[1] === "w" ? "White" : "Black"
+      } to move: Find the best tactical move!`,
     fen: cleanFen,
     solution: playerSolution,
-    hint: `Daily puzzle rating: ${
-      data.puzzle?.rating || 1500
-    }. Focus on the strongest tactical forcing move!`,
+    hint: `Daily puzzle rating: ${data.puzzle?.rating || 1500
+      }. Focus on the strongest tactical forcing move!`,
     rating: data.puzzle?.rating || null,
     themes: data.puzzle?.themes || [],
     source: "lichess-api",
