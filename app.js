@@ -276,52 +276,119 @@ function showToast(message) {
   setTimeout(() => toast.remove(), 2500);
 }
 
-function saveAppState(screenId) {
-  if (!screenId) return;
-  localStorage.setItem(ACTIVE_SCREEN_KEY, screenId);
-  if (screenId !== game.id || privateRoom || replaying) return;
+// ==================== APP STATE PERSISTENCE ====================
+const LOCAL_STORAGE_KEY = "chess_app_state";
 
-  localStorage.setItem(GAME_STATE_KEY, JSON.stringify({
-    fen: chess.fen(),
-    lastMove,
-    moveHistory,
-    undoStack,
-    computerMode,
-    timedMode,
-    puzzleMode,
-    difficulty,
-    selectedTimeControl,
-    color,
-    clockMs,
-    clockExpired,
-    currentPuzzleIndex,
-    currentPuzzleStep,
-    currentPuzzlePage,
-    dailyPuzzle
-  }));
+function saveAppState(gameId = "default") {
+  try {
+    const payload = {
+      gameId: gameId,
+      fen: chess.fen(),
+      turn: chess.turn(),
+      color: color,
+      moveHistory: moveHistory,
+      lastMove: lastMove,
+      clockMs: clockMs,
+      computerMode: computerMode,
+      difficulty: difficulty,
+      timedMode: timedMode,
+      puzzleMode: puzzleMode,
+      timestamp: Date.now()
+    };
+
+    // 1. Save locally to localStorage
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
+
+    // 2. Sync to Supabase Database if playing in a private room
+    if (privateRoom && channel && host) {
+      supabaseClient
+        .from("rooms")
+        .upsert({
+          room_code: codeDisplay.textContent,
+          fen: chess.fen(),
+          move_history: moveHistory,
+          updated_at: new Date()
+        })
+        .then(({ error }) => {
+          if (error) console.error("Supabase Save Error:", error);
+        });
+    }
+  } catch (err) {
+    console.warn("Could not save app state to storage:", err);
+  }
 }
 
 function restoreAppState() {
-  if (new URLSearchParams(window.location.search).get("room")) return;
+  try {
+    const rawData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!rawData) return false;
 
-  const savedScreenId = localStorage.getItem(ACTIVE_SCREEN_KEY);
-  if (!savedScreenId || savedScreenId === start.id) return;
+    const saved = JSON.parse(rawData);
 
-  if (savedScreenId === game.id && restoreGameState()) return;
-  if (savedScreenId === dailyPuzzleScreen.id) {
-    renderDailyPuzzleBanner();
-    updateDailyTimer();
-  }
-  if (savedScreenId === puzzleScreen.id) {
-    renderPuzzleGrid();
-  }
+    // Only restore if the saved state is recent (less than 24 hours old)
+    if (Date.now() - saved.timestamp > 86400000) {
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      return false;
+    }
 
-  const savedScreen = $(savedScreenId === lobby.id ? room.id : savedScreenId);
-  if (savedScreen && savedScreen.classList.contains("screen")) {
-    show(savedScreen);
+    chess.load(saved.fen);
+    moveHistory = saved.moveHistory || [];
+    lastMove = saved.lastMove || null;
+    clockMs = saved.clockMs || clockMs;
+    computerMode = saved.computerMode || false;
+    difficulty = saved.difficulty || "medium";
+    timedMode = saved.timedMode || false;
+    color = saved.color || "w";
+
+    draw();
+    return true;
+  } catch (err) {
+    console.warn("Failed to restore app state:", err);
+    return false;
   }
 }
 
+// ==================== UPDATED MOVE HANDLER ====================
+function makeMove(moveObj) {
+  const movingSide = chess.turn();
+
+  // Save current position state to Undo Stack
+  undoStack.push({
+    fen: chess.fen(),
+    lastMove: lastMove ? { ...lastMove } : null,
+    clockMs: { ...clockMs }
+  });
+
+  const executedMove = chess.move(moveObj);
+  if (!executedMove) return false;
+
+  lastMove = { from: executedMove.from, to: executedMove.to };
+  moveHistory.push(executedMove);
+
+  handleClockAfterMove(movingSide);
+
+  if (puzzleMode) {
+    verifyPuzzleMove(executedMove);
+  } else {
+    draw();
+
+    // Explicitly persist app state here
+    saveAppState(typeof game !== "undefined" ? game.id : "default");
+
+    if (privateRoom && channel) {
+      channel.send({
+        type: "broadcast",
+        event: "move",
+        payload: { move: moveObj, fen: chess.fen(), clockMs }
+      });
+    }
+
+    if (computerMode && chess.turn() === "b" && !chess.game_over()) {
+      setTimeout(computerMove, 300);
+    }
+  }
+  return true;
+}
 function restoreGameState() {
   const raw = localStorage.getItem(GAME_STATE_KEY);
   if (!raw) return false;
@@ -591,7 +658,7 @@ async function fetchOnlineDailyPuzzle(todayKey) {
       const initialFen = getDailyInitialFen(data);
       if (!initialFen) return;
       const fullSolution = p.solution;
-      
+
       let tempChess = new Chess();
       const loaded = tempChess.load(initialFen);
       let playerFen = initialFen;
@@ -617,7 +684,7 @@ async function fetchOnlineDailyPuzzle(todayKey) {
       }
 
       const cleanFen = playerFen.split(" ").slice(0, 4).join(" ") + " 0 1";
-      
+
       dailyPuzzle = {
         id: `lichess_daily_${todayKey}_${p.id || "api"}`,
         sourcePuzzleId: p.id,
@@ -668,7 +735,7 @@ function renderDailyPuzzleBanner() {
   if (!p) return;
   const todayKey = new Date().toISOString().slice(0, 10);
   const isSolved = solvedPuzzles.includes(p.id) || solvedPuzzles.includes(`daily_${todayKey}`);
-  
+
   $("dailyTitle").textContent = p.title;
   $("dailyDesc").textContent = `${p.goal} (${p.category} tier)`;
   const playBtn = $("playDailyBtn");
@@ -1063,7 +1130,7 @@ function draw() {
     }
     return rows;
   }, []).join("") : '<tr><td colspan="3">No moves yet</td></tr>';
-  
+
   // Add click handlers to move rows for review navigation
   document.querySelectorAll(".move-row").forEach((row) => {
     row.style.transition = "background-color 0.2s";
@@ -1173,7 +1240,7 @@ async function clickSquare(square) {
       draw();
       return;
     }
-    
+
     // In review mode, try to play alternative move
     if (selected) {
       const moves = chess.moves({ square: selected, verbose: true });
@@ -1184,7 +1251,7 @@ async function clickSquare(square) {
         return;
       }
     }
-    
+
     // Show legal moves for inspection
     const piece = chess.get(square);
     if (piece) {
@@ -1197,7 +1264,7 @@ async function clickSquare(square) {
     }
     return;
   }
-  
+
   if (!puzzleMode && (chess.game_over() || clockExpired || (computerMode && chess.turn() !== "w"))) return;
   if (thinking || replaying) return;
 
@@ -1207,7 +1274,7 @@ async function clickSquare(square) {
       draw();
       return;
     }
-    
+
     if (!puzzleMode) {
       // Save snapshot for unlimited undo BEFORE move
       undoStack.push({
@@ -1529,7 +1596,7 @@ function buildGameSummaryHtml() {
   let result = "Game in progress";
   let resultClass = "in-progress";
   let resultIcon = "\u231B";
-  
+
   if (clockExpired) {
     const winner = chess.turn() === "w" ? "Black" : "White";
     result = `${winner} won on time (timeout)`;
@@ -1557,7 +1624,7 @@ function buildGameSummaryHtml() {
     resultClass = "draw";
     resultIcon = "\uD83E\uDD1F";
   }
-  
+
   return `
     <div style="padding: 12px; background: #f9f9f9; border-radius: 4px; margin-bottom: 12px;">
       <div style="font-size: 0.9em; color: #666; margin-bottom: 4px;">GAME SUMMARY</div>
@@ -1653,7 +1720,7 @@ function renderAlternativeMoves() {
 
   const isPlayedMove = reviewPly > 0 && reviewPly <= reviewMoves.length;
   const playedMoveText = isPlayedMove ? `(${reviewMoves[reviewPly - 1]})` : "";
-  
+
   const header = document.createElement("div");
   header.style.cssText = "font-size: 0.85em; color: #666; margin-bottom: 6px; font-weight: bold;";
   header.textContent = `${moves.length} legal move${moves.length !== 1 ? "s" : ""} available`;
@@ -1678,7 +1745,7 @@ function renderAlternativeMoves() {
     button.onclick = () => playReviewAlternative(move);
     alternativeMoves.appendChild(button);
   });
-  
+
   if (moves.length > 12) {
     const more = document.createElement("div");
     more.style.cssText = "font-size: 0.8em; color: #999; margin-top: 4px;";
@@ -1704,7 +1771,7 @@ function updateReviewPanel() {
       reviewSummary.innerHTML = `<div style="padding: 12px; background: #f9f9f9; border-radius: 4px;">${summaryHtml.split('\n').slice(1).join('\n')}`;
     }
   }
-  
+
   // Update move counter
   if (reviewStep) {
     if (reviewMode) {
@@ -1715,13 +1782,13 @@ function updateReviewPanel() {
       reviewStep.textContent = `Final position - ${moveHistory.length} ply played`;
     }
   }
-  
+
   // Disable/enable buttons
   if (reviewStartBtn) reviewStartBtn.disabled = !reviewMode || reviewPly === 0;
   if (reviewPrevBtn) reviewPrevBtn.disabled = !reviewMode || reviewPly === 0;
   if (reviewNextBtn) reviewNextBtn.disabled = !reviewMode || reviewPly >= reviewMoves.length;
   if (reviewEndBtn) reviewEndBtn.disabled = !reviewMode || reviewPly >= reviewMoves.length;
-  
+
   if (reviewMode) {
     status.textContent = `Reviewing move ${Math.ceil(reviewPly / 2)} (${reviewPly % 2 === 0 ? "White" : "Black"} to move)${chess.in_check() ? " (Check!)" : ""}`;
   }
